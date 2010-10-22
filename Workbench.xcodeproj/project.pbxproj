@@ -1,0 +1,242 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXFileReference section */
+		4C24B00211EDE6B800E67981 /* Experiments */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Experiments; sourceTree = "<group>"; };
+		4C24B8FB11EDE6B900E67981 /* FFmpeg */ = {isa = PBXFileReference; lastKnownFileType = folder; path = FFmpeg; sourceTree = "<group>"; };
+		4C24B8FC11EDE6B900E67981 /* Samples */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Samples; sourceTree = "<group>"; };
+		4C24B8FD11EDE6B900E67981 /* x264 */ = {isa = PBXFileReference; lastKnownFileType = folder; path = x264; sourceTree = "<group>"; };
+		4C24B9E911EDE6D600E67981 /* h264_workbench.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = h264_workbench.c; sourceTree = "<group>"; };
+		4C24B9EA11EDE6D600E67981 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
+		4C24B9EC11EDE6D600E67981 /* digits.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = digits.h; sourceTree = "<group>"; };
+		4C24B9ED11EDE6D600E67981 /* llsp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = llsp.c; sourceTree = "<group>"; };
+		4C24B9EE11EDE6D600E67981 /* llsp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = llsp.h; sourceTree = "<group>"; };
+		4C24B9F011EDE6D600E67981 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
+		4C24B9F111EDE6D600E67981 /* metrics.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = metrics.c; sourceTree = "<group>"; };
+		4C24B9F311EDE6D600E67981 /* nalu.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = nalu.c; sourceTree = "<group>"; };
+		4C24B9F511EDE6D600E67981 /* process.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = process.c; sourceTree = "<group>"; };
+		4C24B9F611EDE6D600E67981 /* process.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = process.h; sourceTree = "<group>"; };
+		4C24B9F811EDE6D600E67981 /* propagate.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = propagate.c; sourceTree = "<group>"; };
+		4C24B9FA11EDE6D600E67981 /* replace.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = replace.c; sourceTree = "<group>"; };
+		4C24B9FC11EDE6D600E67981 /* schedule.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = schedule.c; sourceTree = "<group>"; };
+		4C24B9FE11EDE6D600E67981 /* ssim.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ssim.c; sourceTree = "<group>"; };
+		4C24B9FF11EDE6D600E67981 /* ssim.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ssim.h; sourceTree = "<group>"; };
+		4C3E4E7F126D9BCF004DACE5 /* Makeconf */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = Makeconf; sourceTree = "<group>"; };
+		4CF0A7011202CA0800817B42 /* weak.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = weak.c; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		08FB7794FE84155DC02AAC07 /* Workbench */ = {
+			isa = PBXGroup;
+			children = (
+				4C24B9EA11EDE6D600E67981 /* Makefile */,
+				4C3E4E7F126D9BCF004DACE5 /* Makeconf */,
+				4C24B9E911EDE6D600E67981 /* h264_workbench.c */,
+				4C24B9EB11EDE6D600E67981 /* Processing */,
+				4C24B8FC11EDE6B900E67981 /* Samples */,
+				4C24B00211EDE6B800E67981 /* Experiments */,
+				4C24B8FB11EDE6B900E67981 /* FFmpeg */,
+				4C24B8FD11EDE6B900E67981 /* x264 */,
+			);
+			name = Workbench;
+			sourceTree = "<group>";
+		};
+		4C24B9EB11EDE6D600E67981 /* Processing */ = {
+			isa = PBXGroup;
+			children = (
+				4C24B9F011EDE6D600E67981 /* Makefile */,
+				4C24B9EC11EDE6D600E67981 /* digits.h */,
+				4C24B9ED11EDE6D600E67981 /* llsp.c */,
+				4C24B9EE11EDE6D600E67981 /* llsp.h */,
+				4C24B9F111EDE6D600E67981 /* metrics.c */,
+				4C24B9F311EDE6D600E67981 /* nalu.c */,
+				4C24B9F511EDE6D600E67981 /* process.c */,
+				4C24B9F611EDE6D600E67981 /* process.h */,
+				4C24B9F811EDE6D600E67981 /* propagate.c */,
+				4C24B9FA11EDE6D600E67981 /* replace.c */,
+				4C24B9FC11EDE6D600E67981 /* schedule.c */,
+				4C24B9FE11EDE6D600E67981 /* ssim.c */,
+				4C24B9FF11EDE6D600E67981 /* ssim.h */,
+				4CF0A7011202CA0800817B42 /* weak.c */,
+			);
+			path = Processing;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXLegacyTarget section */
+		4C24BA0211EDE76D00E67981 /* Samples */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION)";
+			buildConfigurationList = 4C24BA0811EDE7A500E67981 /* Build configuration list for PBXLegacyTarget "Samples" */;
+			buildPhases = (
+			);
+			buildToolPath = make;
+			buildWorkingDirectory = Samples;
+			dependencies = (
+			);
+			name = Samples;
+			passBuildSettingsInEnvironment = 1;
+			productName = Samples;
+		};
+		4C24BA0511EDE77700E67981 /* Experiments */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION)";
+			buildConfigurationList = 4C24BA0911EDE7A500E67981 /* Build configuration list for PBXLegacyTarget "Experiments" */;
+			buildPhases = (
+			);
+			buildToolPath = make;
+			buildWorkingDirectory = Experiments;
+			dependencies = (
+			);
+			name = Experiments;
+			passBuildSettingsInEnvironment = 1;
+			productName = Experiments;
+		};
+		D28A88AD04BDD90700651E21 /* Workbench */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION)";
+			buildConfigurationList = 1DEB918F08733D9F0010E9CD /* Build configuration list for PBXLegacyTarget "Workbench" */;
+			buildPhases = (
+			);
+			buildToolPath = make;
+			dependencies = (
+			);
+			name = Workbench;
+			passBuildSettingsInEnvironment = 1;
+			productName = Workbench;
+		};
+/* End PBXLegacyTarget section */
+
+/* Begin PBXProject section */
+		08FB7793FE84155DC02AAC07 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				ORGANIZATIONNAME = "TU Dresden";
+			};
+			buildConfigurationList = 1DEB919308733D9F0010E9CD /* Build configuration list for PBXProject "Workbench" */;
+			compatibilityVersion = "Xcode 3.2";
+			hasScannedForEncodings = 1;
+			mainGroup = 08FB7794FE84155DC02AAC07 /* Workbench */;
+			projectDirPath = "";
+			projectRoot = FFmpeg;
+			targets = (
+				D28A88AD04BDD90700651E21 /* Workbench */,
+				4C24BA0211EDE76D00E67981 /* Samples */,
+				4C24BA0511EDE77700E67981 /* Experiments */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin XCBuildConfiguration section */
+		1DEB919008733D9F0010E9CD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CFLAGS = "-DPREPROCESSING";
+				PRODUCT_NAME = Workbench;
+			};
+			name = Debug;
+		};
+		1DEB919108733D9F0010E9CD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CFLAGS = "-DLLSP_TRAIN_REPLACE -DSIDEBAND_READ";
+				PRODUCT_NAME = Workbench;
+			};
+			name = Release;
+		};
+		1DEB919408733D9F0010E9CD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = x86_64;
+				CC = "gcc-4.2";
+				DEBUG = true;
+				PATH = "$HOME/.bin:$PATH";
+			};
+			name = Debug;
+		};
+		1DEB919508733D9F0010E9CD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = x86_64;
+				CC = "gcc-4.2";
+				PATH = "$HOME/.bin:$PATH";
+			};
+			name = Release;
+		};
+		4C24BA0311EDE76D00E67981 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = Samples;
+			};
+			name = Debug;
+		};
+		4C24BA0411EDE76D00E67981 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = Samples;
+			};
+			name = Release;
+		};
+		4C24BA0611EDE77700E67981 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = Experiments;
+			};
+			name = Debug;
+		};
+		4C24BA0711EDE77700E67981 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = Experiments;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1DEB918F08733D9F0010E9CD /* Build configuration list for PBXLegacyTarget "Workbench" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1DEB919008733D9F0010E9CD /* Debug */,
+				1DEB919108733D9F0010E9CD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1DEB919308733D9F0010E9CD /* Build configuration list for PBXProject "Workbench" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1DEB919408733D9F0010E9CD /* Debug */,
+				1DEB919508733D9F0010E9CD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		4C24BA0811EDE7A500E67981 /* Build configuration list for PBXLegacyTarget "Samples" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4C24BA0311EDE76D00E67981 /* Debug */,
+				4C24BA0411EDE76D00E67981 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		4C24BA0911EDE7A500E67981 /* Build configuration list for PBXLegacyTarget "Experiments" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4C24BA0611EDE77700E67981 /* Debug */,
+				4C24BA0711EDE77700E67981 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 08FB7793FE84155DC02AAC07 /* Project object */;
+}
