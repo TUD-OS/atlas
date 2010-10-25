@@ -29,7 +29,7 @@ $(FFMPEG_LIBS): FFmpeg
 FFmpeg FFmpeg/: FFmpeg/config.mak force
 	$(MAKE) -j$(CPUS) -C FFmpeg
 FFmpeg/config.mak: FFmpeg/configure
-	cd FFmpeg && CC=$(CC) ./configure \
+	cd FFmpeg && CC=$(CC) CPPFLAGS= CFLAGS= ./configure \
 		--cpu=$(ARCH) --enable-pthreads --disable-doc --disable-swscale --disable-ffplay --disable-ffprobe --disable-ffserver \
 		--disable-decoders --disable-encoders --disable-parsers --disable-demuxers --disable-muxers \
 		--disable-protocols --disable-filters --disable-bsfs --disable-indevs --disable-outdevs \
@@ -44,7 +44,7 @@ Samples Samples/:: x264
 x264 x264/: x264/config.mak force
 	$(MAKE) -j$(CPUS) -C $@
 x264/config.mak: x264/configure
-	cd x264 && CC=$(CC) ./configure --extra-cflags=-march=$(ARCH)
+	cd x264 && CC=$(CC) CPPFLAGS= CFLAGS= ./configure --extra-cflags=-march=$(ARCH)
 x264/configure:
 	rm -rf x264
 	curl 'http://git.videolan.org/?p=x264.git;a=snapshot;h=HEAD;sf=tgz' | tar xz
