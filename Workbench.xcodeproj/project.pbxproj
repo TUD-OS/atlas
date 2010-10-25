@@ -124,7 +124,7 @@
 			hasScannedForEncodings = 1;
 			mainGroup = 08FB7794FE84155DC02AAC07 /* Workbench */;
 			projectDirPath = "";
-			projectRoot = FFmpeg;
+			projectRoot = "";
 			targets = (
 				D28A88AD04BDD90700651E21 /* Workbench */,
 				4C24BA0211EDE76D00E67981 /* Samples */,
@@ -137,7 +137,7 @@
 		1DEB919008733D9F0010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CFLAGS = "-DPREPROCESSING";
+				CPPFLAGS = "-DPREPROCESSING";
 				PRODUCT_NAME = Workbench;
 			};
 			name = Debug;
@@ -145,7 +145,7 @@
 		1DEB919108733D9F0010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CFLAGS = "-DLLSP_TRAIN_REPLACE -DSIDEBAND_READ";
+				CPPFLAGS = "-DLLSP_TRAIN_REPLACE -DSIDEBAND_READ";
 				PRODUCT_NAME = Workbench;
 			};
 			name = Release;
@@ -156,7 +156,7 @@
 				ARCHS = x86_64;
 				CC = "gcc-4.2";
 				DEBUG = true;
-				PATH = "$HOME/.bin:$PATH";
+				PATH = "$(HOME)/.bin:$(PATH):/sw/bin";
 			};
 			name = Debug;
 		};
@@ -165,7 +165,7 @@
 			buildSettings = {
 				ARCHS = x86_64;
 				CC = "gcc-4.2";
-				PATH = "$HOME/.bin:$PATH";
+				PATH = "$(HOME)/.bin:$(PATH):/sw/bin";
 			};
 			name = Release;
 		};
