@@ -30,7 +30,7 @@ FFmpeg FFmpeg/: FFmpeg/config.mak force
 	$(MAKE) -j$(CPUS) -C FFmpeg
 FFmpeg/config.mak: FFmpeg/configure
 	cd FFmpeg && CC=$(CC) ./configure \
-		--cpu=$(ARCH) --enable-pthreads --disable-doc --disable-ffplay \
+		--cpu=$(ARCH) --enable-pthreads --disable-doc --disable-swscale --disable-ffplay --disable-ffprobe --disable-ffserver \
 		--disable-decoders --disable-encoders --disable-parsers --disable-demuxers --disable-muxers \
 		--disable-protocols --disable-filters --disable-bsfs --disable-indevs --disable-outdevs \
 		--enable-decoder=h264 --enable-parser=h264 --enable-demuxer=h264 --enable-protocol=file --enable-filter=buffer
@@ -92,20 +92,15 @@ dist: Workbench.tar.gz
 	rm Workbench.tar.gz
 
 Workbench.tar.gz: force
-	IFS=$$'\n' ; cd .. ; tar -czf Workbench/Workbench.tar.gz \
-		$$(find Workbench/Experiments Workbench/Processing Workbench/Samples Workbench/Workbench.xcodeproj \
-			! \( -name .svn -prune \) ! -type d | while read i ; do \
-				svn info "$$i" &> /dev/null && echo "$$i" ; \
-			done) \
-		Workbench/FFmpeg/.svn \
-		Workbench/FFmpeg/libavcodec/.svn \
-		Workbench/FFmpeg/libavcodec/avcodec.h \
-		Workbench/FFmpeg/libavcodec/h264.c \
-		Workbench/FFmpeg/libavcodec/h264_loopfilter.c \
-		Workbench/FFmpeg/Makefile \
-		Workbench/Makeconf \
-		Workbench/Makefile \
-		Workbench/h264_workbench.c
+	svn co --depth=empty http://os.inf.tu-dresden.de/~mroi/svn/video/trunk Workbench
+	mkdir Workbench/FFmpeg Workbench/FFmpeg/libavcodec
+	echo 'all:\n\trm Makefile\n\tsvn up -r BASE --set-depth infinity\n\t$$(MAKE)' > Workbench/Makefile
+	cp FFmpeg/Makefile Workbench/FFmpeg
+	cp FFmpeg/libavcodec/avcodec.h FFmpeg/libavcodec/h264.c FFmpeg/libavcodec/h264_loopfilter.c Workbench/FFmpeg/libavcodec
+	cp -R FFmpeg/.svn Workbench/FFmpeg/
+	cp -R FFmpeg/libavcodec/.svn Workbench/FFmpeg/libavcodec/
+	tar -czf $@ Workbench/
+	rm -rf Workbench
 
 force:
 	
