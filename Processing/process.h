@@ -17,7 +17,7 @@
 #  include "llsp.h"
 #endif
 
-#if PREPROCESS || SLICE_SKIP || LLSP_TRAIN_REPLACE
+#if PREPROCESS || SLICE_SKIP
 #  include "ssim.h"
 #endif
 
@@ -195,6 +195,9 @@ extern void hook_frame_end(const AVCodecContext *c) WEAK_SYMBOL;
 typedef struct replacement_node_s replacement_node_t;
 typedef struct frame_node_s frame_node_t;
 typedef float propagation_t[SLICE_MAX];
+#if !PREPROCESS
+typedef void change_rect_t;
+#endif
 
 /* node in the quadtree describing frame replacement */
 struct replacement_node_s {
@@ -383,6 +386,9 @@ static const float safety_margin_replace = 1.0;
 /* this is where it all begins */
 void process_init(AVCodecContext *c, char *file);
 void process_finish(AVCodecContext *c);
+#if LLSP_TRAIN_DECODE || LLSP_TRAIN_REPLACE || defined(LLSP_PREDICTION) || defined(FINAL_SCHEDULING)
+double get_time(void);
+#endif
 
 #pragma mark -
 
@@ -413,9 +419,6 @@ const double *metrics_replace(const frame_node_t *frame, int slice);
 #if SLICE_SKIP
 int perform_slice_skip(const AVCodecContext *c);
 int schedule_skip(const AVCodecContext *c, int current_slice);
-#endif
-#if LLSP_TRAIN_DECODE || LLSP_TRAIN_REPLACE || defined(LLSP_PREDICTION) || defined(FINAL_SCHEDULING)
-double get_time(void);
 #endif
 
 #pragma mark -

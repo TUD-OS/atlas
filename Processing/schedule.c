@@ -3,8 +3,6 @@
  * economic rights: Technische Universitaet Dresden (Germany)
  */
 
-#include <sys/time.h>
-
 #include "process.h"
 
 
@@ -174,13 +172,4 @@ int schedule_skip(const AVCodecContext *c, int current_slice)
 }
 #endif
 
-#endif
-
-#if LLSP_TRAIN_DECODE || LLSP_TRAIN_REPLACE || defined(LLSP_PREDICTION) || defined(FINAL_SCHEDULING)
-double get_time(void)
-{
-	struct timeval time;
-	gettimeofday(&time, NULL);
-	return (double)time.tv_sec + (double)time.tv_usec / 1E6;
-}
 #endif

@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/time.h>
 
 #include "process.h"
 
@@ -501,3 +502,12 @@ static void destroy_frames_list(void)
 		)
 		av_free(prev);
 }
+
+#if LLSP_TRAIN_DECODE || LLSP_TRAIN_REPLACE || defined(LLSP_PREDICTION) || defined(FINAL_SCHEDULING)
+double get_time(void)
+{
+	struct timeval time;
+	gettimeofday(&time, NULL);
+	return (double)time.tv_sec + (double)time.tv_usec / 1E6;
+}
+#endif
