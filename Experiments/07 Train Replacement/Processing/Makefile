@@ -1,0 +1,4 @@
+CPPFLAGS = -DSIDEBAND_READ -DLLSP_TRAIN_REPLACE
+
+WORKBENCH_BASE ?= ../../..
+include $(WORKBENCH_BASE)/Processing/Makefile

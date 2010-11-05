@@ -1,0 +1,6 @@
+CPPFLAGS = -DSIDEBAND_READ -DLLSP_PREDICT
+# TODO: this one needs to go
+CPPFLAGS += -DLLSP_PREDICTION
+
+WORKBENCH_BASE ?= ../../..
+include $(WORKBENCH_BASE)/Processing/Makefile
