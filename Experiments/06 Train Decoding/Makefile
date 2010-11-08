@@ -1,6 +1,6 @@
 WORKBENCH_BASE ?= ../..
 
-TRAINING_VIDEOS = $(WORKBENCH_BASE)/Samples/bbc-r_m720p.p264
+TRAINING_VIDEOS ?= $(WORKBENCH_BASE)/Samples/bbc-r_m720p.p264
 
 all:: ../Coefficients.dat
 

@@ -89,8 +89,7 @@
 #endif
 
 /* configuration presets */
-#if defined(LLSP_PREDICTION) || \
-defined(FINAL_SCHEDULING) || \
+#if defined(FINAL_SCHEDULING) || \
 defined(SCHEDULE_EXECUTE)
 #undef METRICS_EXTRACT
 #undef PREPROCESS
@@ -100,16 +99,6 @@ defined(SCHEDULE_EXECUTE)
 #undef SLICE_SKIP
 #undef LLSP_TRAIN
 #undef LLSP_PREDICT
-#endif
-#ifdef LLSP_PREDICTION
-#define METRICS_EXTRACT		0
-#define PREPROCESS		0
-#define PREPROCESS		0
-#define SIDEBAND_WRITE		0
-#define SIDEBAND_READ		1
-#define SLICE_SKIP		0
-#define LLSP_TRAIN		0
-#define LLSP_PREDICT		1
 #endif
 #ifdef FINAL_SCHEDULING
 #define METRICS_EXTRACT		0
@@ -386,7 +375,7 @@ static const float safety_margin_replace = 1.0;
 /* this is where it all begins */
 void process_init(AVCodecContext *c, char *file);
 void process_finish(AVCodecContext *c);
-#if LLSP_TRAIN_DECODE || LLSP_TRAIN_REPLACE || defined(LLSP_PREDICTION) || defined(FINAL_SCHEDULING)
+#if LLSP_TRAIN_DECODE || LLSP_TRAIN_REPLACE || LLSP_PREDICT || defined(FINAL_SCHEDULING)
 double get_time(void);
 #endif
 

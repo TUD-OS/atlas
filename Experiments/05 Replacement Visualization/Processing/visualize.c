@@ -110,26 +110,28 @@ void hook_slice_end(const AVCodecContext *c)
 	const int height = (2 * (c->height + ((1 << mb_size_log) - 1)) >> mb_size_log) << mb_size_log;
 	AVPicture quad;
 	
-	/* use per-frame storage to keep the replaced image */
-	avpicture_fill(&quad, private_data(c->frame.current), c->pix_fmt, width, height);
-	/* left upper quadrant: original */
-	av_picture_copy(&quad, (const AVPicture *)c->frame.current, PIX_FMT_YUV420P, c->width, c->height);
-	/* right upper quadrant: replacement */
-	quad.data[0] += c->width;
-	quad.data[1] += c->width / 2;
-	quad.data[2] += c->width / 2;
-	do_replacement(c, &quad, SLICE_MAX, NULL);
-	/* left lower quadrant: slice error map */
-	quad.data[0] += (c->height    ) * quad.linesize[0] - (c->width    );
-	quad.data[1] += (c->height / 2) * quad.linesize[1] - (c->width / 2);
-	quad.data[2] += (c->height / 2) * quad.linesize[2] - (c->width / 2);
-	draw_slice_error(&quad);
-	/* right lower quadrant: replacement with borders */
-	quad.data[0] += c->width;
-	quad.data[1] += c->width / 2;
-	quad.data[2] += c->width / 2;
-	do_replacement(c, &quad, SLICE_MAX, NULL);
-	draw_border(proc.frame->replacement, &quad);
+	if (c->metrics.type >= 0 || c->slice.flag_last) {
+		/* use per-frame storage to keep the replaced image */
+		avpicture_fill(&quad, private_data(c->frame.current), c->pix_fmt, width, height);
+		/* left upper quadrant: original */
+		av_picture_copy(&quad, (const AVPicture *)c->frame.current, PIX_FMT_YUV420P, c->width, c->height);
+		/* right upper quadrant: replacement */
+		quad.data[0] += c->width;
+		quad.data[1] += c->width / 2;
+		quad.data[2] += c->width / 2;
+		do_replacement(c, &quad, SLICE_MAX, NULL);
+		/* left lower quadrant: slice error map */
+		quad.data[0] += (c->height    ) * quad.linesize[0] - (c->width    );
+		quad.data[1] += (c->height / 2) * quad.linesize[1] - (c->width / 2);
+		quad.data[2] += (c->height / 2) * quad.linesize[2] - (c->width / 2);
+		draw_slice_error(&quad);
+		/* right lower quadrant: replacement with borders */
+		quad.data[0] += c->width;
+		quad.data[1] += c->width / 2;
+		quad.data[2] += c->width / 2;
+		do_replacement(c, &quad, SLICE_MAX, NULL);
+		draw_border(proc.frame->replacement, &quad);
+	}
 }
 
 void hook_frame_end(const AVCodecContext *c)

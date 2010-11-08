@@ -199,15 +199,10 @@ static void process_slice(AVCodecContext *c)
 #if METRICS_EXTRACT
 			remember_metrics(c);
 #endif
-#if LLSP_TRAIN_DECODE || defined(LLSP_PREDICTION)
-			proc.llsp.decoding_time += get_time();
-#endif
 #if LLSP_TRAIN_DECODE
+			proc.llsp.decoding_time += get_time();
 			if (proc.llsp.train_coeffs)
 				llsp_accumulate(proc.llsp.decode, metrics_decode(proc.frame, proc.frame->slice_count), proc.llsp.decoding_time);
-#endif
-#ifdef LLSP_PREDICTION
-			printf("%lf, %lf\n", proc.frame->slice[proc.frame->slice_count].decoding_time, proc.llsp.decoding_time);
 #endif
 #if PREPROCESS
 			remember_slice_boundaries(c);
@@ -224,7 +219,6 @@ static void process_slice(AVCodecContext *c)
 #if PREPROCESS
 				search_replacements(c, proc.frame->replacement);
 #endif
-				if (hook_slice_end) hook_slice_end(c);
 #if LLSP_TRAIN_REPLACE
 				replacement_time(c);
 #endif
@@ -233,6 +227,8 @@ static void process_slice(AVCodecContext *c)
 			skip_slice = perform_slice_skip(c);
 #endif
 	}
+	
+	if (hook_slice_end) hook_slice_end(c);
 	
 	memset(&c->metrics,   0, sizeof(c->metrics  ));
 	memset(&c->timing ,   0, sizeof(c->timing   ));
@@ -245,7 +241,7 @@ static void process_slice(AVCodecContext *c)
 #endif
 	
 	FFMPEG_TIME_START(c, total);
-#if LLSP_TRAIN_DECODE || defined(LLSP_PREDICTION)
+#if LLSP_TRAIN_DECODE
 	proc.llsp.decoding_time = -get_time();
 #endif
 }
@@ -503,7 +499,7 @@ static void destroy_frames_list(void)
 		av_free(prev);
 }
 
-#if LLSP_TRAIN_DECODE || LLSP_TRAIN_REPLACE || defined(LLSP_PREDICTION) || defined(FINAL_SCHEDULING)
+#if LLSP_TRAIN_DECODE || LLSP_TRAIN_REPLACE || LLSP_PREDICT || defined(FINAL_SCHEDULING)
 double get_time(void)
 {
 	struct timeval time;
