@@ -13,6 +13,7 @@ static double measured_decoding_time;
 void hook_slice_any(const AVCodecContext *c)
 {
 	measured_decoding_time += get_time();
+	if (!proc.frame) return;
 	if (c->metrics.type >= 0)
 		printf("%f, %lf\n",
 			   proc.frame->slice[proc.frame->slice_count].decoding_time,
