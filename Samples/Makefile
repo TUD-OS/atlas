@@ -1,6 +1,7 @@
 .PHONY: all clean
 
-X264_OPTIONS_CBR = --input-res $(SIZE) --bitrate $(BITRATE) --slices $(SLICES) --sliced-threads --ref $(REFERENCES) --mixed-refs --bframes 6 --weightb --direct auto --b-pyramid normal --me umh --subme 9 --analyse all --8x8dct --trellis 1 --psy-rd 1:1
+X264_OPTIONS_CBR = --input-res $(SIZE) --bitrate $(BITRATE) --slices $(SLICES) --sliced-threads --ref $(REFERENCES) --mixed-refs --bframes 6 --weightb --direct auto --b-pyramid normal --me umh --subme 9 --analyse all --8x8dct --trellis 2 --psy-rd 1:1
+X264_OPTIONS_CRF = --input-res $(SIZE) --crf $(QUALITY) --slices $(SLICES) --sliced-threads --ref $(REFERENCES) --mixed-refs --bframes 6 --weightb --direct auto --b-pyramid normal --me umh --subme 9 --analyse all --8x8dct --trellis 2 --psy-rd 1:1
 
 ifneq ($(INCLUDE),)
 include $(INCLUDE)
