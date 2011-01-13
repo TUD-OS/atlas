@@ -48,6 +48,7 @@ x264/config.mak: x264/configure
 x264/configure:
 	rm -rf x264
 	curl 'http://git.videolan.org/?p=x264.git;a=snapshot;h=HEAD;sf=tgz' | tar xz
+	mv x264* x264
 endif
 
 
