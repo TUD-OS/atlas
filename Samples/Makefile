@@ -1,7 +1,11 @@
 .PHONY: all clean
 
-X264_OPTIONS_CBR = --input-res $(SIZE) --bitrate $(BITRATE) --slices $(SLICES) --sliced-threads --ref $(REFERENCES) --mixed-refs --bframes 6 --weightb --direct auto --b-pyramid normal --me umh --subme 9 --analyse all --8x8dct --trellis 2 --psy-rd 1:1
-X264_OPTIONS_CRF = --input-res $(SIZE) --crf $(QUALITY) --slices $(SLICES) --sliced-threads --ref $(REFERENCES) --mixed-refs --bframes 6 --weightb --direct auto --b-pyramid normal --me umh --subme 9 --analyse all --8x8dct --trellis 2 --psy-rd 1:1
+X264_CBR = --input-res $(SIZE) --bitrate $(BITRATE) --slices $(SLICES) --sliced-threads
+X264_CRF = --input-res $(SIZE) --crf $(QUALITY) --slices $(SLICES) --sliced-threads
+
+X264_HIGH = --ref $(REFERENCES) --mixed-refs --bframes 8 --b-pyramid normal --weightb --weightp 2 --8x8dct --cqm flat --b-adapt 2 --direct auto --me umh  --merange 16 --partitions all --subme 9 --trellis 2 --rc-lookahead 60
+X264_MAIN = --no-cabac --ref $(REFERENCES) --bframes 8 --b-pyramid none --no-weightb --weightp 0 --no-8x8dct --cqm flat --b-adapt 2 --direct auto --me umh --merange 16 --partitions all --subme 9 --trellis 2 --rc-lookahead 60
+X264_BASELINE = --no-cabac --ref $(REFERENCES) --bframes 0 --weightp 0 --no-8x8dct --cqm flat --direct auto --me umh --merange 16 --partitions all --subme 9 --trellis 2 --rc-lookahead 60
 
 ifneq ($(INCLUDE),)
 include $(INCLUDE)
@@ -13,14 +17,14 @@ all: $(patsubst %.opt,%.h264,$(if $(wildcard *.opt),$(wildcard *.opt),bbc-r_m720
 ifeq ($(MODE),)
 	$(MAKE) $@ INCLUDE=$*.opt
 else
-	ffmpeg -i $< -f rawvideo - 2> /dev/null | ../x264/x264 $(X264_OPTIONS_$(MODE)) -o $@ -
+	ffmpeg -i $< -f rawvideo - 2> /dev/null | ../x264/x264 $(X264_$(MODE)) $(X264_$(PROFILE)) -o $@ -
 endif
 
 %.h264: %.yuv %.opt ../x264/x264
 ifeq ($(MODE),)
 	$(MAKE) $@ INCLUDE=$*.opt
 else
-	../x264/x264 $(X264_OPTIONS_$(MODE)) -o $@ $< $(SIZE)
+	../x264/x264 $(X264_$(MODE)) $(X264_$(PROFILE)) -o $@ $< $(SIZE)
 endif
 
 ../x264/x264: ../x264
