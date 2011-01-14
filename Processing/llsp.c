@@ -235,6 +235,22 @@ int llsp_store(const llsp_t *llsp, const char *filename)
 		return 0;
 }
 
+void llsp_purge(llsp_t *llsp)
+{
+	if (llsp->learn) {
+		metrics_node_t *node, *next;
+		for (node = llsp->learn->head; node; node = next) {
+			next = node->next;
+			if (node != llsp->learn->head) free(node);
+		}
+		llsp->learn->head->next = NULL;
+		llsp->learn->total_rows = 0;
+		llsp->learn->list_end   = &llsp->learn->head->next;
+		llsp->learn->cur        = llsp->learn->head->metrics;
+		llsp->learn->last       = llsp->learn->head->metrics + llsp->learn->head->rows * llsp->columns;
+	}
+}
+
 void llsp_dispose(llsp_t *llsp)
 {
 	if (llsp->learn) llsp_dispose_learn(llsp);

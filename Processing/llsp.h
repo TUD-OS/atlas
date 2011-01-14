@@ -53,5 +53,9 @@ const double *llsp_load(llsp_t *llsp, const char *filename);
  * coefficients are undefined. */
 int llsp_store(const llsp_t *llsp, const char *filename);
 
+/* Clears an llsp context. Functionally equivalent to disposing and
+ * reallocating it, but this saves you some memory allocations. */
+void llsp_purge(llsp_t *llsp);
+
 /* Frees the llsp context. */
 void llsp_dispose(llsp_t *llsp);
