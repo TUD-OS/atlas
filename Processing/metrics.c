@@ -60,7 +60,7 @@ void read_metrics(frame_node_t *frame, int slice)
 }
 #endif
 
-#if LLSP_TRAIN_DECODE || LLSP_TRAIN_REPLACE || LLSP_PREDICT
+#if LLSP_SUPPORT
 const double *metrics_decode(const frame_node_t *frame, int slice)
 {
 	static double metrics[METRICS_COUNT];

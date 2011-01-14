@@ -209,7 +209,7 @@ static void process_slice(AVCodecContext *c)
 			remember_reference_frames(c);
 			remember_dependencies(c);
 #endif
-#if !SIDEBAND_READ || METRICS_EXTRACT || PREPROCESS || LLSP_TRAIN_DECODE || LLSP_TRAIN_REPLACE || defined(LLSP_PREDICTION)
+#if !SIDEBAND_READ || METRICS_EXTRACT || PREPROCESS || LLSP_SUPPORT || defined(LLSP_PREDICTION)
 			if (++proc.frame->slice_count == SLICE_MAX) {
 				printf("ERROR: maximum number of slices exceeded\n");
 				exit(1);
@@ -357,7 +357,7 @@ static void write_sideband_data(void)
 #if PREPROCESS || SIDEBAND_READ
 			nalu_write_float(frame->slice[i].emission_factor);
 #else
-		nalu_write_float(0.0);
+			nalu_write_float(0.0);
 #endif
 		nalu_write_end();
 		
@@ -458,7 +458,7 @@ static void setup_frame(const AVCodecContext *c)
 	proc.frame->reference = proc.frame->reference_base + REF_MAX;
 #endif
 	
-#if !SIDEBAND_READ || METRICS_EXTRACT || PREPROCESS || LLSP_TRAIN_DECODE || LLSP_TRAIN_REPLACE || defined(LLSP_PREDICTION)
+#if !SIDEBAND_READ || METRICS_EXTRACT || PREPROCESS || LLSP_SUPPORT || defined(LLSP_PREDICTION)
 	proc.frame->slice_count = 0;
 #endif
 #if PREPROCESS
@@ -499,7 +499,7 @@ static void destroy_frames_list(void)
 		av_free(prev);
 }
 
-#if LLSP_TRAIN_DECODE || LLSP_TRAIN_REPLACE || LLSP_PREDICT || defined(FINAL_SCHEDULING)
+#if LLSP_SUPPORT || defined(FINAL_SCHEDULING)
 double get_time(void)
 {
 	struct timeval time;

@@ -13,8 +13,11 @@
 #undef fprintf
 #undef exit
 
-#if LLSP_TRAIN_DECODE || LLSP_TRAIN_REPLACE || LLSP_PREDICT
+#if LLSP_TRAIN_DECODE || LLSP_TRAIN_REPLACE || LLSP_PREDICT || defined(LLSP_SUPPORT)
 #  include "llsp.h"
+#  define LLSP_SUPPORT 1
+#else
+#  define LLSP_SUPPORT 0
 #endif
 
 #if PREPROCESS || SLICE_SKIP
@@ -152,7 +155,7 @@ defined(SCHEDULE_EXECUTE)
 #define NO_SKIP		3
 #define LIFETIME	4
 
-#if LLSP_TRAIN_DECODE || LLSP_TRAIN_REPLACE || LLSP_PREDICT
+#if LLSP_SUPPORT
 /* number of decoding time metrics in use */
 #define METRICS_COUNT 12
 /* the LLSP solver IDs */
@@ -375,7 +378,7 @@ static const float safety_margin_replace = 1.0;
 /* this is where it all begins */
 void process_init(AVCodecContext *c, char *file);
 void process_finish(AVCodecContext *c);
-#if LLSP_TRAIN_DECODE || LLSP_TRAIN_REPLACE || LLSP_PREDICT || defined(FINAL_SCHEDULING)
+#if LLSP_SUPPORT || defined(FINAL_SCHEDULING)
 double get_time(void);
 #endif
 
@@ -394,7 +397,7 @@ void write_metrics(const frame_node_t *frame, int slice);
 #if SIDEBAND_READ
 void read_metrics(frame_node_t *frame, int slice);
 #endif
-#if LLSP_TRAIN_DECODE || LLSP_TRAIN_REPLACE || LLSP_PREDICT
+#if LLSP_SUPPORT
 const double *metrics_decode(const frame_node_t *frame, int slice);
 const double *metrics_replace(const frame_node_t *frame, int slice);
 #endif
