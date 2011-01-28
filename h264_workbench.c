@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 Michael Roitzsch <mroi@os.inf.tu-dresden.de>
+ * Copyright (C) 2009-2011 Michael Roitzsch <mroi@os.inf.tu-dresden.de>
  * economic rights: Technische Universitaet Dresden (Germany)
  */
 
@@ -44,8 +44,13 @@ static void video_decode(char *filename)
 	process_init(codec_context, filename);
 	while (av_read_frame(format_context, &packet) >= 0) {
 		if (packet.stream_index == video_stream) {
-			if (avcodec_decode_video2(codec_context, frame, &frame_finished, &packet) < 0)
-				return;
+			AVPacket working_packet = packet;
+			do {
+				int length = avcodec_decode_video2(codec_context, frame, &frame_finished, &working_packet);
+				if (length < 0) return;
+				working_packet.size -= length;
+				working_packet.data += length;
+			} while (working_packet.size);
 		}
 		av_free_packet(&packet);
 	}
