@@ -13,7 +13,7 @@ Demo.mp4: ../../Samples/bbc-r_m720p.mov ssim_demo
 	ffmpeg -i $< -f m4v -s 640x360 -r 24 -b 192k - 2> /dev/null | ffmpeg -f m4v -s 640x360 -r 24 -i - -f rawvideo -y Clip2.yuv 2> /dev/null &
 	./ssim_demo 1280x720 &
 	ffmpeg -f rawvideo -s 1280x720 -r 12 -i Demo.yuv -b 8M -y $@
-	reset
+	tty -s && reset
 	rm Clip1.yuv Clip2.yuv Demo.yuv
 
 ../../Samples/bbc-r_m720p.mov:
