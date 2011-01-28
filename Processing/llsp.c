@@ -292,8 +292,8 @@ static int llsp_solve(llsp_t *llsp)
 		for (row = 0; row < matrix->columns - 1; row++)
 			negative_before += (matrix->value[matrix->columns - 1][row] < 0.0);
 		/* if there are no negative coefficients, we eliminate all columns with only
-		 * little influence (less than 0.01 percent) on the final prediction results */
-		residue_before = fabs(matrix->value[matrix->columns - 1][matrix->columns - 1]) * 1.0001;
+		 * little influence on the final prediction results */
+		residue_before = fabs(matrix->value[matrix->columns - 1][matrix->columns - 1]) * COLUMN_DROP_THRESHOLD;
 		
 		matrix_dispose(matrix);
 		

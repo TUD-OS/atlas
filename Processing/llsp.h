@@ -12,6 +12,12 @@
  * samples for calculating new coefficients at the same time).
  */
 
+/* Columns with only little influence on the result are dropped to
+ * prevent overfitting. The threshold specifies the acceptable increase
+ * of the residual error for a column to be dropped. Increase this
+ * value to improve stability at the cost of accuracy. */
+#define COLUMN_DROP_THRESHOLD 1.0001
+
 /* an opaque handle for the llsp solver/predictor */
 typedef struct llsp_s llsp_t;
 
