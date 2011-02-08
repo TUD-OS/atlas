@@ -29,7 +29,6 @@ endif
 
 ../x264/x264: ../x264
 ../x264:
-	mkdir ../x264
 	$(MAKE) -C $(@D) $(@F)
 
 # some demo video

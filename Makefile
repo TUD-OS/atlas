@@ -8,24 +8,29 @@ FFMPEG_LIBS = \
 	$(WORKBENCH_BASE)/FFmpeg/libavcore/libavcore.a \
 	$(WORKBENCH_BASE)/FFmpeg/libavutil/libavutil.a
 
-.PHONY: all debug clean cleanall update dist force
+.PHONY: all debug clean cleanall update force
 
 
-ifeq ($(wildcard h264_workbench.c),h264_workbench.c)
+BUILD_WORKBENCH ?= $(wildcard h264_workbench.c)
+ifneq ($(BUILD_WORKBENCH),)
 h264_workbench: h264_workbench.c $(FFMPEG_LIBS) $(PROCESSING_OBJS) Makefile
 	$(CC) $(CPPFLAGS) $(CFLAGS) -MMD -MF .$@.d -o $@ $< $(FFMPEG_LIBS) $(PROCESSING_OBJS) -lz -lm -pthread
 all:: h264_workbench
 endif
 
-ifeq ($(wildcard Processing),Processing)
+BUILD_PROCESSING ?= $(wildcard Processing)
+ifneq ($(BUILD_PROCESSING),)
 $(PROCESSING_OBJS): Processing
+	
 Processing Processing/: force
 	$(MAKE) -j$(CPUS) -C Processing
 endif
 
 
-ifeq ($(wildcard FFmpeg),FFmpeg)
+BUILD_FFMPEG ?= $(filter .,$(WORKBENCH_BASE))$(wildcard FFmpeg)
+ifneq ($(BUILD_FFMPEG),)
 $(FFMPEG_LIBS): FFmpeg
+	
 FFmpeg FFmpeg/: FFmpeg/config.mak force
 	$(MAKE) -j$(CPUS) -C FFmpeg
 FFmpeg/config.mak: FFmpeg/configure
@@ -42,7 +47,8 @@ FFmpeg/configure:
 endif
 
 
-ifeq ($(wildcard x264),x264)
+BUILD_X264 ?= $(filter .,$(WORKBENCH_BASE))$(wildcard x264)
+ifneq ($(BUILD_X264),)
 Samples Samples/:: x264
 x264 x264/: x264/config.mak force
 	$(MAKE) -j$(CPUS) -C $@
@@ -55,7 +61,8 @@ x264/configure:
 endif
 
 
-ifeq ($(wildcard Samples),Samples)
+BUILD_SAMPLES ?= $(wildcard Samples)
+ifneq ($(BUILD_SAMPLES),)
 all:: Samples
 Samples/%.h264: Samples
 Samples Samples/:: force
@@ -65,7 +72,9 @@ endif
 %.h264 %.mov:
 	$(MAKE) -C $(@D) $(@F)
 
-ifeq ($(wildcard Experiments),Experiments)
+
+BUILD_EXPERIMENTS ?= $(wildcard Experiments)
+ifneq ($(BUILD_EXPERIMENTS),)
 all:: Experiments
 Experiments Experiments/: force
 	$(MAKE) -C $@
@@ -90,21 +99,6 @@ cleanall: clean
 update: cleanall
 	rm -f FFmpeg/configure x264/configure
 	$(MAKE) all
-
-dist: Workbench.tar.gz
-	scp Workbench.tar.gz os:Sites/
-	rm Workbench.tar.gz
-
-Workbench.tar.gz: force
-	svn co --depth=empty http://os.inf.tu-dresden.de/~mroi/svn/video/trunk Workbench
-	mkdir Workbench/FFmpeg Workbench/FFmpeg/libavcodec
-	echo 'all:\n\trm Makefile\n\tsvn up -r BASE --set-depth infinity\n\t$$(MAKE)' > Workbench/Makefile
-	cp FFmpeg/Makefile Workbench/FFmpeg
-	cp FFmpeg/libavcodec/avcodec.h FFmpeg/libavcodec/h264.c FFmpeg/libavcodec/h264_loopfilter.c Workbench/FFmpeg/libavcodec
-	cp -R FFmpeg/.svn Workbench/FFmpeg/
-	cp -R FFmpeg/libavcodec/.svn Workbench/FFmpeg/libavcodec/
-	tar -czf $@ Workbench/
-	rm -rf Workbench
 
 force:
 	
