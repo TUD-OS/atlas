@@ -123,6 +123,9 @@
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 1;
+			knownRegions = (
+				en,
+			);
 			mainGroup = 08FB7794FE84155DC02AAC07 /* Workbench */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -138,16 +141,14 @@
 		1DEB919008733D9F0010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CPPFLAGS = "-DPREPROCESSING";
-				PRODUCT_NAME = Workbench;
+				CPPFLAGS = "";
 			};
 			name = Debug;
 		};
 		1DEB919108733D9F0010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CPPFLAGS = "-DLLSP_TRAIN_REPLACE -DSIDEBAND_READ";
-				PRODUCT_NAME = Workbench;
+				CPPFLAGS = "";
 			};
 			name = Release;
 		};
@@ -157,7 +158,7 @@
 				ARCHS = x86_64;
 				CC = "gcc-4.2";
 				DEBUG = true;
-				PATH = "$(HOME)/.bin:$(PATH):/sw/bin";
+				PATH = "$(HOME)/.bin:$(PATH)";
 			};
 			name = Debug;
 		};
@@ -166,35 +167,31 @@
 			buildSettings = {
 				ARCHS = x86_64;
 				CC = "gcc-4.2";
-				PATH = "$(HOME)/.bin:$(PATH):/sw/bin";
+				PATH = "$(HOME)/.bin:$(PATH)";
 			};
 			name = Release;
 		};
 		4C24BA0311EDE76D00E67981 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PRODUCT_NAME = Samples;
 			};
 			name = Debug;
 		};
 		4C24BA0411EDE76D00E67981 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PRODUCT_NAME = Samples;
 			};
 			name = Release;
 		};
 		4C24BA0611EDE77700E67981 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PRODUCT_NAME = Experiments;
 			};
 			name = Debug;
 		};
 		4C24BA0711EDE77700E67981 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PRODUCT_NAME = Experiments;
 			};
 			name = Release;
 		};
