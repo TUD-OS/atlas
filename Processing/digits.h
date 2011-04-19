@@ -193,8 +193,8 @@ static const uint8_t digit_shape[10][16][16] = {
 #undef O
 };
 
-/* counts the number of calls in a static variable and prints the number on th frame
- * between the start_index and end_index macroblocks */
+/* counts the number of calls in a static variable and prints the number on the
+ * frame between the start_index and end_index macroblocks */
 static inline int print_number(AVPicture *frame, int start_index, int end_index)
 {
 	static int number = 0;
