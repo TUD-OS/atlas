@@ -78,7 +78,7 @@ llsp_t *llsp_new(int id, unsigned count)
 	
 	if (count < 1 || count > MAX_METRICS) return NULL;
 	
-	llsp = (llsp_t *)malloc(sizeof(llsp_t) + (count - 1) * sizeof(double));
+	llsp = malloc(sizeof(llsp_t) + (count - 1) * sizeof(double));
 	if (!llsp) return NULL;
 	
 	llsp->id      = id;
@@ -93,7 +93,7 @@ void llsp_accumulate(llsp_t *llsp, const double *metrics, double time)
 	unsigned i;
 	
 	if (!llsp->learn) {
-		llsp->learn = (learning_t *)malloc(sizeof(learning_t));
+		llsp->learn = malloc(sizeof(learning_t));
 		llsp->learn->total_rows = 0;
 		llsp->learn->head       = NULL;
 		llsp->learn->list_end   = &llsp->learn->head;
@@ -106,7 +106,7 @@ void llsp_accumulate(llsp_t *llsp, const double *metrics, double time)
 		/* we allocate a pseudo-random amount of rows to avoid any aliasing problems */
 		unsigned rows = 1024 + ((double)rand() / (double)RAND_MAX) * 1024.0;
 		size_t size = sizeof(metrics_node_t) + (rows * llsp->columns - 1) * sizeof(double);
-		*llsp->learn->list_end = (metrics_node_t *)malloc(size);
+		*llsp->learn->list_end = malloc(size);
 		if (!*llsp->learn->list_end) return;  /* we'll have to make due with what we have */
 		(*llsp->learn->list_end)->rows = rows;
 		(*llsp->learn->list_end)->next = NULL;
@@ -189,7 +189,7 @@ const double *llsp_load(llsp_t *llsp, const char *filename)
 	return result;
 }
 
-int llsp_store(const llsp_t *llsp, const char *filename)
+bool llsp_store(const llsp_t *llsp, const char *filename)
 {
 	int result = 0;
 	int fd = -1;
@@ -230,9 +230,9 @@ int llsp_store(const llsp_t *llsp, const char *filename)
 		printf("prediction coefficients follow:\n");
 		for (i = 0; i < llsp->columns - 1; i++)
 			printf("\t%G\n", llsp->result[i]);
-		return 1;
+		return true;
 	} else
-		return 0;
+		return false;
 }
 
 void llsp_purge(llsp_t *llsp)
@@ -355,16 +355,16 @@ static matrix_t *llsp_copy_to_matrix(llsp_t *llsp, const unsigned long long used
 	for (col = 0, columns = 1; col < (sizeof(used_columns) * 8); col++)
 		columns += !!(used_columns & ((unsigned long long)1 << col));
 	
-	matrix = (matrix_t *)malloc(sizeof(matrix_t) + (columns - 1) * sizeof(double *));
+	matrix = malloc(sizeof(matrix_t) + (columns - 1) * sizeof(double *));
 	if (!matrix) return NULL;
 	
 	matrix->rows    = llsp->learn->total_rows;
 	matrix->columns = columns;
 	
 	for (col = 0; col < matrix->columns; col++) {
-		matrix->value[col] = (double *)malloc(sizeof(double) * matrix->rows);
+		matrix->value[col] = malloc(sizeof(double) * matrix->rows);
 		if (!matrix->value[col]) {
-			for (col--; col >= 0; col--) free(matrix->value[col]);
+			for (; col > 0; col--) free(matrix->value[col - 1]);
 			free(matrix);
 			return NULL;
 		}

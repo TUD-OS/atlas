@@ -6,6 +6,33 @@
 	objectVersion = 46;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		4C3AF428135D7D0100473692 /* h264_workbench.c in Sources */ = {isa = PBXBuildFile; fileRef = 4C24B9E911EDE6D600E67981 /* h264_workbench.c */; };
+		4C3AF429135D7D0100473692 /* llsp_trace.c in Sources */ = {isa = PBXBuildFile; fileRef = 4CAA9EDC135C502900AEA9EB /* llsp_trace.c */; };
+		4C3AF42A135D7D0100473692 /* llsp.c in Sources */ = {isa = PBXBuildFile; fileRef = 4C24B9ED11EDE6D600E67981 /* llsp.c */; };
+		4C3AF42B135D7D0100473692 /* metrics.c in Sources */ = {isa = PBXBuildFile; fileRef = 4C24B9F111EDE6D600E67981 /* metrics.c */; };
+		4C3AF42C135D7D0100473692 /* nalu.c in Sources */ = {isa = PBXBuildFile; fileRef = 4C24B9F311EDE6D600E67981 /* nalu.c */; };
+		4C3AF42D135D7D0100473692 /* process.c in Sources */ = {isa = PBXBuildFile; fileRef = 4C24B9F511EDE6D600E67981 /* process.c */; };
+		4C3AF42E135D7D0100473692 /* propagate.c in Sources */ = {isa = PBXBuildFile; fileRef = 4C24B9F811EDE6D600E67981 /* propagate.c */; };
+		4C3AF42F135D7D0100473692 /* replace.c in Sources */ = {isa = PBXBuildFile; fileRef = 4C24B9FA11EDE6D600E67981 /* replace.c */; };
+		4C3AF430135D7D0100473692 /* schedule.c in Sources */ = {isa = PBXBuildFile; fileRef = 4C24B9FC11EDE6D600E67981 /* schedule.c */; };
+		4C3AF431135D7D0100473692 /* ssim.c in Sources */ = {isa = PBXBuildFile; fileRef = 4C24B9FE11EDE6D600E67981 /* ssim.c */; };
+		4C3AF432135D7D0100473692 /* weak.c in Sources */ = {isa = PBXBuildFile; fileRef = 4CF0A7011202CA0800817B42 /* weak.c */; };
+		4C3AF43C135D7F0C00473692 /* hde.c in Sources */ = {isa = PBXBuildFile; fileRef = 4C3AF425135D7BFB00473692 /* hde.c */; };
+		4C3AF43F135D7F1D00473692 /* llsp.c in Sources */ = {isa = PBXBuildFile; fileRef = 4C3AF43D135D7F1D00473692 /* llsp.c */; };
+		4CAA9EFC135C57AE00AEA9EB /* h264_workbench.c in Sources */ = {isa = PBXBuildFile; fileRef = 4C24B9E911EDE6D600E67981 /* h264_workbench.c */; };
+		4CAA9EFE135C589200AEA9EB /* llsp_trace.c in Sources */ = {isa = PBXBuildFile; fileRef = 4CAA9EDC135C502900AEA9EB /* llsp_trace.c */; };
+		4CAA9EFF135C58F500AEA9EB /* llsp.c in Sources */ = {isa = PBXBuildFile; fileRef = 4C24B9ED11EDE6D600E67981 /* llsp.c */; };
+		4CAA9F00135C58F500AEA9EB /* metrics.c in Sources */ = {isa = PBXBuildFile; fileRef = 4C24B9F111EDE6D600E67981 /* metrics.c */; };
+		4CAA9F01135C58F500AEA9EB /* nalu.c in Sources */ = {isa = PBXBuildFile; fileRef = 4C24B9F311EDE6D600E67981 /* nalu.c */; };
+		4CAA9F02135C58F500AEA9EB /* process.c in Sources */ = {isa = PBXBuildFile; fileRef = 4C24B9F511EDE6D600E67981 /* process.c */; };
+		4CAA9F03135C58F500AEA9EB /* propagate.c in Sources */ = {isa = PBXBuildFile; fileRef = 4C24B9F811EDE6D600E67981 /* propagate.c */; };
+		4CAA9F04135C58F500AEA9EB /* replace.c in Sources */ = {isa = PBXBuildFile; fileRef = 4C24B9FA11EDE6D600E67981 /* replace.c */; };
+		4CAA9F05135C58F500AEA9EB /* schedule.c in Sources */ = {isa = PBXBuildFile; fileRef = 4C24B9FC11EDE6D600E67981 /* schedule.c */; };
+		4CAA9F06135C58F500AEA9EB /* ssim.c in Sources */ = {isa = PBXBuildFile; fileRef = 4C24B9FE11EDE6D600E67981 /* ssim.c */; };
+		4CAA9F07135C58F500AEA9EB /* weak.c in Sources */ = {isa = PBXBuildFile; fileRef = 4CF0A7011202CA0800817B42 /* weak.c */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		4C24B00211EDE6B800E67981 /* Experiments */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Experiments; sourceTree = "<group>"; };
 		4C24B8FB11EDE6B900E67981 /* FFmpeg */ = {isa = PBXFileReference; lastKnownFileType = folder; path = FFmpeg; sourceTree = "<group>"; };
@@ -26,7 +53,14 @@
 		4C24B9FC11EDE6D600E67981 /* schedule.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = schedule.c; sourceTree = "<group>"; };
 		4C24B9FE11EDE6D600E67981 /* ssim.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ssim.c; sourceTree = "<group>"; };
 		4C24B9FF11EDE6D600E67981 /* ssim.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ssim.h; sourceTree = "<group>"; };
+		4C3AF424135D7B3D00473692 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
+		4C3AF425135D7BFB00473692 /* hde.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = hde.c; sourceTree = "<group>"; };
+		4C3AF436135D7D0100473692 /* predictor */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = predictor; sourceTree = BUILT_PRODUCTS_DIR; };
+		4C3AF43D135D7F1D00473692 /* llsp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = llsp.c; path = Processing/llsp.c; sourceTree = SOURCE_ROOT; };
+		4C3AF43E135D7F1D00473692 /* llsp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = llsp.h; path = Processing/llsp.h; sourceTree = SOURCE_ROOT; };
 		4C3E4E7F126D9BCF004DACE5 /* Makeconf */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = Makeconf; sourceTree = "<group>"; };
+		4CAA9EDC135C502900AEA9EB /* llsp_trace.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = llsp_trace.c; sourceTree = "<group>"; };
+		4CAA9F08135C59C400AEA9EB /* h264_workbench */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = h264_workbench; sourceTree = BUILT_PRODUCTS_DIR; };
 		4CF0A7011202CA0800817B42 /* weak.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = weak.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -37,6 +71,8 @@
 				4C24B9EA11EDE6D600E67981 /* Makefile */,
 				4C3E4E7F126D9BCF004DACE5 /* Makeconf */,
 				4C24B9E911EDE6D600E67981 /* h264_workbench.c */,
+				4CAA9F08135C59C400AEA9EB /* h264_workbench */,
+				4C3AF423135D7B3D00473692 /* Predictor */,
 				4C24B9EB11EDE6D600E67981 /* Processing */,
 				4C24B8FC11EDE6B900E67981 /* Samples */,
 				4C24B00211EDE6B800E67981 /* Experiments */,
@@ -63,8 +99,21 @@
 				4C24B9FE11EDE6D600E67981 /* ssim.c */,
 				4C24B9FF11EDE6D600E67981 /* ssim.h */,
 				4CF0A7011202CA0800817B42 /* weak.c */,
+				4CAA9EDC135C502900AEA9EB /* llsp_trace.c */,
 			);
 			path = Processing;
+			sourceTree = "<group>";
+		};
+		4C3AF423135D7B3D00473692 /* Predictor */ = {
+			isa = PBXGroup;
+			children = (
+				4C3AF424135D7B3D00473692 /* Makefile */,
+				4C3AF425135D7BFB00473692 /* hde.c */,
+				4C3AF43D135D7F1D00473692 /* llsp.c */,
+				4C3AF43E135D7F1D00473692 /* llsp.h */,
+				4C3AF436135D7D0100473692 /* predictor */,
+			);
+			path = Predictor;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -98,6 +147,20 @@
 			passBuildSettingsInEnvironment = 1;
 			productName = Experiments;
 		};
+		4C3AF438135D7DFC00473692 /* Predictor */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION)";
+			buildConfigurationList = 4C3AF439135D7DFC00473692 /* Build configuration list for PBXLegacyTarget "Predictor" */;
+			buildPhases = (
+			);
+			buildToolPath = make;
+			buildWorkingDirectory = Predictor;
+			dependencies = (
+			);
+			name = Predictor;
+			passBuildSettingsInEnvironment = 1;
+			productName = Workbench;
+		};
 		D28A88AD04BDD90700651E21 /* Workbench */ = {
 			isa = PBXLegacyTarget;
 			buildArgumentsString = "$(ACTION)";
@@ -105,6 +168,7 @@
 			buildPhases = (
 			);
 			buildToolPath = make;
+			buildWorkingDirectory = "";
 			dependencies = (
 			);
 			name = Workbench;
@@ -112,6 +176,39 @@
 			productName = Workbench;
 		};
 /* End PBXLegacyTarget section */
+
+/* Begin PBXNativeTarget section */
+		4C3AF426135D7D0100473692 /* predictor */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4C3AF433135D7D0100473692 /* Build configuration list for PBXNativeTarget "predictor" */;
+			buildPhases = (
+				4C3AF427135D7D0100473692 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = predictor;
+			productName = Dummy;
+			productReference = 4C3AF436135D7D0100473692 /* predictor */;
+			productType = "com.apple.product-type.tool";
+		};
+		4CAA9EF1135C535300AEA9EB /* h264_workbench */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4CAA9EF9135C535300AEA9EB /* Build configuration list for PBXNativeTarget "h264_workbench" */;
+			buildPhases = (
+				4CAA9EEE135C535300AEA9EB /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = h264_workbench;
+			productName = Dummy;
+			productReference = 4CAA9F08135C59C400AEA9EB /* h264_workbench */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
@@ -127,28 +224,73 @@
 				en,
 			);
 			mainGroup = 08FB7794FE84155DC02AAC07 /* Workbench */;
+			productRefGroup = 08FB7794FE84155DC02AAC07 /* Workbench */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				D28A88AD04BDD90700651E21 /* Workbench */,
+				4C3AF438135D7DFC00473692 /* Predictor */,
 				4C24BA0211EDE76D00E67981 /* Samples */,
 				4C24BA0511EDE77700E67981 /* Experiments */,
+				4CAA9EF1135C535300AEA9EB /* h264_workbench */,
+				4C3AF426135D7D0100473692 /* predictor */,
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		4C3AF427135D7D0100473692 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4C3AF428135D7D0100473692 /* h264_workbench.c in Sources */,
+				4C3AF429135D7D0100473692 /* llsp_trace.c in Sources */,
+				4C3AF42A135D7D0100473692 /* llsp.c in Sources */,
+				4C3AF42B135D7D0100473692 /* metrics.c in Sources */,
+				4C3AF42C135D7D0100473692 /* nalu.c in Sources */,
+				4C3AF42D135D7D0100473692 /* process.c in Sources */,
+				4C3AF42E135D7D0100473692 /* propagate.c in Sources */,
+				4C3AF42F135D7D0100473692 /* replace.c in Sources */,
+				4C3AF430135D7D0100473692 /* schedule.c in Sources */,
+				4C3AF431135D7D0100473692 /* ssim.c in Sources */,
+				4C3AF432135D7D0100473692 /* weak.c in Sources */,
+				4C3AF43C135D7F0C00473692 /* hde.c in Sources */,
+				4C3AF43F135D7F1D00473692 /* llsp.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4CAA9EEE135C535300AEA9EB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4CAA9EFC135C57AE00AEA9EB /* h264_workbench.c in Sources */,
+				4CAA9EFE135C589200AEA9EB /* llsp_trace.c in Sources */,
+				4CAA9EFF135C58F500AEA9EB /* llsp.c in Sources */,
+				4CAA9F00135C58F500AEA9EB /* metrics.c in Sources */,
+				4CAA9F01135C58F500AEA9EB /* nalu.c in Sources */,
+				4CAA9F02135C58F500AEA9EB /* process.c in Sources */,
+				4CAA9F03135C58F500AEA9EB /* propagate.c in Sources */,
+				4CAA9F04135C58F500AEA9EB /* replace.c in Sources */,
+				4CAA9F05135C58F500AEA9EB /* schedule.c in Sources */,
+				4CAA9F06135C58F500AEA9EB /* ssim.c in Sources */,
+				4CAA9F07135C58F500AEA9EB /* weak.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
 		1DEB919008733D9F0010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CPPFLAGS = "";
+				CPPFLAGS = "-DSIDEBAND_READ -DLLSP_TRAIN_DECODE";
 			};
 			name = Debug;
 		};
 		1DEB919108733D9F0010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CPPFLAGS = "";
+				CPPFLAGS = "-DSIDEBAND_READ -DLLSP_TRAIN_DECODE";
 			};
 			name = Release;
 		};
@@ -159,6 +301,7 @@
 				CC = "gcc-4.2";
 				DEBUG = true;
 				PATH = "$(HOME)/.bin:$(PATH)";
+				SDKROOT = macosx10.6;
 			};
 			name = Debug;
 		};
@@ -168,6 +311,7 @@
 				ARCHS = x86_64;
 				CC = "gcc-4.2";
 				PATH = "$(HOME)/.bin:$(PATH)";
+				SDKROOT = macosx10.6;
 			};
 			name = Release;
 		};
@@ -192,6 +336,74 @@
 		4C24BA0711EDE77700E67981 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+			};
+			name = Release;
+		};
+		4C3AF434135D7D0100473692 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CC = "";
+				GCC_C_LANGUAGE_STANDARD = c99;
+				PRODUCT_NAME = predictor;
+			};
+			name = Debug;
+		};
+		4C3AF435135D7D0100473692 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CC = "";
+				GCC_C_LANGUAGE_STANDARD = c99;
+				PRODUCT_NAME = predictor;
+			};
+			name = Release;
+		};
+		4C3AF43A135D7DFC00473692 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Debug;
+		};
+		4C3AF43B135D7DFC00473692 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Release;
+		};
+		4CAA9EFA135C535300AEA9EB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CC = "";
+				GCC_C_LANGUAGE_STANDARD = c99;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					METRICS_EXTRACT,
+					PREPROCESS,
+					SIDEBAND_WRITE,
+					SIDEBAND_READ,
+					LLSP_TRAIN_DECODE,
+					LLSP_TRAIN_REPLACE,
+					LLSP_PREDICT,
+				);
+				HEADER_SEARCH_PATHS = FFmpeg;
+				PRODUCT_NAME = h264_workbench;
+			};
+			name = Debug;
+		};
+		4CAA9EFB135C535300AEA9EB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CC = "";
+				GCC_C_LANGUAGE_STANDARD = c99;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					METRICS_EXTRACT,
+					PREPROCESS,
+					SIDEBAND_WRITE,
+					SIDEBAND_READ,
+					LLSP_TRAIN_DECODE,
+					LLSP_TRAIN_REPLACE,
+					LLSP_PREDICT,
+				);
+				HEADER_SEARCH_PATHS = FFmpeg;
+				PRODUCT_NAME = h264_workbench;
 			};
 			name = Release;
 		};
@@ -230,6 +442,33 @@
 			buildConfigurations = (
 				4C24BA0611EDE77700E67981 /* Debug */,
 				4C24BA0711EDE77700E67981 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		4C3AF433135D7D0100473692 /* Build configuration list for PBXNativeTarget "predictor" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4C3AF434135D7D0100473692 /* Debug */,
+				4C3AF435135D7D0100473692 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		4C3AF439135D7DFC00473692 /* Build configuration list for PBXLegacyTarget "Predictor" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4C3AF43A135D7DFC00473692 /* Debug */,
+				4C3AF43B135D7DFC00473692 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		4CAA9EF9135C535300AEA9EB /* Build configuration list for PBXNativeTarget "h264_workbench" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4CAA9EFA135C535300AEA9EB /* Debug */,
+				4CAA9EFB135C535300AEA9EB /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

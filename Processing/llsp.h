@@ -3,6 +3,8 @@
  * economic rights: Technische Universitaet Dresden (Germany)
  */
 
+#include <stdbool.h>
+
 /* 
  * The operation of the llsp decoding time predictor is divided in two
  * phases: First, the predictor has to be trained with a mix of typical
@@ -57,7 +59,7 @@ const double *llsp_load(llsp_t *llsp, const char *filename);
  * populated by either llsp_load() or by a training phase with a
  * successfully finished llsp_finalize(). Otherwise, the stored
  * coefficients are undefined. */
-int llsp_store(const llsp_t *llsp, const char *filename);
+bool llsp_store(const llsp_t *llsp, const char *filename);
 
 /* Clears an llsp context. Functionally equivalent to disposing and
  * reallocating it, but this saves you some memory allocations. */
