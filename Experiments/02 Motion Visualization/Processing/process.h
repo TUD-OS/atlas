@@ -3,7 +3,7 @@
  * economic rights: Technische Universitaet Dresden (Germany)
  */
 
-#include "avcodec.h"
+#include "libavcodec/avcodec.h"
 
 /* FFmpeg wants to replace those, but I want to use them */
 #undef printf

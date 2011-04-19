@@ -8,7 +8,7 @@ ARCH ?= core2
 CPUS ?= $(shell case `uname` in (Darwin) ioreg | fgrep -c ' AppleACPICPU ' ;; (Linux) grep -c ^processor /proc/cpuinfo ;; esac)
 
 override CPPFLAGS := -DTHREADS=$(CPUS) $(CPPFLAGS)
-override CPPFLAGS := -I$(WORKBENCH_BASE)/FFmpeg -I$(WORKBENCH_BASE)/FFmpeg/libavcodec -I$(WORKBENCH_BASE)/FFmpeg/libavutil $(CPPFLAGS)
+override CPPFLAGS := -I$(WORKBENCH_BASE)/FFmpeg $(CPPFLAGS)
 override CPPFLAGS := -IProcessing $(CPPFLAGS)
 
 override CFLAGS := $(if $(DEBUG),-g -O,-O3) $(CFLAGS)

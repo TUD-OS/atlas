@@ -6,7 +6,7 @@
 #include "config.h"
 #define HAVE_AV_CONFIG_H
 
-#include "avcodec.h"
+#include "libavcodec/avcodec.h"
 
 /* FFmpeg wants to disable those, but I want to use them */
 #undef printf
