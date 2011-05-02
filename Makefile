@@ -41,7 +41,7 @@ FFmpeg/config.mak: FFmpeg/configure
 		--enable-decoder=h264 --enable-parser=h264 --enable-demuxer=h264 --enable-protocol=file --enable-filter=buffer
 FFmpeg/configure:
 	rm -rf FFmpeg
-	curl 'http://git.ffmpeg.org/?p=ffmpeg.git;a=snapshot;h=HEAD;sf=tgz' | tar xz
+	curl 'http://git.videolan.org/?p=ffmpeg.git;a=snapshot;h=HEAD;sf=tgz' | tar xz
 	mv ffmpeg* FFmpeg
 	patch -d FFmpeg -p0 < FFmpeg.patch
 endif
