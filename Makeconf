@@ -11,7 +11,7 @@ override CPPFLAGS := -DTHREADS=$(CPUS) $(CPPFLAGS)
 override CPPFLAGS := -I$(WORKBENCH_BASE)/FFmpeg $(CPPFLAGS)
 override CPPFLAGS := -IProcessing $(CPPFLAGS)
 
-override CFLAGS := $(if $(DEBUG),-g -O,-O3) $(CFLAGS)
+override CFLAGS := $(if $(DEBUG),-g -O0,-O3) $(CFLAGS)
 override CFLAGS := -march=$(ARCH) -fopenmp $(CFLAGS)
 override CFLAGS := -std=gnu99 $(CFLAGS)
 override CFLAGS := -Wall $(if $(NOWARN),,-Werror) $(shell case `uname` in (Linux) echo -Wno-unknown-pragmas ;; esac) $(CFLAGS)
