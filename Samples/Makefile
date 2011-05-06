@@ -20,11 +20,11 @@ else
 	ffmpeg -i $< -f rawvideo - 2> /dev/null | ../x264/x264 $(X264_$(MODE)) $(X264_$(PROFILE)) -o $@ -
 endif
 
-%.h264: %.yuv %.opt ../x264/x264
+%.h264: %.y4m %.opt ../x264/x264
 ifeq ($(MODE),)
 	$(MAKE) $@ INCLUDE=$*.opt
 else
-	../x264/x264 $(X264_$(MODE)) $(X264_$(PROFILE)) -o $@ $< $(SIZE)
+	../x264/x264 $(X264_$(MODE)) $(X264_$(PROFILE)) -o $@ $<
 endif
 
 ../x264/x264: ../x264
