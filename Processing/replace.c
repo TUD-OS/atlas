@@ -4,7 +4,7 @@
  */
 
 #include "process.h"
-#include "mpegvideo.h"
+#include "libavcodec/mpegvideo.h"
 
 #if PREPROCESS || SIDEBAND_READ
 static int fill_coordinates(replacement_node_t *node);

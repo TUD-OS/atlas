@@ -11,7 +11,7 @@ static void update_total_error(const AVCodecContext *c, const AVPicture *quad);
 
 
 #if PREPROCESS
-#include "mpegvideo.h"
+#include "libavcodec/mpegvideo.h"
 
 /* upcasting an AVFrame's opaque pointer */
 static inline frame_node_t *private_data(const AVFrame *frame)
