@@ -16,6 +16,8 @@ ifneq ($(BUILD_WORKBENCH),)
 h264_workbench: h264_workbench.c $(FFMPEG_LIBS) $(PROCESSING_OBJS) Makefile
 	$(CC) $(CPPFLAGS) $(CFLAGS) -MMD -MF .$@.d -o $@ $< $(FFMPEG_LIBS) $(PROCESSING_OBJS) -lz -lm -pthread
 all:: h264_workbench
+clean::
+	rm -f h264_workbench
 endif
 
 BUILD_PROCESSING ?= $(wildcard Processing)
@@ -24,6 +26,8 @@ $(PROCESSING_OBJS): Processing
 	
 Processing Processing/: force
 	$(MAKE) -j$(CPUS) -C Processing
+clean::
+	$(MAKE) -C Processing $@
 endif
 
 
@@ -85,10 +89,8 @@ debug:
 	$(MAKE) DEBUG=true
 
 clean::
-	$(MAKE) -C Processing $@
 	rm -f .*.d
 	rm -rf *.dSYM
-	rm -f h264_workbench
 
 cleanall: clean
 	$(MAKE) -C Samples clean
