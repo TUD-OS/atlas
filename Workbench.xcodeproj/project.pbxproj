@@ -151,6 +151,7 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				LastUpgradeCheck = 0420;
 				ORGANIZATIONNAME = "TU Dresden";
 			};
 			buildConfigurationList = 1DEB919308733D9F0010E9CD /* Build configuration list for PBXProject "Workbench" */;
@@ -179,7 +180,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				4CAA9EFC135C57AE00AEA9EB /* h264_workbench.c in Sources */,
-				4CAA9EFE135C589200AEA9EB /* llsp_trace.c in Sources */,
 				4CAA9EFF135C58F500AEA9EB /* llsp.c in Sources */,
 				4CAA9F00135C58F500AEA9EB /* metrics.c in Sources */,
 				4CAA9F01135C58F500AEA9EB /* nalu.c in Sources */,
@@ -212,21 +212,19 @@
 		1DEB919408733D9F0010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = x86_64;
-				CC = "gcc-4.2";
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CC = clang;
 				DEBUG = true;
 				PATH = "$(HOME)/.bin:$(PATH)";
-				SDKROOT = macosx10.6;
 			};
 			name = Debug;
 		};
 		1DEB919508733D9F0010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = x86_64;
-				CC = "gcc-4.2";
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CC = clang;
 				PATH = "$(HOME)/.bin:$(PATH)";
-				SDKROOT = macosx10.6;
 			};
 			name = Release;
 		};
@@ -257,7 +255,6 @@
 		4CAA9EFA135C535300AEA9EB /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CC = "";
 				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					METRICS_EXTRACT,
@@ -276,7 +273,6 @@
 		4CAA9EFB135C535300AEA9EB /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CC = "";
 				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					METRICS_EXTRACT,
