@@ -5,6 +5,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <math.h>
 
 #include <fcntl.h>
@@ -14,512 +15,300 @@
 
 #include "llsp.h"
 
-/* the amount of metrics values is currently limited, because a bitfield
- * is used in llsp_solve() to store, which columns to use and which to drop;
- * this line also assumes octets (8 bits per byte) */
-#define MAX_METRICS (sizeof(unsigned long long) * 8)
+/* float values below this are considered to be 0 */
+#define EPSILON 1E-10
 
-
-/* internal structures */
-typedef struct learning_s learning_t;
-typedef struct metrics_node_s metrics_node_t;
-typedef struct matrix_s matrix_t;
-
-struct llsp_s {
-	int              id;		/* context id */
-	unsigned         columns;	/* columns of the collected (metrics, time) tuples */
-	learning_t      *learn;	/* for learning phase */
-	double           result[1];	/* the resulting coefficients (array will be sufficiently large) */
-};
-
-struct learning_s {
-	unsigned         total_rows;	/* total amount of collected tuples */
-	metrics_node_t  *head;	/* the first tuple block */
-	metrics_node_t **list_end;	/* the end of the block list for easy appending */
-	double          *cur;		/* the next sample to write to */
-	double          *last;	/* the last sample in the tuple block currently being written */  
-};
-
-struct metrics_node_s {
-	unsigned        rows;
-	metrics_node_t *next;
-	/* this array will be larger, because we allocate additional space for the struct */
-	double          metrics[1];
-};
 
 struct matrix_s {
-	unsigned  rows;
-	unsigned  columns;
-	/* this array will be larger, because we allocate additional space for the struct */
-	double   *value[1];	/* Attention! matrix is transposed for efficient column-wise access */
+	double    *data;         // pointer to the malloc'ed data block, matrix is transposed
+	double   **full;         // pointers to the individual columns for easy column dropping
+	unsigned   full_cols;    // column count of all columns
+	double   **drop;         // matrix with some columns dropped
+	unsigned   drop_cols;    // remaining column count after dropping
 };
 
-/* helper functions */
-static int llsp_solve(llsp_t *llsp);
-static matrix_t *llsp_copy_to_matrix(llsp_t *llsp, const unsigned long long used_columns);
-static void matrix_qr_decompose(matrix_t *matrix, char pivoting);
-static long double scalarprod(double *a, double *b, unsigned rows);
-static void matrix_trisolve(matrix_t *matrix);
-static void matrix_dispose(matrix_t *matrix);
-static void llsp_dispose_learn(llsp_t *llsp);
+struct llsp_s {
+	unsigned         metrics;
+	float            drop_threshold;
+	struct matrix_s  matrix;           // the running solutions matrix, remember: transposed
+	struct matrix_s *scratch;          // pre-allocated scratchpad matrices for column dropping
+	double           last_prediction;
+	double           result[];         // the resulting coefficients
+};
 
+static inline void givens_rotate(struct matrix_s *matrix, unsigned row, unsigned column);
+static inline struct matrix_s *stabilize(struct matrix_s *matrix, struct matrix_s *scratch, double residue_bound, unsigned drop_start);
+static inline void trisolve(struct matrix_s *matrix);
 #ifdef __GNUC__
-static void llsp_dump(llsp_t *llsp) __attribute__((unused));
-static void matrix_dump(matrix_t *matrix) __attribute__((unused));
+static void dump_matrix(double **matrix, unsigned size) __attribute__((unused));
 #else
-static void llsp_dump(llsp_t *llsp);
-static void matrix_dump(matrix_t *matrix);
+static void dump_matrix(double **matrix, unsigned size);
 #endif
 
 
-llsp_t *llsp_new(int id, unsigned count)
+#pragma mark -
+#pragma mark LLSP API Functions
+
+llsp_t *llsp_new(unsigned count)
 {
 	llsp_t *llsp;
 	
-	if (count < 1 || count > MAX_METRICS) return NULL;
+	if (count < 1) return NULL;
 	
-	llsp = malloc(sizeof(llsp_t) + (count - 1) * sizeof(double));
+	llsp = malloc(sizeof(llsp_t) + count * sizeof(double));
 	if (!llsp) return NULL;
 	
-	llsp->id      = id;
-	llsp->columns = count + 1;  /* we store the time as the last column */
-	llsp->learn   = NULL;
+	llsp->metrics = count;
+	llsp->drop_threshold = COLUMN_DROP_THRESHOLD_START;
+	llsp->matrix.data = NULL;
+	llsp->matrix.full = NULL;
+	llsp->matrix.full_cols = count + 1;
+	llsp->matrix.drop = NULL;
+	llsp->matrix.drop_cols = 0;
+	llsp->scratch = NULL;
+	llsp->last_prediction = 0.0;
 	
 	return llsp;
 }
 
-void llsp_accumulate(llsp_t *llsp, const double *metrics, double time)
+void llsp_add(llsp_t *llsp, const double *metrics, double time)
 {
-	unsigned i;
+	const unsigned column_count = llsp->matrix.full_cols;
+	const unsigned row_count = llsp->matrix.full_cols + 1;  // one extra row for shifting down
+	const size_t matrix_size = column_count * sizeof(double *);
+	const size_t data_size = column_count * row_count * sizeof(double);
 	
-	if (!llsp->learn) {
-		llsp->learn = malloc(sizeof(learning_t));
-		llsp->learn->total_rows = 0;
-		llsp->learn->head       = NULL;
-		llsp->learn->list_end   = &llsp->learn->head;
-		llsp->learn->cur        = NULL;
-		llsp->learn->last       = NULL;
+	if (!llsp->matrix.data) {
+		llsp->matrix.data = malloc(data_size);
+		if (!llsp->matrix.data) goto error;
+		memset(llsp->matrix.data, 0, data_size);
+		
+		llsp->matrix.full = malloc(matrix_size);
+		if (!llsp->matrix.full) goto error;
+		for (unsigned column = 0; column < llsp->matrix.full_cols; column++)
+			llsp->matrix.full[column] = llsp->matrix.data + column * row_count;
+		
+		llsp->matrix.drop = malloc(matrix_size);
+		if (!llsp->matrix.drop) goto error;
+		memset(llsp->matrix.drop, 0, matrix_size);
+		
+		llsp->scratch = malloc(llsp->metrics * sizeof(llsp->scratch[0]));
+		if (!llsp->scratch) goto error;
+		
+		llsp->scratch[0].data = malloc(llsp->metrics * data_size);
+		llsp->scratch[0].full = malloc(llsp->metrics * matrix_size);
+		llsp->scratch[0].drop = malloc(llsp->metrics * matrix_size);
+		if (!llsp->scratch[0].data) goto error;
+		if (!llsp->scratch[0].full) goto error;
+		if (!llsp->scratch[0].drop) goto error;
+		for (unsigned depth = 0; depth < llsp->metrics; depth++) {
+			llsp->scratch[depth].data = llsp->scratch[0].data + depth * column_count * row_count;
+			llsp->scratch[depth].full = llsp->scratch[0].full + depth * column_count;
+			llsp->scratch[depth].drop = llsp->scratch[0].drop + depth * column_count;
+			llsp->scratch[depth].full_cols = llsp->matrix.full_cols;
+			for (unsigned column = 0; column < llsp->scratch[depth].full_cols; column++)
+				llsp->scratch[depth].full[column] = llsp->scratch[depth].data + column * row_count;
+		}
 	}
 	
-	if (llsp->learn->cur == llsp->learn->last) {
-		/* no place to write the next row, we need to allocate a new node */
-		/* we allocate a pseudo-random amount of rows to avoid any aliasing problems */
-		unsigned rows = 1024 + ((double)rand() / (double)RAND_MAX) * 1024.0;
-		size_t size = sizeof(metrics_node_t) + (rows * llsp->columns - 1) * sizeof(double);
-		*llsp->learn->list_end = malloc(size);
-		if (!*llsp->learn->list_end) return;  /* we'll have to make due with what we have */
-		(*llsp->learn->list_end)->rows = rows;
-		(*llsp->learn->list_end)->next = NULL;
-		llsp->learn->cur      = (*llsp->learn->list_end)->metrics;
-		llsp->learn->last     = (*llsp->learn->list_end)->metrics + rows * llsp->columns;
-		llsp->learn->list_end = &(*llsp->learn->list_end)->next;
-	}
+	/* age out the past a little bit */
+	for (unsigned element = 0; element < row_count * column_count; element++)
+		llsp->matrix.data[element] *= AGING_FACTOR;
 	
-	for (i = 0; i < llsp->columns - 1; i++)
-		*(llsp->learn->cur++) = metrics[i];
-	*(llsp->learn->cur++) = time;
+	/* add new row to the top of the solving matrix */
+	memmove(llsp->matrix.data + 1, llsp->matrix.data, data_size - sizeof(double));
+	for (unsigned column = 0; column < llsp->metrics; column++)
+		llsp->matrix.full[column][0] = metrics[column];
+	llsp->matrix.full[llsp->metrics][0] = time;
+	
+	/* create a drop-column-matrix without the all-zero columns */
+	unsigned drop_column = 0;
+	for (unsigned column = 0; column < llsp->metrics; column++) {
+		if (llsp->matrix.drop[drop_column] == llsp->matrix.full[column]) {
+			// always include all columns in use before
+			drop_column++;
+			continue;
+		}
+		for (unsigned row = 0; row <= column + 1; row++) {
+			if (llsp->matrix.full[column][row] >= EPSILON) {
+				llsp->matrix.drop[drop_column++] = llsp->matrix.full[column];
+				break;
+			}
+		}
+	}
+	// last column with the times always gets in
+	llsp->matrix.drop[drop_column++] = llsp->matrix.full[llsp->metrics];
+	memset(llsp->matrix.drop + drop_column, 0, matrix_size - drop_column * sizeof(double *));
+	llsp->matrix.drop_cols = drop_column;
+	
+	for (unsigned i = 0; i < llsp->matrix.drop_cols; i++)
+		givens_rotate(&llsp->matrix, i + 1, i);
+	
+	return;
+	
+error:
+	free(llsp->matrix.data);
+	free(llsp->matrix.full);
+	free(llsp->matrix.drop);
+	
+	if (llsp->scratch) {
+		free(llsp->scratch[0].data);
+		free(llsp->scratch[0].full);
+		free(llsp->scratch[0].drop);
+		free(llsp->scratch);
+	}
 }
 
-const double *llsp_finalize(llsp_t *llsp)
+const double *llsp_solve(llsp_t *llsp)
 {
 	double *result = NULL;
 	
-	if (llsp->learn) {
-		/* we traverse the list to correct the last row count */
-		metrics_node_t *node;
+	if (llsp->matrix.data) {
+		trisolve(&llsp->matrix);
 		
-		llsp->learn->total_rows = 0;
-		for (node = llsp->learn->head; node->next; node = node->next)
-			llsp->learn->total_rows += node->rows;
-		/* the last node might not be fully filled -> correct that */
-		node->rows = (llsp->learn->cur - node->metrics) / llsp->columns;
-		llsp->learn->total_rows += node->rows;
-		/* keep consistent */
-		llsp->learn->last = llsp->learn->cur;
+		double residue_bound = fabs(llsp->matrix.drop[llsp->matrix.drop_cols - 1][llsp->matrix.drop_cols - 1]) * llsp->drop_threshold;
+		struct matrix_s *solution = stabilize(&llsp->matrix, llsp->scratch, residue_bound, 0);
 		
-		if (llsp_solve(llsp)) result = llsp->result;
+		if (llsp->drop_threshold > COLUMN_DROP_THRESHOLD_END)
+			llsp->drop_threshold -= COLUMN_DROP_THRESHOLD_STEP;
+		
+		unsigned result_row = solution->full_cols;
+		for (unsigned column = 0; column < llsp->metrics; column++)
+			llsp->result[column] = solution->full[column][result_row];
+		
+		result = llsp->result;
 	}
 	
 	return result;
 }
 
-double llsp_predict(const llsp_t *llsp, const double *metrics)
+double llsp_predict(llsp_t *llsp, const double *metrics)
 {
-	unsigned i;
 	double result = 0.0;
-	for (i = 0; i < llsp->columns - 1; i++)
+	for (unsigned i = 0; i < llsp->metrics; i++)
 		result += llsp->result[i] * metrics[i];
-	return result;
-}
-
-const double *llsp_load(llsp_t *llsp, const char *filename)
-{
-	double *result = NULL;
-	int fd = -1;
-	unsigned i;
 	
-	do {
-		off_t offset;
-		
-		fd = open(filename, O_RDONLY);
-		if (fd < 0) {
-			printf("opening error, coefficients could not be loaded\n");
-			break;
-		}
-		
-		offset = MAX_METRICS * llsp->id * sizeof(double);
-		if (lseek(fd, offset, SEEK_SET) != offset) {
-			printf("seeking error, coefficients could not be loaded\n");
-			break;
-		}
-		
-		for (i = 0; i < llsp->columns - 1; i++) {
-			double value;
-			if (read(fd, &value, sizeof(value)) != sizeof(value)) {
-				printf("reading error, coefficients could not be loaded\n");
-				break;
-			}
-			llsp->result[i] = value;
-		}
-		if (i == llsp->columns - 1) result = llsp->result;
-	} while (0);
-	
-	if (fd >= 0) close(fd);
+	if (result >= 0.0)
+		llsp->last_prediction = result;
+	else
+		result = llsp->last_prediction;
 	
 	return result;
-}
-
-bool llsp_store(const llsp_t *llsp, const char *filename)
-{
-	int result = 0;
-	int fd = -1;
-	unsigned i;
-	
-	do {
-		off_t offset;
-		
-		fd = open(filename, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-		if (fd < 0) {
-			printf("opening error, coefficients could not be stored\n");
-			break;
-		}
-		
-		offset = MAX_METRICS * llsp->id * sizeof(double);
-		if (lseek(fd, offset, SEEK_SET) != offset) {
-			printf("seeking error, coefficients could not be stored\n");
-			break;
-		}
-		
-		for (i = 0; i < MAX_METRICS; i++) {
-			double value;
-			if (i < llsp->columns - 1)
-				value = llsp->result[i];
-			else
-				value = 0.0;
-			if (write(fd, &value, sizeof(value)) != sizeof(value)) {
-				printf("writing error, coefficients could not be stored\n");
-				break;
-			}
-		}
-		if (i == MAX_METRICS) result = 1;
-	} while (0);
-	
-	if (fd >= 0) close(fd);
-	
-	if (result) {
-		printf("prediction coefficients follow:\n");
-		for (i = 0; i < llsp->columns - 1; i++)
-			printf("\t%G\n", llsp->result[i]);
-		return true;
-	} else
-		return false;
-}
-
-void llsp_purge(llsp_t *llsp)
-{
-	if (llsp->learn) {
-		metrics_node_t *node, *next;
-		for (node = llsp->learn->head; node; node = next) {
-			next = node->next;
-			if (node != llsp->learn->head) free(node);
-		}
-		llsp->learn->head->next = NULL;
-		llsp->learn->total_rows = 0;
-		llsp->learn->list_end   = &llsp->learn->head->next;
-		llsp->learn->cur        = llsp->learn->head->metrics;
-		llsp->learn->last       = llsp->learn->head->metrics + llsp->learn->head->rows * llsp->columns;
-	}
 }
 
 void llsp_dispose(llsp_t *llsp)
 {
-	if (llsp->learn) llsp_dispose_learn(llsp);
+	free(llsp->matrix.data);
+	free(llsp->matrix.full);
+	free(llsp->matrix.drop);
+	
+	if (llsp->scratch) {
+		free(llsp->scratch[0].data);
+		free(llsp->scratch[0].full);
+		free(llsp->scratch[0].drop);
+		free(llsp->scratch);
+	}
+	
 	free(llsp);
 }
 
 
-static int llsp_solve(llsp_t *llsp)
-{
-	matrix_t *matrix;
-	unsigned long long used_columns;
-	char negative_before, negative_after;
-	double residue_before, residue_after;
-	unsigned row, col, drop_col, result_row;
-	
-	if (llsp->learn->total_rows < llsp->columns) return 0;
-	
-	/* Which metric columns are being used? (The time column is always used.) */
-	/* Attention: since (llsp->columns - 1) can be as large as the number of bits in
-	 * used_columns, this line assumes two's complement for negative values to
-	 * work correctly in this corner case; this assumption is believed to be safe */
-	used_columns = ((unsigned long long)1 << (llsp->columns - 1)) - 1;
-	
-	while (1) {
-		/* at first, we calculate a preliminary result and use that to determine,
-		 * if we need to drop bad columns, which potentially make the calculation unstable */
-		
-		matrix = llsp_copy_to_matrix(llsp, used_columns);
-		if (!matrix) return 0;
-		
-		/* we use pivoting here to get a better result; the coefficients will be
-		 * permutated, but the residual sum of squares (called "residue" in variable
-		 * names for brevity) will stay the same */
-		matrix_qr_decompose(matrix, 1);
-		matrix_trisolve(matrix);
-		
-		/* check for negative coefficients in the result */
-		negative_before = 0;
-		for (row = 0; row < matrix->columns - 1; row++)
-			negative_before += (matrix->value[matrix->columns - 1][row] < 0.0);
-		/* if there are no negative coefficients, we eliminate all columns with only
-		 * little influence on the final prediction results */
-		residue_before = fabs(matrix->value[matrix->columns - 1][matrix->columns - 1]) * COLUMN_DROP_THRESHOLD;
-		
-		matrix_dispose(matrix);
-		
-		/* now try dropping every column and check, which (if any) should be dropped */
-		drop_col = MAX_METRICS + 1;
-		for (col = 0; col < llsp->columns - 1; col++) {
-			if ((used_columns & ~((unsigned long long)1 << col)) == used_columns)
-			/* this column is already dropped, nothing to do */
-				continue;
-			if ((used_columns & ~((unsigned long long)1 << col)) == 0)
-			/* only one column left -> terminate */
-				break;
-			matrix = llsp_copy_to_matrix(llsp, (used_columns & ~((unsigned long long)1 << col)));
-			if (!matrix) return 0;
-			matrix_qr_decompose(matrix, 1);
-			matrix_trisolve(matrix);
-			negative_after = 0;
-			for (row = 0; row < matrix->columns - 1; row++)
-				negative_after += (matrix->value[matrix->columns - 1][row] < 0.0);
-			residue_after = fabs(matrix->value[matrix->columns - 1][matrix->columns - 1]);
-			if ((negative_after < negative_before) ||
-				(negative_after == negative_before && residue_after < residue_before)) {
-				negative_before = negative_after;
-				residue_before  = residue_after;
-				drop_col = col;
-			}
-			matrix_dispose(matrix);
-		}
-		if (drop_col > MAX_METRICS)
-			break;
-		else
-			used_columns &= ~((unsigned long long)1 << drop_col);
-	}
-	
-	/* now we can calculate the final result */
-	matrix = llsp_copy_to_matrix(llsp, used_columns);
-	if (!matrix) return 0;
-	
-	matrix_qr_decompose(matrix, 0);
-	matrix_trisolve(matrix);
-	
-	for (result_row = 0, row = 0; result_row < llsp->columns - 1; result_row++, used_columns >>= 1)
-		if (used_columns & 1)
-			llsp->result[result_row] = matrix->value[matrix->columns - 1][row++];
-		else
-			llsp->result[result_row] = 0.0;
-	
-	matrix_dispose(matrix);
-	
-	return 1;
-}
+#pragma mark -
+#pragma mark Helper Functions
 
-static matrix_t *llsp_copy_to_matrix(llsp_t *llsp, const unsigned long long used_columns)
+static void givens_rotate(struct matrix_s *matrix, unsigned row, unsigned column)
 {
-	matrix_t *matrix;
-	metrics_node_t *node;
-	unsigned row, col, columns;
+	if (fabs(matrix->drop[column][row]) < EPSILON)
+		return;  // already zero
 	
-	for (col = 0, columns = 1; col < (sizeof(used_columns) * 8); col++)
-		columns += !!(used_columns & ((unsigned long long)1 << col));
+	const unsigned i = row;
+	const unsigned j = column;
+	const double a_ij = matrix->drop[j][i];
+	const double a_jj = matrix->drop[j][j];
+	const double rho = ((a_jj < 0.0) ? -1.0 : 1.0) * sqrt(a_jj * a_jj + a_ij * a_ij);
+	const double c = a_jj / rho;
+	const double s = a_ij / rho;
 	
-	matrix = malloc(sizeof(matrix_t) + (columns - 1) * sizeof(double *));
-	if (!matrix) return NULL;
-	
-	matrix->rows    = llsp->learn->total_rows;
-	matrix->columns = columns;
-	
-	for (col = 0; col < matrix->columns; col++) {
-		matrix->value[col] = malloc(sizeof(double) * matrix->rows);
-		if (!matrix->value[col]) {
-			for (; col > 0; col--) free(matrix->value[col - 1]);
-			free(matrix);
-			return NULL;
-		}
-	}
-	
-	for (node = llsp->learn->head, row = col = 0; node; node = node->next) {
-		double *cur;
-		unsigned i;
-		for (i = 0, cur = node->metrics; i < node->rows * llsp->columns; i++, cur++) {
-			/* check, if this is the time column or a used metrics column */
-			if (i % llsp->columns == llsp->columns - 1 || 
-				used_columns & ((unsigned long long)1 << (i % llsp->columns))) {
-				matrix->value[col][row] = *cur;
-				if (++col == matrix->columns) {
-					col = 0;
-					row++;
-				}
-			}
-		}
-	}
-	
-	return matrix;
-}
-
-static void matrix_qr_decompose(matrix_t *matrix, char pivoting)
-{
-	unsigned step;
-	
-	/* QR decompostion using householder transformation */
-	for (step = 0; step < matrix->columns; step++) {
-		double *col1;
-		long double sigma, s;
-		unsigned rows, row, cols, col;
-		
-		rows = matrix->rows - step;
-		cols = matrix->columns - step;
-		
-		if (pivoting) {
-			/* we optionally use column pivoting to further stengthen the numeric stability,
-			 * especially for rank deficient matrices: select the unreduced column with the
-			 * largest norm and swap it with the leading unreduced column; of course this
-			 * will give permutated coefficients, so don't use it for the final result */
-			double norm, max_norm;
-			unsigned max_norm_col;
-			max_norm = 0.0;
-			max_norm_col = 0;
-			for (col = 0; col < cols - 1; col++) {
-				norm = scalarprod(&matrix->value[col + step][step], &matrix->value[col + step][step], rows);
-				if (norm > max_norm) {
-					max_norm     = norm;
-					max_norm_col = col;
-				}
-			}
-			if (max_norm_col != 0) {
-				double *swap;
-				swap = matrix->value[step];
-				matrix->value[step] = matrix->value[max_norm_col + step];
-				matrix->value[max_norm_col + step] = swap;
-			}
-		}
-		
-		col1 = &matrix->value[step][step];
-		sigma = ((col1[0] >= 0.0) ? -1.0 : 1.0) * sqrt(scalarprod(col1, col1, rows));
-		if (sigma == 0.0) continue;
-		col1[0] -= sigma;
-		
-		for (col = 1; col < cols; col++) {
-			s = scalarprod(col1, &matrix->value[col + step][step], rows) / (sigma * (long double)col1[0]);
-			for (row = 0; row < rows; row++)
-				matrix->value[col + step][row + step] += s * (long double)col1[row];
-		}
-		
-#if 0
-		/* for better readability of dumps, we could really fill the subdiagonal elements
-		 * with zeroes, but since we do not use them any more, we might as well leave them alone */
-		for (row = 0; row < rows; row++)
-			col1[row] = (row == 0) ? sigma : 0;
-#else
-		col1[0] = sigma;
-#endif
+	for (unsigned x = 0; x < matrix->drop_cols; x++) {
+		const double a_ix = matrix->drop[x][i];
+		const double a_jx = matrix->drop[x][j];
+		matrix->drop[x][i] = c * a_ix - s * a_jx;
+		matrix->drop[x][j] = c * a_jx + s * a_ix;
 	}
 }
 
-static long double scalarprod(double *a, double *b, unsigned rows)
+static inline struct matrix_s *stabilize(struct matrix_s *matrix, struct matrix_s *scratch, double residue_bound, unsigned drop_start)
 {
-	unsigned row;
-	long double result;
-	for (result = 0.0, row = 0; row < rows; row++)
-		result += a[row] * b[row];
+	struct matrix_s *result = matrix;
+	
+	const unsigned column_count = matrix->full_cols;
+	const unsigned row_count = matrix->full_cols + 1;
+	const size_t data_size = column_count * row_count * sizeof(double);
+	
+	for (unsigned drop = drop_start; drop < matrix->drop_cols - 1; drop++) {
+		/* copy current matrix to scratchpad */
+		memcpy(scratch->data, matrix->data, data_size);
+		unsigned drop_column = 0;
+		for (unsigned column = 0; column < matrix->full_cols; column++)
+			if (matrix->full[column] == matrix->drop[drop_column])
+				scratch->drop[drop_column++] = scratch->full[column];
+		scratch->drop_cols = drop_column;
+		
+		/* drop column and givens fixup */
+		memmove(scratch->drop + drop, scratch->drop + drop + 1, (scratch->drop_cols - drop - 1) * sizeof(double *));
+		scratch->drop_cols--;
+		for (unsigned fix = drop; fix < scratch->drop_cols; fix++)
+			givens_rotate(scratch, fix + 1, fix);
+		
+		trisolve(scratch);
+		
+		/* evaluate solution */
+		unsigned result_row = matrix->full_cols;
+		unsigned new_negative = 0, old_negative = 0;
+		for (unsigned column = 0; column < matrix->full_cols - 1; column++) {
+			if (scratch->full[column][result_row] < 0.0) new_negative++;
+			if (result->full[column][result_row] < 0.0) old_negative++;
+		}
+		
+		double new_residue = fabs(scratch->drop[scratch->drop_cols - 1][scratch->drop_cols - 1]);
+		double old_residue = fabs(result->drop[result->drop_cols - 1][result->drop_cols - 1]);
+		
+		if (new_negative < old_negative ||
+		    (new_negative == old_negative && new_residue < old_residue) ||
+		    (new_residue < residue_bound && new_residue > old_residue)) {
+			result = stabilize(scratch, scratch + 1, residue_bound, drop);
+			if (result == scratch) scratch++;  // use a new scratch so we don't overwrite
+		}
+	}
+	
 	return result;
 }
 
-static void matrix_trisolve(matrix_t *matrix)
+static inline void trisolve(struct matrix_s *matrix)
 {
-	double *last_col;
-	int row, col;
-	
-	last_col = matrix->value[matrix->columns - 1];
-	
-	for (row = matrix->columns - 2; row >= 0; row--) {
-		if (matrix->value[row][row] != 0.0) {
-			for (col = matrix->columns - 2; col > row; col--)
-				last_col[row] -= matrix->value[col][row] * last_col[col];
-			last_col[row] /= matrix->value[row][row];
-		} else
-			last_col[row] = 0.0;
-	}
-}
-
-static void matrix_dispose(matrix_t *matrix)
-{
-	unsigned col;
-	for (col = 0; col < matrix->columns; col++)
-		free(matrix->value[col]);
-	free(matrix);
-}
-
-static void llsp_dispose_learn(llsp_t *llsp)
-{
-	metrics_node_t *node, *next;
-	for (node = llsp->learn->head; node; node = next) {
-		next = node->next;
-		free(node);
-	}
-	free(llsp->learn);
-	llsp->learn = NULL;
-}
-
-
-static void llsp_dump(llsp_t *llsp)
-{
-	metrics_node_t *node;
-	for (node = llsp->learn->head; node; node = node->next) {
-		double *cur;
-		unsigned i;
-		for (i = 0, cur = node->metrics; i < node->rows * llsp->columns; i++, cur++) {
-			if (i % llsp->columns < llsp->columns - 1)
-				printf("%G, ", *cur);
-			else
-				printf("%G\n", *cur);
+	unsigned result_row = matrix->full_cols;  // use extra row to solve the coefficients
+	for (unsigned column = 0; column < matrix->full_cols - 1; column++)
+		matrix->full[column][result_row] = 0.0;
+	for (int row = matrix->drop_cols - 2; row >= 0; row--) {
+		unsigned column = row;
+		if (fabs(matrix->drop[column][row]) >= EPSILON) {
+			column = matrix->drop_cols - 1;
+			double intermediate = matrix->drop[column][row];
+			for (column--; column > row; column--)
+				intermediate -= matrix->drop[column][result_row] * matrix->drop[column][row];
+			matrix->drop[column][result_row] = intermediate / matrix->drop[column][row];
 		}
 	}
-	printf("-----------------------------------------------------------\n");
 }
 
-static void matrix_dump(matrix_t *matrix)
+static void dump_matrix(double **matrix, unsigned size)
 {
-	unsigned row, col;
-	for (row = 0; row < matrix->rows; row++) {
-		for (col = 0; col < matrix->columns; col++) {
-			if (col < matrix->columns - 1)
-				printf("%G, ", matrix->value[col][row]);
+	for (unsigned row = 0; row < size; row++) {
+		for (unsigned column = 0; column < size; column++)
+			if (fabs(matrix[column][row]) < EPSILON)
+				printf("       0 ");
 			else
-				printf("%G\n", matrix->value[col][row]);
-		}
+				printf("%+8.2lG ", matrix[column][row]);
+		printf("\n");
 	}
-	printf("-----------------------------------------------------------\n");
 }
