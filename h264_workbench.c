@@ -24,7 +24,7 @@ static void video_decode(char *filename)
 	if (av_find_stream_info(format_context) < 0)
 		return;
 	for (video_stream = 0; video_stream < format_context->nb_streams; video_stream++)
-		if (format_context->streams[video_stream]->codec->codec_type == CODEC_TYPE_VIDEO) {
+		if (format_context->streams[video_stream]->codec->codec_type == AVMEDIA_TYPE_VIDEO) {
 			codec_context = format_context->streams[video_stream]->codec;
 			break;
 		}

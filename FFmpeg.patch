@@ -1,12 +1,11 @@
-Index: libavcodec/avcodec.h
-===================================================================
---- libavcodec/avcodec.h	(revision 25549)
-+++ libavcodec/avcodec.h	(working copy)
-@@ -2744,6 +2744,93 @@
-      * - decoding: unused
-      */
-     int lpc_passes;
-+	
+diff -ru FFmpeg.orig/libavcodec/avcodec.h FFmpeg/libavcodec/avcodec.h
+--- libavcodec/avcodec.h	2011-12-30 12:32:39.000000000 +0100
++++ libavcodec/avcodec.h	2011-12-30 13:25:54.000000000 +0100
+@@ -3210,6 +3210,93 @@
+     int64_t pts_correction_last_pts;       /// PTS of the last frame
+     int64_t pts_correction_last_dts;       /// DTS of the last frame
+ 
++
 +    /* callback for external slice processing */
 +    void (*process_slice)(void *);
 +    /* callback for sideband data processing */
@@ -96,11 +95,10 @@ Index: libavcodec/avcodec.h
  } AVCodecContext;
  
  /**
-Index: libavcodec/h264.c
-===================================================================
---- libavcodec/h264.c	(revision 25549)
-+++ libavcodec/h264.c	(working copy)
-@@ -60,6 +60,18 @@
+diff -ru FFmpeg.orig/libavcodec/h264.c FFmpeg/libavcodec/h264.c
+--- libavcodec/h264.c	2011-12-30 12:32:39.000000000 +0100
++++ libavcodec/h264.c	2011-12-30 14:22:47.000000000 +0100
+@@ -64,6 +64,17 @@
      PIX_FMT_NONE
  };
  
@@ -115,66 +113,65 @@ Index: libavcodec/h264.c
 +    2, 4, 8
 +};
 +
-+
- void ff_h264_write_back_intra_pred_mode(H264Context *h){
-     int8_t *mode= h->intra4x4_pred_mode + h->mb2br_xy[h->mb_xy];
- 
-@@ -402,7 +414,9 @@
-             src_y= s->edge_emu_buffer + 2 + 2*h->mb_linesize;
+ /**
+  * Check if the top & left blocks are available if needed and
+  * change the dc mode so it only uses the available blocks.
+@@ -502,6 +513,8 @@
          emu=1;
      }
--
-+	
+ 
 +    FFMPEG_METRICS_EXTRACT(*inter_type += (1 + !square) * (qpel_luma_cost[luma_xy] + qpel_chroma_cost[!!(mx&7)+!!(my&7)]));
-+	
++
      qpix_op[luma_xy](dest_y, src_y, h->mb_linesize); //FIXME try variable height perhaps?
      if(!square){
          qpix_op[luma_xy](dest_y + delta, src_y + delta, h->mb_linesize);
-@@ -579,11 +593,13 @@
-     prefetch_motion(h, 0);
+@@ -756,12 +769,14 @@
+     prefetch_motion(h, 0, pixel_shift, chroma_idc);
  
      if(IS_16X16(mb_type)){
 +        FFMPEG_METRICS_EXTRACT(inter_type = &s->avctx->metrics.inter_16x16);
-         mc_part(h, 0, 1, 8, 0, dest_y, dest_cb, dest_cr, 0, 0,
+         mc_part(h, 0, 1, 16, 0, dest_y, dest_cb, dest_cr, 0, 0,
                  qpix_put[0], chroma_put[0], qpix_avg[0], chroma_avg[0],
                  weight_op, weight_avg,
-                 IS_DIR(mb_type, 0, 0), IS_DIR(mb_type, 0, 1));
+                 IS_DIR(mb_type, 0, 0), IS_DIR(mb_type, 0, 1),
+                 pixel_shift, chroma_idc);
      }else if(IS_16X8(mb_type)){
 +        FFMPEG_METRICS_EXTRACT(inter_type = &s->avctx->metrics.inter_8x8);
-         mc_part(h, 0, 0, 4, 8, dest_y, dest_cb, dest_cr, 0, 0,
+         mc_part(h, 0, 0, 8, 8 << pixel_shift, dest_y, dest_cb, dest_cr, 0, 0,
                  qpix_put[1], chroma_put[0], qpix_avg[1], chroma_avg[0],
-                 &weight_op[1], &weight_avg[1],
-@@ -593,6 +609,7 @@
-                 &weight_op[1], &weight_avg[1],
-                 IS_DIR(mb_type, 1, 0), IS_DIR(mb_type, 1, 1));
+                 weight_op, weight_avg,
+@@ -773,6 +788,7 @@
+                 IS_DIR(mb_type, 1, 0), IS_DIR(mb_type, 1, 1),
+                 pixel_shift, chroma_idc);
      }else if(IS_8X16(mb_type)){
 +        FFMPEG_METRICS_EXTRACT(inter_type = &s->avctx->metrics.inter_8x8);
-         mc_part(h, 0, 0, 8, 8*h->mb_linesize, dest_y, dest_cb, dest_cr, 0, 0,
+         mc_part(h, 0, 0, 16, 8*h->mb_linesize, dest_y, dest_cb, dest_cr, 0, 0,
                  qpix_put[1], chroma_put[1], qpix_avg[1], chroma_avg[1],
-                 &weight_op[2], &weight_avg[2],
-@@ -613,11 +630,13 @@
+                 &weight_op[1], &weight_avg[1],
+@@ -795,12 +811,14 @@
              int y_offset= (i&2)<<1;
  
              if(IS_SUB_8X8(sub_mb_type)){
 +                FFMPEG_METRICS_EXTRACT(inter_type = &s->avctx->metrics.inter_8x8);
-                 mc_part(h, n, 1, 4, 0, dest_y, dest_cb, dest_cr, x_offset, y_offset,
+                 mc_part(h, n, 1, 8, 0, dest_y, dest_cb, dest_cr, x_offset, y_offset,
                      qpix_put[1], chroma_put[1], qpix_avg[1], chroma_avg[1],
-                     &weight_op[3], &weight_avg[3],
-                     IS_DIR(sub_mb_type, 0, 0), IS_DIR(sub_mb_type, 0, 1));
+                     &weight_op[1], &weight_avg[1],
+                     IS_DIR(sub_mb_type, 0, 0), IS_DIR(sub_mb_type, 0, 1),
+                     pixel_shift, chroma_idc);
              }else if(IS_SUB_8X4(sub_mb_type)){
 +                FFMPEG_METRICS_EXTRACT(inter_type = &s->avctx->metrics.inter_4x4);
-                 mc_part(h, n  , 0, 2, 4, dest_y, dest_cb, dest_cr, x_offset, y_offset,
+                 mc_part(h, n  , 0, 4, 4 << pixel_shift, dest_y, dest_cb, dest_cr, x_offset, y_offset,
                      qpix_put[2], chroma_put[1], qpix_avg[2], chroma_avg[1],
-                     &weight_op[4], &weight_avg[4],
-@@ -627,6 +646,7 @@
-                     &weight_op[4], &weight_avg[4],
-                     IS_DIR(sub_mb_type, 0, 0), IS_DIR(sub_mb_type, 0, 1));
+                     &weight_op[1], &weight_avg[1],
+@@ -812,6 +830,7 @@
+                     IS_DIR(sub_mb_type, 0, 0), IS_DIR(sub_mb_type, 0, 1),
+                     pixel_shift, chroma_idc);
              }else if(IS_SUB_4X8(sub_mb_type)){
 +                FFMPEG_METRICS_EXTRACT(inter_type = &s->avctx->metrics.inter_4x4);
-                 mc_part(h, n  , 0, 4, 4*h->mb_linesize, dest_y, dest_cb, dest_cr, x_offset, y_offset,
+                 mc_part(h, n  , 0, 8, 4*h->mb_linesize, dest_y, dest_cb, dest_cr, x_offset, y_offset,
                      qpix_put[2], chroma_put[2], qpix_avg[2], chroma_avg[2],
-                     &weight_op[5], &weight_avg[5],
-@@ -638,6 +658,7 @@
+                     &weight_op[2], &weight_avg[2],
+@@ -825,6 +844,7 @@
              }else{
                  int j;
                  assert(IS_SUB_4X4(sub_mb_type));
@@ -182,21 +179,152 @@ Index: libavcodec/h264.c
                  for(j=0; j<4; j++){
                      int sub_x_offset= x_offset + 2*(j&1);
                      int sub_y_offset= y_offset +   (j&2);
-@@ -1156,6 +1177,7 @@
+@@ -1760,20 +1780,28 @@
+                     idct_add    = h->h264dsp.h264_idct8_add;
+                 }
+                 for(i=0; i<16; i+=4){
++                    FFMPEG_METRICS_EXTRACT(s->avctx->metrics.intra_8x8++);
+                     uint8_t * const ptr= dest_y + block_offset[i];
+                     const int dir= h->intra4x4_pred_mode_cache[ scan8[i] ];
+                     if(transform_bypass && h->sps.profile_idc==244 && dir<=1){
++                        FFMPEG_TIME_START(s->avctx, spatial_pred);
+                         h->hpc.pred8x8l_add[dir](ptr, h->mb + (i*16+p*256 << pixel_shift), linesize);
++                        FFMPEG_TIME_STOP(s->avctx, spatial_pred);
+                     }else{
+                         const int nnz = h->non_zero_count_cache[ scan8[i+p*16] ];
++                        FFMPEG_TIME_START(s->avctx, spatial_pred);
+                         h->hpc.pred8x8l[ dir ](ptr, (h->topleft_samples_available<<i)&0x8000,
+                                                     (h->topright_samples_available<<i)&0x4000, linesize);
++                        FFMPEG_TIME_STOP(s->avctx, spatial_pred);
++                        FFMPEG_TIME_START(s->avctx, idct);
+                         if(nnz){
++                            FFMPEG_METRICS_EXTRACT(transform_bypass ? 0 : s->avctx->metrics.idct_8x8++);
+                             if(nnz == 1 && dctcoef_get(h->mb, pixel_shift, i*16+p*256))
+                                 idct_dc_add(ptr, h->mb + (i*16+p*256 << pixel_shift), linesize);
+                             else
+                                 idct_add   (ptr, h->mb + (i*16+p*256 << pixel_shift), linesize);
+                         }
++                        FFMPEG_TIME_STOP(s->avctx, idct);
+                     }
+                 }
+             }else{
+@@ -1785,11 +1813,14 @@
+                     idct_add    = h->h264dsp.h264_idct_add;
+                 }
+                 for(i=0; i<16; i++){
++                    FFMPEG_METRICS_EXTRACT(s->avctx->metrics.intra_4x4++);
+                     uint8_t * const ptr= dest_y + block_offset[i];
+                     const int dir= h->intra4x4_pred_mode_cache[ scan8[i] ];
+ 
+                     if(transform_bypass && h->sps.profile_idc==244 && dir<=1){
++                        FFMPEG_TIME_START(s->avctx, spatial_pred);
+                         h->hpc.pred4x4_add[dir](ptr, h->mb + (i*16+p*256 << pixel_shift), linesize);
++                        FFMPEG_TIME_STOP(s->avctx, spatial_pred);
+                     }else{
+                         uint8_t *topright;
+                         int nnz, tr;
+@@ -1810,10 +1841,14 @@
+                         }else
+                             topright= NULL;
+ 
++                        FFMPEG_TIME_START(s->avctx, spatial_pred);
+                         h->hpc.pred4x4[ dir ](ptr, topright, linesize);
++                        FFMPEG_TIME_STOP(s->avctx, spatial_pred);
++                        FFMPEG_TIME_START(s->avctx, idct);
+                         nnz = h->non_zero_count_cache[ scan8[i+p*16] ];
+                         if(nnz){
+                             if(is_h264){
++                                FFMPEG_METRICS_EXTRACT(transform_bypass ? 0 : s->avctx->metrics.idct_4x4++);
+                                 if(nnz == 1 && dctcoef_get(h->mb, pixel_shift, i*16+p*256))
+                                     idct_dc_add(ptr, h->mb + (i*16+p*256 << pixel_shift), linesize);
+                                 else
+@@ -1821,12 +1856,17 @@
+                             }else if(CONFIG_SVQ3_DECODER)
+                                 ff_svq3_add_idct_c(ptr, h->mb + i*16+p*256, linesize, qscale, 0);
+                         }
++                        FFMPEG_TIME_STOP(s->avctx, idct);
+                     }
+                 }
+             }
+         }
+     }else{
++        FFMPEG_METRICS_EXTRACT(s->avctx->metrics.intra_16x16++);
++        FFMPEG_TIME_START(s->avctx, spatial_pred);
+         h->hpc.pred16x16[ h->intra16x16_pred_mode ](dest_y , linesize);
++        FFMPEG_TIME_STOP(s->avctx, spatial_pred);
++        FFMPEG_TIME_START(s->avctx, idct);
+         if(is_h264){
+             if(h->non_zero_count_cache[ scan8[LUMA_DC_BLOCK_INDEX+p] ]){
+                 if(!transform_bypass)
+@@ -1840,6 +1880,7 @@
+             }
+         }else if(CONFIG_SVQ3_DECODER)
+             ff_svq3_luma_dc_dequant_idct_c(h->mb+p*256, h->mb_luma_dc[p], qscale);
++        FFMPEG_TIME_STOP(s->avctx, idct);
+     }
+ }
+ 
+@@ -1855,31 +1896,45 @@
+             if(IS_INTRA16x16(mb_type)){
+                 if(transform_bypass){
+                     if(h->sps.profile_idc==244 && (h->intra16x16_pred_mode==VERT_PRED8x8 || h->intra16x16_pred_mode==HOR_PRED8x8)){
++                        FFMPEG_METRICS_EXTRACT(s->avctx->metrics.intra_16x16++);
++                        FFMPEG_TIME_START(s->avctx, spatial_pred);
+                         h->hpc.pred16x16_add[h->intra16x16_pred_mode](dest_y, block_offset, h->mb + (p*256 << pixel_shift), linesize);
++                        FFMPEG_TIME_STOP(s->avctx, spatial_pred);
+                     }else{
++                        FFMPEG_TIME_START(s->avctx, idct);
+                         for(i=0; i<16; i++){
+                             if(h->non_zero_count_cache[ scan8[i+p*16] ] || dctcoef_get(h->mb, pixel_shift, i*16+p*256))
+                                 s->dsp.add_pixels4(dest_y + block_offset[i], h->mb + (i*16+p*256 << pixel_shift), linesize);
+                         }
++                        FFMPEG_TIME_STOP(s->avctx, idct);
+                     }
+                 }else{
++                    FFMPEG_METRICS_EXTRACT(s->avctx->metrics.idct_4x4 += 16);
++                    FFMPEG_TIME_START(s->avctx, idct);
+                     h->h264dsp.h264_idct_add16intra(dest_y, block_offset, h->mb + (p*256 << pixel_shift), linesize, h->non_zero_count_cache+p*5*8);
++                    FFMPEG_TIME_STOP(s->avctx, idct);
+                 }
+             }else if(h->cbp&15){
+                 if(transform_bypass){
+                     const int di = IS_8x8DCT(mb_type) ? 4 : 1;
+                     idct_add= IS_8x8DCT(mb_type) ? s->dsp.add_pixels8 : s->dsp.add_pixels4;
++                    FFMPEG_TIME_START(s->avctx, idct);
+                     for(i=0; i<16; i+=di){
+                         if(h->non_zero_count_cache[ scan8[i+p*16] ]){
+                             idct_add(dest_y + block_offset[i], h->mb + (i*16+p*256 << pixel_shift), linesize);
+                         }
+                     }
++                    FFMPEG_TIME_STOP(s->avctx, idct);
+                 }else{
++                    FFMPEG_TIME_START(s->avctx, idct);
+                     if(IS_8x8DCT(mb_type)){
++                        FFMPEG_METRICS_EXTRACT(s->avctx->metrics.idct_8x8 += 4);
+                         h->h264dsp.h264_idct8_add4(dest_y, block_offset, h->mb + (p*256 << pixel_shift), linesize, h->non_zero_count_cache+p*5*8);
+                     }else{
++                        FFMPEG_METRICS_EXTRACT(s->avctx->metrics.idct_4x4 += 16);
+                         h->h264dsp.h264_idct_add16(dest_y, block_offset, h->mb + (p*256 << pixel_shift), linesize, h->non_zero_count_cache+p*5*8);
+                     }
++                    FFMPEG_TIME_STOP(s->avctx, idct);
+                 }
+             }
+         }else if(CONFIG_SVQ3_DECODER) {
+@@ -1953,6 +2008,7 @@
      }
  
      if (!simple && IS_INTRA_PCM(mb_type)) {
 +        FFMPEG_METRICS_EXTRACT(s->avctx->metrics.intra_pcm++);
-         for (i=0; i<16; i++) {
-             memcpy(dest_y + i*  linesize, h->mb       + i*8, 16);
-         }
-@@ -1165,17 +1187,22 @@
+         const int bit_depth = h->sps.bit_depth_luma;
+         if (pixel_shift) {
+             int j;
+@@ -2006,19 +2062,26 @@
          }
      } else {
          if(IS_INTRA(mb_type)){
 +            FFMPEG_TIME_START(s->avctx, post);
              if(h->deblocking_filter)
-                 xchg_mb_border(h, dest_y, dest_cb, dest_cr, linesize, uvlinesize, 1, simple);
+                 xchg_mb_border(h, dest_y, dest_cb, dest_cr, linesize, uvlinesize, 1, 0, simple, pixel_shift);
 +            FFMPEG_TIME_STOP(s->avctx, post);
  
              if(simple || !CONFIG_GRAY || !(s->flags&CODEC_FLAG_GRAY)){
@@ -206,238 +334,148 @@ Index: libavcodec/h264.c
 +                FFMPEG_TIME_STOP(s->avctx, spatial_pred);
              }
  
-             if(IS_INTRA4x4(mb_type)){
-                 if(simple || !s->encoding){
-                     if(IS_8x8DCT(mb_type)){
-+                        FFMPEG_METRICS_EXTRACT(s->avctx->metrics.intra_8x8++);
-                         if(transform_bypass){
-                             idct_dc_add =
-                             idct_add    = s->dsp.add_pixels8;
-@@ -1187,18 +1214,25 @@
-                             uint8_t * const ptr= dest_y + block_offset[i];
-                             const int dir= h->intra4x4_pred_mode_cache[ scan8[i] ];
-                             if(transform_bypass && h->sps.profile_idc==244 && dir<=1){
-+                                FFMPEG_TIME_START(s->avctx, spatial_pred);
-                                 h->hpc.pred8x8l_add[dir](ptr, h->mb + i*16, linesize);
-+                                FFMPEG_TIME_STOP(s->avctx, spatial_pred);
-                             }else{
-                                 const int nnz = h->non_zero_count_cache[ scan8[i] ];
-+                                FFMPEG_TIME_START(s->avctx, spatial_pred);
-                                 h->hpc.pred8x8l[ dir ](ptr, (h->topleft_samples_available<<i)&0x8000,
-                                                             (h->topright_samples_available<<i)&0x4000, linesize);
-+                                FFMPEG_TIME_STOP(s->avctx, spatial_pred);
-+                                FFMPEG_TIME_START(s->avctx, idct);
-                                 if(nnz){
-+                                    FFMPEG_METRICS_EXTRACT(transform_bypass ? 0 : s->avctx->metrics.idct_8x8++);
-                                     if(nnz == 1 && h->mb[i*16])
-                                         idct_dc_add(ptr, h->mb + i*16, linesize);
-                                     else
-                                         idct_add   (ptr, h->mb + i*16, linesize);
-                                 }
--                            }
-+								FFMPEG_TIME_STOP(s->avctx, idct);
-+							}
-                         }
-                     }else{
-                         if(transform_bypass){
-@@ -1208,13 +1242,16 @@
-                             idct_dc_add = h->h264dsp.h264_idct_dc_add;
-                             idct_add    = h->h264dsp.h264_idct_add;
-                         }
--                        for(i=0; i<16; i++){
-+						FFMPEG_METRICS_EXTRACT(s->avctx->metrics.intra_4x4++);
-+						for(i=0; i<16; i++){
-                             uint8_t * const ptr= dest_y + block_offset[i];
-                             const int dir= h->intra4x4_pred_mode_cache[ scan8[i] ];
+             hl_decode_mb_predict_luma(h, mb_type, is_h264, simple, transform_bypass, pixel_shift, block_offset, linesize, dest_y, 0);
  
-                             if(transform_bypass && h->sps.profile_idc==244 && dir<=1){
--                                h->hpc.pred4x4_add[dir](ptr, h->mb + i*16, linesize);
--                            }else{
-+								FFMPEG_TIME_START(s->avctx, spatial_pred);
-+								h->hpc.pred4x4_add[dir](ptr, h->mb + i*16, linesize);
-+								FFMPEG_TIME_STOP(s->avctx, spatial_pred);
-+							}else{
-                                 uint8_t *topright;
-                                 int nnz, tr;
-                                 if(dir == DIAG_DOWN_LEFT_PRED || dir == VERT_LEFT_PRED){
-@@ -1228,10 +1265,14 @@
-                                 }else
-                                     topright= NULL;
- 
--                                h->hpc.pred4x4[ dir ](ptr, topright, linesize);
-+								FFMPEG_TIME_START(s->avctx, spatial_pred);
-+								h->hpc.pred4x4[ dir ](ptr, topright, linesize);
-+                                FFMPEG_TIME_STOP(s->avctx, spatial_pred);
-+                                FFMPEG_TIME_START(s->avctx, idct);
-                                 nnz = h->non_zero_count_cache[ scan8[i] ];
-                                 if(nnz){
-                                     if(is_h264){
-+                                        FFMPEG_METRICS_EXTRACT(transform_bypass ? 0 : s->avctx->metrics.idct_4x4++);
-                                         if(nnz == 1 && h->mb[i*16])
-                                             idct_dc_add(ptr, h->mb + i*16, linesize);
-                                         else
-@@ -1239,25 +1280,35 @@
-                                     }else
-                                         ff_svq3_add_idct_c(ptr, h->mb + i*16, linesize, s->qscale, 0);
-                                 }
-+                                FFMPEG_TIME_STOP(s->avctx, idct);
-                             }
-                         }
-                     }
-                 }
-             }else{
-+                FFMPEG_METRICS_EXTRACT(s->avctx->metrics.intra_16x16++);
-+                FFMPEG_TIME_START(s->avctx, spatial_pred);
-                 h->hpc.pred16x16[ h->intra16x16_pred_mode ](dest_y , linesize);
-+                FFMPEG_TIME_STOP(s->avctx, spatial_pred);
-+                FFMPEG_TIME_START(s->avctx, idct);
-                 if(is_h264){
-                     if(!transform_bypass)
-                         h264_luma_dc_dequant_idct_c(h->mb, s->qscale, h->dequant4_coeff[0][s->qscale][0]);
-                 }else
-                     ff_svq3_luma_dc_dequant_idct_c(h->mb, s->qscale);
-+                FFMPEG_TIME_STOP(s->avctx, idct);
-             }
 +            FFMPEG_TIME_START(s->avctx, post);
              if(h->deblocking_filter)
-                 xchg_mb_border(h, dest_y, dest_cb, dest_cr, linesize, uvlinesize, 0, simple);
+                 xchg_mb_border(h, dest_y, dest_cb, dest_cr, linesize, uvlinesize, 0, 0, simple, pixel_shift);
 +            FFMPEG_TIME_STOP(s->avctx, post);
          }else if(is_h264){
 +            FFMPEG_TIME_START(s->avctx, temporal_pred);
-             hl_motion(h, dest_y, dest_cb, dest_cr,
-                       s->me.qpel_put, s->dsp.put_h264_chroma_pixels_tab,
-                       s->me.qpel_avg, s->dsp.avg_h264_chroma_pixels_tab,
-                       h->h264dsp.weight_h264_pixels_tab, h->h264dsp.biweight_h264_pixels_tab);
+             if (chroma422) {
+                 hl_motion_422(h, dest_y, dest_cb, dest_cr,
+                               s->me.qpel_put, s->dsp.put_h264_chroma_pixels_tab,
+@@ -2034,6 +2097,7 @@
+                               h->h264dsp.biweight_h264_pixels_tab,
+                               pixel_shift);
+             }
 +            FFMPEG_TIME_STOP(s->avctx, temporal_pred);
          }
  
- 
-@@ -1266,31 +1317,45 @@
-                 if(IS_INTRA16x16(mb_type)){
-                     if(transform_bypass){
-                         if(h->sps.profile_idc==244 && (h->intra16x16_pred_mode==VERT_PRED8x8 || h->intra16x16_pred_mode==HOR_PRED8x8)){
-+                            FFMPEG_METRICS_EXTRACT(s->avctx->metrics.intra_16x16++);
-+                            FFMPEG_TIME_START(s->avctx, spatial_pred);
-                             h->hpc.pred16x16_add[h->intra16x16_pred_mode](dest_y, block_offset, h->mb, linesize);
-+                            FFMPEG_TIME_STOP(s->avctx, spatial_pred);
-                         }else{
-+                            FFMPEG_TIME_START(s->avctx, idct);
-                             for(i=0; i<16; i++){
-                                 if(h->non_zero_count_cache[ scan8[i] ] || h->mb[i*16])
-                                     s->dsp.add_pixels4(dest_y + block_offset[i], h->mb + i*16, linesize);
-                             }
-+                            FFMPEG_TIME_STOP(s->avctx, idct);
-                         }
-                     }else{
-+                        FFMPEG_METRICS_EXTRACT(s->avctx->metrics.idct_4x4 += 16);
-+                        FFMPEG_TIME_START(s->avctx, idct);
-                          h->h264dsp.h264_idct_add16intra(dest_y, block_offset, h->mb, linesize, h->non_zero_count_cache);
-+                        FFMPEG_TIME_STOP(s->avctx, idct);
-                     }
-                 }else if(h->cbp&15){
-                     if(transform_bypass){
-                         const int di = IS_8x8DCT(mb_type) ? 4 : 1;
-                         idct_add= IS_8x8DCT(mb_type) ? s->dsp.add_pixels8 : s->dsp.add_pixels4;
-+                        FFMPEG_TIME_START(s->avctx, idct);
-                         for(i=0; i<16; i+=di){
-                             if(h->non_zero_count_cache[ scan8[i] ]){
-                                 idct_add(dest_y + block_offset[i], h->mb + i*16, linesize);
-                             }
-                         }
-+                        FFMPEG_TIME_STOP(s->avctx, idct);
-                     }else{
-+                        FFMPEG_TIME_START(s->avctx, idct);
-                         if(IS_8x8DCT(mb_type)){
-+                            FFMPEG_METRICS_EXTRACT(s->avctx->metrics.idct_8x8 += 4);
-                             h->h264dsp.h264_idct8_add4(dest_y, block_offset, h->mb, linesize, h->non_zero_count_cache);
-                         }else{
-+                            FFMPEG_METRICS_EXTRACT(s->avctx->metrics.idct_4x4 += 16);
-                             h->h264dsp.h264_idct_add16(dest_y, block_offset, h->mb, linesize, h->non_zero_count_cache);
-                         }
-+                        FFMPEG_TIME_STOP(s->avctx, idct);
-                     }
-                 }
-             }else{
-@@ -1307,22 +1372,29 @@
+         hl_decode_mb_idct_luma(h, mb_type, is_h264, simple, transform_bypass, pixel_shift, block_offset, linesize, dest_y, 0);
+@@ -2042,10 +2106,13 @@
              uint8_t *dest[2] = {dest_cb, dest_cr};
              if(transform_bypass){
                  if(IS_INTRA(mb_type) && h->sps.profile_idc==244 && (h->chroma_pred_mode==VERT_PRED8x8 || h->chroma_pred_mode==HOR_PRED8x8)){
 +                    FFMPEG_TIME_START(s->avctx, spatial_pred);
-                     h->hpc.pred8x8_add[h->chroma_pred_mode](dest[0], block_offset + 16, h->mb + 16*16, uvlinesize);
-                     h->hpc.pred8x8_add[h->chroma_pred_mode](dest[1], block_offset + 20, h->mb + 20*16, uvlinesize);
+                     h->hpc.pred8x8_add[h->chroma_pred_mode](dest[0], block_offset + 16, h->mb + (16*16*1 << pixel_shift), uvlinesize);
+                     h->hpc.pred8x8_add[h->chroma_pred_mode](dest[1], block_offset + 32, h->mb + (16*16*2 << pixel_shift), uvlinesize);
 +                    FFMPEG_TIME_STOP(s->avctx, spatial_pred);
                  }else{
                      idct_add = s->dsp.add_pixels4;
 +                    FFMPEG_TIME_START(s->avctx, idct);
-                     for(i=16; i<16+8; i++){
-                         if(h->non_zero_count_cache[ scan8[i] ] || h->mb[i*16])
-                             idct_add   (dest[(i&4)>>2] + block_offset[i], h->mb + i*16, uvlinesize);
+                     for(j=1; j<3; j++){
+                         for(i=j*16; i<j*16+4; i++){
+                             if(h->non_zero_count_cache[ scan8[i] ] || dctcoef_get(h->mb, pixel_shift, i*16))
+@@ -2058,6 +2125,7 @@
+                             }
+                         }
                      }
 +                    FFMPEG_TIME_STOP(s->avctx, idct);
                  }
              }else{
-                 chroma_dc_dequant_idct_c(h->mb + 16*16, h->chroma_qp[0], h->dequant4_coeff[IS_INTRA(mb_type) ? 1:4][h->chroma_qp[0]][0]);
-                 chroma_dc_dequant_idct_c(h->mb + 16*16+4*16, h->chroma_qp[1], h->dequant4_coeff[IS_INTRA(mb_type) ? 2:5][h->chroma_qp[1]][0]);
                  if(is_h264){
+@@ -2069,6 +2137,8 @@
+                         qp[0] = h->chroma_qp[0];
+                         qp[1] = h->chroma_qp[1];
+                     }
 +                    FFMPEG_METRICS_EXTRACT(s->avctx->metrics.idct_4x4 += 8);
 +                    FFMPEG_TIME_START(s->avctx, idct);
+                     if(h->non_zero_count_cache[ scan8[CHROMA_DC_BLOCK_INDEX+0] ])
+                         h->h264dsp.h264_chroma_dc_dequant_idct(h->mb + (16*16*1 << pixel_shift), h->dequant4_coeff[IS_INTRA(mb_type) ? 1:4][qp[0]][0]);
+                     if(h->non_zero_count_cache[ scan8[CHROMA_DC_BLOCK_INDEX+1] ])
+@@ -2076,6 +2146,7 @@
                      h->h264dsp.h264_idct_add8(dest, block_offset,
                                                h->mb, uvlinesize,
                                                h->non_zero_count_cache);
 +                    FFMPEG_TIME_STOP(s->avctx, idct);
-                 }else{
-                     for(i=16; i<16+8; i++){
-                         if(h->non_zero_count_cache[ scan8[i] ] || h->mb[i*16]){
-@@ -2467,6 +2539,7 @@
-     const int end_mb_y= s->mb_y + FRAME_MBAFF;
-     const int old_slice_type= h->slice_type;
+                 }
+ #if CONFIG_SVQ3_DECODER
+                 else{
+@@ -2150,6 +2221,7 @@
+     }
+ 
+     if (!simple && IS_INTRA_PCM(mb_type)) {
++        FFMPEG_METRICS_EXTRACT(s->avctx->metrics.intra_pcm++);
+         if (pixel_shift) {
+             const int bit_depth = h->sps.bit_depth_luma;
+             GetBitContext gb;
+@@ -2171,20 +2243,26 @@
+         }
+     } else {
+         if(IS_INTRA(mb_type)){
++            FFMPEG_TIME_START(s->avctx, post);
+             if(h->deblocking_filter)
+                 xchg_mb_border(h, dest[0], dest[1], dest[2], linesize, linesize, 1, 1, simple, pixel_shift);
++            FFMPEG_TIME_STOP(s->avctx, post);
+ 
+             for (p = 0; p < plane_count; p++)
+                 hl_decode_mb_predict_luma(h, mb_type, 1, simple, transform_bypass, pixel_shift, block_offset, linesize, dest[p], p);
+ 
++            FFMPEG_TIME_START(s->avctx, post);
+             if(h->deblocking_filter)
+                 xchg_mb_border(h, dest[0], dest[1], dest[2], linesize, linesize, 0, 1, simple, pixel_shift);
++            FFMPEG_TIME_STOP(s->avctx, post);
+         }else{
++            FFMPEG_TIME_START(s->avctx, temporal_pred);
+             hl_motion(h, dest[0], dest[1], dest[2],
+                       s->me.qpel_put, s->dsp.put_h264_chroma_pixels_tab,
+                       s->me.qpel_avg, s->dsp.avg_h264_chroma_pixels_tab,
+                       h->h264dsp.weight_h264_pixels_tab,
+                       h->h264dsp.biweight_h264_pixels_tab, pixel_shift, 3);
++            FFMPEG_TIME_STOP(s->avctx, temporal_pred);
+         }
+ 
+         for (p = 0; p < plane_count; p++)
+@@ -3495,6 +3573,7 @@
+     const int pixel_shift = h->pixel_shift;
+     const int block_h = 16 >> s->chroma_y_shift;
  
 +    FFMPEG_TIME_START(s->avctx, post);
      if(h->deblocking_filter) {
-         for(mb_x= 0; mb_x<s->mb_width; mb_x++){
+         for(mb_x= start_x; mb_x<end_x; mb_x++){
              for(mb_y=end_mb_y - FRAME_MBAFF; mb_y<= end_mb_y; mb_y++){
-@@ -2512,6 +2585,8 @@
+@@ -3540,6 +3619,7 @@
              }
          }
      }
 +    FFMPEG_TIME_STOP(s->avctx, post);
-+	
      h->slice_type= old_slice_type;
-     s->mb_x= 0;
+     s->mb_x= end_x;
      s->mb_y= end_mb_y - FRAME_MBAFF;
-@@ -2534,7 +2609,49 @@
-     H264Context *h = *(void**)arg;
+@@ -3597,7 +3677,49 @@
      MpegEncContext * const s = &h->s;
-     const int part_mask= s->partitioned_frame ? (AC_END|AC_ERROR) : 0x7F;
+     const int part_mask= s->partitioned_frame ? (ER_AC_END|ER_AC_ERROR) : 0x7F;
+     int lf_x_start = s->mb_x;
 +    FFMPEG_METRICS_EXTRACT(unsigned bits_gone_by = 0);
  
-+	/* new slice coming up, process previous one */
-+	s->avctx->frame.flag_idr  = (h->nal_unit_type == NAL_IDR_SLICE);
++    /* new slice coming up, process previous one */
++    s->avctx->frame.flag_idr  = (h->nal_unit_type == NAL_IDR_SLICE);
 +    s->avctx->frame.current   = (AVFrame *)&s->current_picture;
-+	s->avctx->frame.mb_width  = s->mb_width;
-+	s->avctx->frame.mb_height = s->mb_height;
-+	s->avctx->slice.end_index = s->mb_x + s->mb_y * s->mb_width;
-+	s->avctx->reference.long_count  = h->long_ref_count;
-+	s->avctx->reference.short_count = h->short_ref_count;
-+	memcpy(s->avctx->reference.long_list , h->long_ref , sizeof(h->long_ref ));
-+	memcpy(s->avctx->reference.short_list, h->short_ref, sizeof(h->short_ref));
-+	if (s->avctx->slice.skip && !s->avctx->slice.conceal)
-+		/* previous slice has been skipped, mark it done so that error resilience does not kick in */
++    s->avctx->frame.mb_width  = s->mb_width;
++    s->avctx->frame.mb_height = s->mb_height;
++    s->avctx->slice.end_index = s->mb_x + s->mb_y * s->mb_width;
++    s->avctx->reference.long_count  = h->long_ref_count;
++    s->avctx->reference.short_count = h->short_ref_count;
++    memcpy(s->avctx->reference.long_list , h->long_ref , sizeof(h->long_ref ));
++    memcpy(s->avctx->reference.short_list, h->short_ref, sizeof(h->short_ref));
++    if (s->avctx->slice.skip && !s->avctx->slice.conceal)
++        // previous slice has been skipped, mark it done so that error resilience does not kick in
 +        ff_er_add_slice(s,
-+						s->avctx->slice.start_index % s->mb_width,
-+						s->avctx->slice.start_index / s->mb_width,
-+						s->avctx->slice.end_index % s->mb_width - 1,
-+						s->avctx->slice.end_index / s->mb_width,
-+						(AC_END|DC_END|MV_END) & 0x7F);
++                        s->avctx->slice.start_index % s->mb_width,
++                        s->avctx->slice.start_index / s->mb_width,
++                        s->avctx->slice.end_index % s->mb_width - 1,
++                        s->avctx->slice.end_index / s->mb_width,
++                        (AC_END|DC_END|MV_END) & 0x7F);
 +    if (avctx->process_slice) {
 +        emms_c();
 +        avctx->process_slice(s->avctx);
 +    }
 +    /* prepare data for upcoming slice */
 +    s->avctx->metrics.type = h->slice_type;
-+	s->avctx->slice.start_index = s->mb_x + s->mb_y * s->mb_width;
-+	s->avctx->reference.count[0] = h->ref_count[0];
-+	s->avctx->reference.count[1] = h->ref_count[1];
++    s->avctx->slice.start_index = s->mb_x + s->mb_y * s->mb_width;
++    s->avctx->reference.count[0] = h->ref_count[0];
++    s->avctx->reference.count[1] = h->ref_count[1];
 +    {
 +        int i;
 +        for (i = 0; i < 32; i++) {
@@ -446,16 +484,16 @@ Index: libavcodec/h264.c
 +        }
 +    }
 +    if (s->avctx->slice.skip) {
-+		/* do not decode this slice and skip the given amount of macroblocks */
-+		s->mb_x = (s->avctx->slice.start_index + s->avctx->slice.skip) % s->mb_width;
-+		s->mb_y = (s->avctx->slice.start_index + s->avctx->slice.skip) / s->mb_width;
-+		return 0;
++        // do not decode this slice and skip the given amount of macroblocks
++        s->mb_x = (s->avctx->slice.start_index + s->avctx->slice.skip) % s->mb_width;
++        s->mb_y = (s->avctx->slice.start_index + s->avctx->slice.skip) / s->mb_width;
++        return 0;
 +    }
 +    
      s->mb_skip_run= -1;
  
      h->is_complex = FRAME_MBAFF || s->picture_structure != PICT_FRAME || s->codec_id != CODEC_ID_H264 ||
-@@ -2545,16 +2662,20 @@
+@@ -3608,16 +3730,20 @@
          align_get_bits( &s->gb );
  
          /* init cabac */
@@ -476,7 +514,7 @@ Index: libavcodec/h264.c
              int eos;
  //STOP_TIMER("decode_mb_cabac")
  
-@@ -2563,13 +2684,26 @@
+@@ -3626,12 +3752,25 @@
              if( ret >= 0 && FRAME_MBAFF ) { //FIXME optimal? or let mb_decode decode 16x32 ?
                  s->mb_y++;
  
@@ -489,22 +527,20 @@ Index: libavcodec/h264.c
              }
 +            FFMPEG_TIME_START(s->avctx, decompress_cabac);
              eos = get_cabac_terminate( &h->cabac );
--
 +            FFMPEG_TIME_STOP(s->avctx, decompress_cabac);
-+            
++
 +            FFMPEG_METRICS_EXTRACT(s->avctx->metrics.bits -= bits_gone_by);
 +            FFMPEG_METRICS_EXTRACT(bits_gone_by = (h->cabac.bytestream - h->cabac.bytestream_start) * 8);
 +            FFMPEG_METRICS_EXTRACT(s->avctx->metrics.bits += bits_gone_by);
-+            
++
 +            if(s->avctx->process_mb) {
 +                emms_c();
 +                s->avctx->process_mb(s->avctx);
 +            }
-+			
+ 
              if((s->workaround_bugs & FF_BUG_TRUNCATED) && h->cabac.bytestream > h->cabac.bytestream_end + 2){
-                 ff_er_add_slice(s, s->resync_mb_x, s->resync_mb_y, s->mb_x-1, s->mb_y, (AC_END|DC_END|MV_END)&part_mask);
-                 return 0;
-@@ -2601,18 +2735,31 @@
+                 ff_er_add_slice(s, s->resync_mb_x, s->resync_mb_y, s->mb_x-1, s->mb_y, ER_MB_END&part_mask);
+@@ -3666,18 +3805,31 @@
  
      } else {
          for(;;){
@@ -523,36 +559,33 @@ Index: libavcodec/h264.c
                  if(ret>=0) ff_h264_hl_decode_mb(h);
                  s->mb_y--;
              }
--
-+            
+ 
 +            FFMPEG_METRICS_EXTRACT(s->avctx->metrics.bits -= bits_gone_by);
 +            FFMPEG_METRICS_EXTRACT(bits_gone_by = get_bits_count(&s->gb));
 +            FFMPEG_METRICS_EXTRACT(s->avctx->metrics.bits += bits_gone_by);
-+            
++
 +            if(s->avctx->process_mb) {
 +                emms_c();
 +                s->avctx->process_mb(s->avctx);
 +            }
-+            
++
              if(ret<0){
                  av_log(h->s.avctx, AV_LOG_ERROR, "error while decoding MB %d %d\n", s->mb_x, s->mb_y);
-                 ff_er_add_slice(s, s->resync_mb_x, s->resync_mb_y, s->mb_x, s->mb_y, (AC_ERROR|DC_ERROR|MV_ERROR)&part_mask);
-@@ -2938,7 +3085,13 @@
+                 ff_er_add_slice(s, s->resync_mb_x, s->resync_mb_y, s->mb_x, s->mb_y, ER_MB_ERROR&part_mask);
+@@ -4000,6 +4152,12 @@
          case NAL_SPS_EXT:
          case NAL_AUXILIARY_SLICE:
              break;
--        default:
-+		case NAL_SIDEBAND_DATA:
-+			if (s->avctx->process_sideband) {
-+				emms_c();
-+				s->avctx->process_sideband(ptr);
-+			}
-+			break;
-+		default:
++        case NAL_SIDEBAND_DATA:
++            if (s->avctx->process_sideband) {
++                emms_c();
++                s->avctx->process_sideband(ptr);
++            }
++            break;
+         default:
              av_log(avctx, AV_LOG_DEBUG, "Unknown NAL code: %d (%d bits)\n", hx->nal_unit_type, bit_length);
          }
- 
-@@ -3011,19 +3164,46 @@
+@@ -4077,6 +4235,13 @@
              *pict= *(AVFrame*)out;
          }
  
@@ -563,133 +596,110 @@ Index: libavcodec/h264.c
 +            avctx->process_slice(avctx);
 +        }
 +
-         return 0;
+         return buf_size;
      }
- 
+     if(h->is_avc && buf_size >= 9 && buf[0]==1 && buf[2]==0 && (buf[4]&0xFC)==0xFC && (buf[5]&0x1F) && buf[8]==0x67){
+@@ -4101,11 +4266,29 @@
+         return ff_h264_decode_extradata(h, buf, buf_size);
+     }
+ not_extra:
 +    avctx->metrics.type = PSEUDO_SLICE_FRAME_START;
-+    
+ 
      buf_index=decode_nal_units(h, buf, buf_size);
      if(buf_index < 0)
          return -1;
  
 +    /* process last slice */
-+	s->avctx->slice.flag_last = 1;
-+	s->avctx->slice.end_index = s->mb_x + s->mb_y * s->mb_width;
-+	if (s->avctx->slice.skip && !s->avctx->slice.conceal)
-+		/* previous slice has been skipped, mark it done so that error resilience does not kick in */
++    s->avctx->slice.flag_last = 1;
++    s->avctx->slice.end_index = s->mb_x + s->mb_y * s->mb_width;
++    if (s->avctx->slice.skip && !s->avctx->slice.conceal)
++        // previous slice has been skipped, mark it done so that error resilience does not kick in
 +        ff_er_add_slice(s,
-+						s->avctx->slice.start_index % s->mb_width,
-+						s->avctx->slice.start_index / s->mb_width,
-+						s->avctx->slice.end_index % s->mb_width - 1,
-+						s->avctx->slice.end_index / s->mb_width,
-+						(AC_END|DC_END|MV_END) & 0x7F);
++                        s->avctx->slice.start_index % s->mb_width,
++                        s->avctx->slice.start_index / s->mb_width,
++                        s->avctx->slice.end_index % s->mb_width - 1,
++                        s->avctx->slice.end_index / s->mb_width,
++                        (AC_END|DC_END|MV_END) & 0x7F);
 +    if (avctx->process_slice) {
 +        emms_c();
 +        avctx->process_slice(s->avctx);
 +    }
 +    avctx->metrics.type = PSEUDO_SLICE_FRAME_END;
-+    
-     if(!(s->flags2 & CODEC_FLAG2_CHUNKS) && !s->current_picture_ptr){
-         if (avctx->skip_frame >= AVDISCARD_NONREF || s->hurry_up) return 0;
-         av_log(avctx, AV_LOG_ERROR, "no frame!\n");
++
+     if (!s->current_picture_ptr && h->nal_unit_type == NAL_END_SEQUENCE) {
+         av_assert0(buf_index <= buf_size);
+         buf_size = buf_index;
+@@ -4120,6 +4303,7 @@
          return -1;
      }
  
 +    FFMPEG_TIME_START(avctx, frame_end);
      if(!(s->flags2 & CODEC_FLAG2_CHUNKS) || (s->mb_y >= s->mb_height && s->mb_height)){
-         Picture *out = s->current_picture_ptr;
-         Picture *cur = s->current_picture_ptr;
-@@ -3164,10 +3344,19 @@
+ 
+         if(s->flags2 & CODEC_FLAG2_CHUNKS) decode_postinit(h, 1);
+@@ -4134,6 +4318,14 @@
              }
          }
      }
 +    FFMPEG_TIME_STOP(avctx, frame_end);
- 
-     assert(pict->data[0] || !*data_size);
-     ff_print_debug_info(s, pict);
--//printf("out %d\n", (int)pict->data[0]);
-+	
++
 +    /* frame end processing */
 +    avctx->frame.display = *data_size ? pict : NULL;
 +    if (avctx->process_slice) {
 +        emms_c();
 +        avctx->process_slice(avctx);
 +    }
-+    
-+	//printf("out %d\n", (int)pict->data[0]);
  
-     return get_consumed_bytes(s, buf_index, buf_size);
- }
-Index: libavcodec/h264_loopfilter.c
-===================================================================
---- libavcodec/h264_loopfilter.c	(revision 25549)
-+++ libavcodec/h264_loopfilter.c	(working copy)
-@@ -344,10 +344,12 @@
-         if(left_type)
-             filter_mb_edgev( &img_y[4*0], linesize, bS4, qp0, h);
-         if( IS_8x8DCT(mb_type) ) {
-+            FFMPEG_METRICS_EXTRACT(s->avctx->metrics.deblock_edges += 4);
-             filter_mb_edgev( &img_y[4*2], linesize, bS3, qp, h);
-             filter_mb_edgeh( &img_y[4*0*linesize], linesize, bSH, qp1, h);
-             filter_mb_edgeh( &img_y[4*2*linesize], linesize, bS3, qp, h);
-         } else {
-+            FFMPEG_METRICS_EXTRACT(s->avctx->metrics.deblock_edges += 8);
-             filter_mb_edgev( &img_y[4*1], linesize, bS3, qp, h);
-             filter_mb_edgev( &img_y[4*2], linesize, bS3, qp, h);
-             filter_mb_edgev( &img_y[4*3], linesize, bS3, qp, h);
-@@ -391,6 +393,7 @@
+     assert(pict->data[0] || !*data_size);
+     ff_print_debug_info(s, pict);
+diff -ru FFmpeg.orig/libavcodec/h264_loopfilter.c FFmpeg/libavcodec/h264_loopfilter.c
+--- libavcodec/h264_loopfilter.c	2011-12-30 12:32:39.000000000 +0100
++++ libavcodec/h264_loopfilter.c	2011-12-30 14:44:27.000000000 +0100
+@@ -106,6 +106,7 @@
+     const int alpha = alpha_table[index_a];
+     const int beta  = beta_table[qp + b];
+     if (alpha ==0 || beta == 0) return;
++    FFMPEG_METRICS_EXTRACT(h->s.avctx->metrics.deblock_edges += 4);
  
- #define FILTER(hv,dir,edge)\
-         if(AV_RN64A(bS[dir][edge])) {                                   \
-+			FFMPEG_METRICS_EXTRACT(s->avctx->metrics.deblock_edges++);\
-             filter_mb_edge##hv( &img_y[4*edge*(dir?linesize:1)], linesize, bS[dir][edge], edge ? qp : qp##dir, h );\
-             if(!(edge&1)) {\
-                 filter_mb_edgec##hv( &img_cb[2*edge*(dir?uvlinesize:1)], uvlinesize, bS[dir][edge], edge ? qpc : qpc##dir, h );\
-@@ -500,6 +503,7 @@
-                 qp = ( s->current_picture.qscale_table[mb_xy] + s->current_picture.qscale_table[mbn_xy] + 1 ) >> 1;
-                 tprintf(s->avctx, "filter mb:%d/%d dir:%d edge:%d, QPy:%d ls:%d uvls:%d", mb_x, mb_y, dir, edge, qp, tmp_linesize, tmp_uvlinesize);
-                 { int i; for (i = 0; i < 4; i++) tprintf(s->avctx, " bS[%d]:%d", i, bS[i]); tprintf(s->avctx, "\n"); }
-+				FFMPEG_METRICS_EXTRACT(s->avctx->metrics.deblock_edges++);
-                 filter_mb_edgeh( &img_y[j*linesize], tmp_linesize, bS, qp, h );
-                 filter_mb_edgech( &img_cb[j*uvlinesize], tmp_uvlinesize, bS,
-                                 ( h->chroma_qp[0] + get_chroma_qp( h, 0, s->current_picture.qscale_table[mbn_xy] ) + 1 ) >> 1, h);
-@@ -559,6 +563,7 @@
-                 //tprintf(s->avctx, "filter mb:%d/%d dir:%d edge:%d, QPy:%d, QPc:%d, QPcn:%d\n", mb_x, mb_y, dir, edge, qp, h->chroma_qp[0], s->current_picture.qscale_table[mbn_xy]);
-                 tprintf(s->avctx, "filter mb:%d/%d dir:%d edge:%d, QPy:%d ls:%d uvls:%d", mb_x, mb_y, dir, edge, qp, linesize, uvlinesize);
-                 //{ int i; for (i = 0; i < 4; i++) tprintf(s->avctx, " bS[%d]:%d", i, bS[i]); tprintf(s->avctx, "\n"); }
-+				FFMPEG_METRICS_EXTRACT(s->avctx->metrics.deblock_edges++);
-                 if( dir == 0 ) {
-                     filter_mb_edgev( &img_y[0], linesize, bS, qp, h );
-                     {
-@@ -637,6 +642,7 @@
-         //tprintf(s->avctx, "filter mb:%d/%d dir:%d edge:%d, QPy:%d, QPc:%d, QPcn:%d\n", mb_x, mb_y, dir, edge, qp, h->chroma_qp[0], s->current_picture.qscale_table[mbn_xy]);
-         tprintf(s->avctx, "filter mb:%d/%d dir:%d edge:%d, QPy:%d ls:%d uvls:%d", mb_x, mb_y, dir, edge, qp, linesize, uvlinesize);
-         //{ int i; for (i = 0; i < 4; i++) tprintf(s->avctx, " bS[%d]:%d", i, bS[i]); tprintf(s->avctx, "\n"); }
-+        FFMPEG_METRICS_EXTRACT(s->avctx->metrics.deblock_edges++);
-         if( dir == 0 ) {
-             filter_mb_edgev( &img_y[4*edge], linesize, bS, qp, h );
-             if( (edge&1) == 0 ) {
-Index: Makefile
-===================================================================
---- Makefile	(revision 25549)
-+++ Makefile	(working copy)
-@@ -94,15 +94,15 @@
+     if( bS[0] < 4 || !intra ) {
+         int8_t tc[4];
+@@ -123,6 +124,7 @@
+     const int alpha = alpha_table[index_a];
+     const int beta  = beta_table[qp + b];
+     if (alpha ==0 || beta == 0) return;
++    FFMPEG_METRICS_EXTRACT(h->s.avctx->metrics.deblock_edges += 2);
  
- ffplay.o: CFLAGS += $(SDL_CFLAGS)
+     if( bS[0] < 4 || !intra ) {
+         int8_t tc[4];
+@@ -141,6 +143,7 @@
+     const int alpha = alpha_table[index_a];
+     const int beta  = beta_table[qp + b];
+     if (alpha ==0 || beta == 0) return;
++    FFMPEG_METRICS_EXTRACT(h->s.avctx->metrics.deblock_edges += 2);
  
--VERSION_SH  = $(SRC_PATH_BARE)/version.sh
--GIT_LOG     = $(SRC_PATH_BARE)/.git/logs/HEAD
--SVN_ENTRIES = $(SRC_PATH_BARE)/.svn/entries
-+VERSION_SH  = version.sh
-+GIT_LOG     = .git/logs/HEAD
-+SVN_ENTRIES = .svn/entries
+     if( bS[0] < 4 || !intra ) {
+         int8_t tc[4];
+@@ -158,6 +161,7 @@
+     const int alpha = alpha_table[index_a];
+     const int beta  = beta_table[qp + b];
+     if (alpha ==0 || beta == 0) return;
++    FFMPEG_METRICS_EXTRACT(h->s.avctx->metrics.deblock_edges++);
  
- .version: $(wildcard $(GIT_LOG) $(SVN_ENTRIES)) $(VERSION_SH) config.mak
- .version: M=@
+     if( bS[0] < 4 || !intra ) {
+         int8_t tc[4];
+@@ -176,6 +180,7 @@
+     const int alpha = alpha_table[index_a];
+     const int beta  = beta_table[qp + b];
+     if (alpha ==0 || beta == 0) return;
++    FFMPEG_METRICS_EXTRACT(h->s.avctx->metrics.deblock_edges += 4);
  
- version.h .version:
--	$(M)$(VERSION_SH) $(SRC_PATH) version.h $(EXTRA_VERSION)
-+	$(M)./$(VERSION_SH) $(SRC_PATH) version.h $(EXTRA_VERSION)
- 	$(Q)touch .version
+     if( bS[0] < 4 || !intra ) {
+         int8_t tc[4];
+@@ -194,6 +199,7 @@
+     const int alpha = alpha_table[index_a];
+     const int beta  = beta_table[qp + b];
+     if (alpha ==0 || beta == 0) return;
++    FFMPEG_METRICS_EXTRACT(h->s.avctx->metrics.deblock_edges += 2);
  
- # force version.sh to run whenever version might have changed
+     if( bS[0] < 4 || !intra ) {
+         int8_t tc[4];

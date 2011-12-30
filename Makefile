@@ -3,10 +3,12 @@ include $(WORKBENCH_BASE)/Makeconf
 
 PROCESSING_OBJS = $(patsubst %.c,%.o,$(wildcard Processing/*.c))
 FFMPEG_LIBS = \
+	$(WORKBENCH_BASE)/FFmpeg/libavdevice/libavdevice.a \
 	$(WORKBENCH_BASE)/FFmpeg/libavformat/libavformat.a \
 	$(WORKBENCH_BASE)/FFmpeg/libavcodec/libavcodec.a \
-	$(WORKBENCH_BASE)/FFmpeg/libavcore/libavcore.a \
-	$(WORKBENCH_BASE)/FFmpeg/libavutil/libavutil.a
+	$(WORKBENCH_BASE)/FFmpeg/libavfilter/libavfilter.a \
+	$(WORKBENCH_BASE)/FFmpeg/libavutil/libavutil.a \
+	$(WORKBENCH_BASE)/FFmpeg/libswscale/libswscale.a
 
 .PHONY: all debug clean cleanall update force
 
@@ -25,7 +27,7 @@ ifneq ($(BUILD_PROCESSING),)
 $(PROCESSING_OBJS): Processing
 	
 Processing Processing/: force
-	$(MAKE) -j$(CPUS) -C Processing
+	$(MAKE) -j$(CPUS) -C $@
 clean::
 	$(MAKE) -C Processing $@
 endif
@@ -36,13 +38,14 @@ ifneq ($(BUILD_FFMPEG),)
 $(FFMPEG_LIBS): FFmpeg
 	
 FFmpeg FFmpeg/: FFmpeg/config.mak force
-	$(MAKE) -j$(CPUS) -C FFmpeg
+	$(MAKE) -j$(CPUS) -C $@
 FFmpeg/config.mak: FFmpeg/configure
-	cd FFmpeg && CC=$(CC) CPPFLAGS= CFLAGS= ./configure \
-		--cpu=$(ARCH) --enable-pthreads --disable-doc --disable-swscale --disable-ffplay --disable-ffprobe --disable-ffserver \
+	cd FFmpeg && CPPFLAGS= CFLAGS= ./configure \
+		--cc=$(CC) --cpu=$(ARCH) --enable-pthreads \
+		--disable-doc --disable-ffplay --disable-ffprobe --disable-ffserver \
 		--disable-decoders --disable-encoders --disable-parsers --disable-demuxers --disable-muxers \
-		--disable-protocols --disable-filters --disable-bsfs --disable-indevs --disable-outdevs \
-		--enable-decoder=h264 --enable-parser=h264 --enable-demuxer=h264 --enable-protocol=file --enable-filter=buffer
+		--disable-protocols --disable-filters --disable-bsfs --disable-indevs --disable-outdevs --disable-hwaccels \
+		--enable-decoder=h264 --enable-parser=h264 --enable-demuxer=h264 --enable-protocol=file --enable-rdft
 FFmpeg/configure:
 	rm -rf FFmpeg
 	curl 'http://git.videolan.org/?p=ffmpeg.git;a=snapshot;h=HEAD;sf=tgz' | tar xz
