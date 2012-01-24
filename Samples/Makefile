@@ -1,4 +1,4 @@
-.PHONY: all clean
+.PHONY: all clean cleanall force
 
 .INTERMEDIATE: $(patsubst %.opt,%.y4m,$(wildcard *.opt))
 
@@ -36,9 +36,8 @@ else
 	curl --user-agent QuickTime $(URL) > $@
 endif
 
-../x264/x264: ../x264
-../x264:
-	$(MAKE) -C $(@D) $(@F)
+../x264/x264: force
+	$(MAKE) -C .. x264
 
 # some demo video
 bbc-r_m720p.opt:
@@ -46,3 +45,9 @@ bbc-r_m720p.opt:
 
 clean:
 	rm -f *.h264 *.p264 *.prop
+
+cleanall: clean
+	rm -f *.mov
+
+force:
+	

@@ -3,11 +3,12 @@ include $(WORKBENCH_BASE)/Makeconf
 
 PROCESSING_OBJS = $(patsubst %.c,%.o,$(wildcard Processing/*.c))
 FFMPEG_LIBS = \
+	$(WORKBENCH_BASE)/FFmpeg/libavutil/libavutil.a \
 	$(WORKBENCH_BASE)/FFmpeg/libavdevice/libavdevice.a \
+	$(WORKBENCH_BASE)/FFmpeg/libavfilter/libavfilter.a \
 	$(WORKBENCH_BASE)/FFmpeg/libavformat/libavformat.a \
 	$(WORKBENCH_BASE)/FFmpeg/libavcodec/libavcodec.a \
-	$(WORKBENCH_BASE)/FFmpeg/libavfilter/libavfilter.a \
-	$(WORKBENCH_BASE)/FFmpeg/libavutil/libavutil.a \
+	$(WORKBENCH_BASE)/FFmpeg/libswresample/libswresample.a \
 	$(WORKBENCH_BASE)/FFmpeg/libswscale/libswscale.a
 
 .PHONY: all debug clean cleanall update force
@@ -60,7 +61,8 @@ Samples Samples/:: x264
 x264 x264/: x264/config.mak force
 	$(MAKE) -j$(CPUS) -C $@
 x264/config.mak: x264/configure
-	cd x264 && CC=$(CC) CPPFLAGS= CFLAGS= ./configure --extra-cflags=-march=$(ARCH)
+	# FIXME: clang-compiled x264 crashes when encoding the demo BBC video
+	cd x264 && CC=gcc CPPFLAGS= CFLAGS= ./configure --extra-cflags=-march=$(ARCH)
 x264/configure:
 	rm -rf x264
 	curl 'http://git.videolan.org/?p=x264.git;a=snapshot;h=HEAD;sf=tgz' | tar xz

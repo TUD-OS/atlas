@@ -1,9 +1,6 @@
 WORKBENCH_BASE ?= .
 -include $(WORKBENCH_BASE)/Makeconf.local
 
-# disable all default implicit rules
-#.SUFFIXES:
-
 ARCH ?= core2
 CPUS ?= $(shell case `uname` in (Darwin) ioreg | fgrep -c ' AppleACPICPU ' ;; (Linux) grep -c ^processor /proc/cpuinfo ;; esac)
 
