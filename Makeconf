@@ -7,6 +7,7 @@ CPUS ?= $(shell case `uname` in (Darwin) ioreg | fgrep -c ' AppleACPICPU ' ;; (L
 # a compiler with blocks support is required
 CC = clang
 
+override CPPFLAGS := $(if $(DEBUG),-DDEBUG,) $(CPPFLAGS)
 override CPPFLAGS := -DTHREADS=$(CPUS) $(CPPFLAGS)
 override CPPFLAGS := -I$(WORKBENCH_BASE)/FFmpeg $(CPPFLAGS)
 override CPPFLAGS := -IProcessing $(CPPFLAGS)

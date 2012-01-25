@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4C4847D314CED80A009DDAAF /* ffplay.c in Sources */ = {isa = PBXBuildFile; fileRef = 4C4847D114CED7F0009DDAAF /* ffplay.c */; };
 		4CAA9EFC135C57AE00AEA9EB /* h264_workbench.c in Sources */ = {isa = PBXBuildFile; fileRef = 4C24B9E911EDE6D600E67981 /* h264_workbench.c */; };
 		4CAA9EFF135C58F500AEA9EB /* llsp.c in Sources */ = {isa = PBXBuildFile; fileRef = 4C24B9ED11EDE6D600E67981 /* llsp.c */; };
 		4CAA9F00135C58F500AEA9EB /* metrics.c in Sources */ = {isa = PBXBuildFile; fileRef = 4C24B9F111EDE6D600E67981 /* metrics.c */; };
@@ -40,6 +41,7 @@
 		4C24B9FE11EDE6D600E67981 /* ssim.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ssim.c; sourceTree = "<group>"; };
 		4C24B9FF11EDE6D600E67981 /* ssim.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ssim.h; sourceTree = "<group>"; };
 		4C3E4E7F126D9BCF004DACE5 /* Makeconf */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = Makeconf; sourceTree = "<group>"; };
+		4C4847D114CED7F0009DDAAF /* ffplay.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = ffplay.c; path = Experiments/ffplay/ffplay.c; sourceTree = "<group>"; };
 		4CAA9F08135C59C400AEA9EB /* h264_workbench */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = h264_workbench; sourceTree = BUILT_PRODUCTS_DIR; };
 		4CF0A7011202CA0800817B42 /* weak.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = weak.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -57,6 +59,7 @@
 				4C24B00211EDE6B800E67981 /* Experiments */,
 				4C24B8FB11EDE6B900E67981 /* FFmpeg */,
 				4C24B8FD11EDE6B900E67981 /* x264 */,
+				4C4847D414CED846009DDAAF /* Shortcuts */,
 			);
 			name = Workbench;
 			sourceTree = "<group>";
@@ -80,6 +83,14 @@
 				4CF0A7011202CA0800817B42 /* weak.c */,
 			);
 			path = Processing;
+			sourceTree = "<group>";
+		};
+		4C4847D414CED846009DDAAF /* Shortcuts */ = {
+			isa = PBXGroup;
+			children = (
+				4C4847D114CED7F0009DDAAF /* ffplay.c */,
+			);
+			name = Shortcuts;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -130,17 +141,18 @@
 /* End PBXLegacyTarget section */
 
 /* Begin PBXNativeTarget section */
-		4CAA9EF1135C535300AEA9EB /* h264_workbench */ = {
+		4CAA9EF1135C535300AEA9EB /* Xcode Editor Support */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 4CAA9EF9135C535300AEA9EB /* Build configuration list for PBXNativeTarget "h264_workbench" */;
+			buildConfigurationList = 4CAA9EF9135C535300AEA9EB /* Build configuration list for PBXNativeTarget "Xcode Editor Support" */;
 			buildPhases = (
+				4C4847D514CED91A009DDAAF /* ShellScript */,
 				4CAA9EEE135C535300AEA9EB /* Sources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = h264_workbench;
+			name = "Xcode Editor Support";
 			productName = Dummy;
 			productReference = 4CAA9F08135C59C400AEA9EB /* h264_workbench */;
 			productType = "com.apple.product-type.tool";
@@ -169,10 +181,27 @@
 				D28A88AD04BDD90700651E21 /* Workbench */,
 				4C24BA0211EDE76D00E67981 /* Samples */,
 				4C24BA0511EDE77700E67981 /* Experiments */,
-				4CAA9EF1135C535300AEA9EB /* h264_workbench */,
+				4CAA9EF1135C535300AEA9EB /* Xcode Editor Support */,
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		4C4847D514CED91A009DDAAF /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# This target helps the Xcode editor parse the files and find all the relevant headers for code completion. It is not intended to be compiled.\nfalse";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		4CAA9EEE135C535300AEA9EB /* Sources */ = {
@@ -189,6 +218,7 @@
 				4CAA9F05135C58F500AEA9EB /* schedule.c in Sources */,
 				4CAA9F06135C58F500AEA9EB /* ssim.c in Sources */,
 				4CAA9F07135C58F500AEA9EB /* weak.c in Sources */,
+				4C4847D314CED80A009DDAAF /* ffplay.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -255,7 +285,6 @@
 		4CAA9EFA135C535300AEA9EB /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					METRICS_EXTRACT,
 					PREPROCESS,
@@ -266,14 +295,12 @@
 					LLSP_PREDICT,
 				);
 				HEADER_SEARCH_PATHS = FFmpeg;
-				PRODUCT_NAME = h264_workbench;
 			};
 			name = Debug;
 		};
 		4CAA9EFB135C535300AEA9EB /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					METRICS_EXTRACT,
 					PREPROCESS,
@@ -284,7 +311,6 @@
 					LLSP_PREDICT,
 				);
 				HEADER_SEARCH_PATHS = FFmpeg;
-				PRODUCT_NAME = h264_workbench;
 			};
 			name = Release;
 		};
@@ -327,7 +353,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		4CAA9EF9135C535300AEA9EB /* Build configuration list for PBXNativeTarget "h264_workbench" */ = {
+		4CAA9EF9135C535300AEA9EB /* Build configuration list for PBXNativeTarget "Xcode Editor Support" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				4CAA9EFA135C535300AEA9EB /* Debug */,
