@@ -23,9 +23,6 @@ static void destroy_frames_list(void);
 
 struct proc_s proc = {
 .last_idr = NULL, .frame = NULL,
-#if SIDEBAND_READ
-.lookahead = NULL,
-#endif
 #ifdef SCHEDULE_EXECUTE
 .propagation = { .vis_frame = { .data = { NULL, NULL, NULL, NULL } }, .total_error = 0.0 },
 #endif
@@ -124,9 +121,6 @@ void process_finish(AVCodecContext *c)
 #endif
 	while (proc.last_idr)
 		destroy_frames_list();
-#if SIDEBAND_READ
-	proc.lookahead = NULL;
-#endif
 #if LLSP_PREDICT && !LLSP_TRAIN_DECODE && !LLSP_TRAIN_REPLACE
 	/* we cannot free the handles during training, since we may want to train on multiple files */
 	llsp_dispose(proc.llsp.decode);
@@ -236,10 +230,6 @@ static void process_sideband(const uint8_t *nalu)
 	frame = (frame_node_t *)av_malloc(sizeof(frame_node_t));
 	if (!proc.last_idr)
 		proc.last_idr = frame;
-	if (proc.lookahead)
-		proc.lookahead->next = frame;
-	proc.lookahead = frame;
-	proc.lookahead->next = NULL;
 	
 	nalu_read_start(nalu);
 	mb_width  = nalu_read_uint16();
@@ -298,15 +288,18 @@ static void process_sideband(const uint8_t *nalu)
 #if SIDEBAND_WRITE
 static void write_sideband_data(void)
 {
-	static int lookahead_left = frame_lookahead;
 	frame_node_t *frame;
 	int i;
 	
 	if (!proc.frame) return;
 	/* process frame list up to and including proc.frame */
 	for (frame = proc.last_idr; frame != proc.frame->next; frame = frame->next) {
-		/* align the stream to the next slice start */
-		while (!slice_start()) copy_nalu();
+		/* copy slices worth a full frame */
+		for (i = 0; i < frame->slice_count; i++) {
+			/* skip to the next slice start */
+			while (!slice_start()) copy_nalu();
+			copy_nalu();
+		}
 		
 		/* write our sideband data as a custom NALU */
 		nalu_write_start();
@@ -345,16 +338,6 @@ static void write_sideband_data(void)
 		/* store immission factors in a separate file, so we can use them for slice tracking later */
 		write_immission(frame);
 #endif
-		
-		if (!lookahead_left)
-		/* copy slices worth a full frame */
-			for (i = 0; i < frame->slice_count; i++) {
-				copy_nalu();
-				/* skip to the next slice start */
-				while (!slice_start()) copy_nalu();
-			}
-		else
-			lookahead_left--;
 	}
 }
 #endif

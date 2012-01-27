@@ -280,13 +280,9 @@ extern struct proc_s {
 	 * some processing like backwards-accumulation of error propagation can only
 	 * be performed at IDR frames; the layout of the frames list is:
 	 * 
-	 * node -> node -> node -> node -> node -> node -> node -> node -> node
-	 *  ^                       ^                                       ^
-	 * last_idr                frame                                 lookahead
-	 * 
-	 * If we are not currently reading sideband data, the list ends at the "frame"
-	 * node and lookahead does not exist. If we are reading sideband data, the
-	 * distance between "frame" and "lookahead" is constant (see frame_lookahead).
+	 * node -> node -> node -> node
+	 *  ^                       ^
+	 * last_idr                frame
 	 * 
 	 * If the upcoming frame is an IDR, the list should be processed from last_idr
 	 * to frame->next. This will mark the end regardless of sideband reading. */
@@ -295,10 +291,6 @@ extern struct proc_s {
 	frame_node_t *last_idr;
 	/* current frame */
 	frame_node_t *frame;
-#if SIDEBAND_READ
-	/* sideband data already read */
-	frame_node_t *lookahead;
-#endif
 	
 	/* state variables for sideband reading/writing */
 	struct {
@@ -360,7 +352,6 @@ extern struct proc_s {
 static const int mb_size_log = 4;	/* log2 of the edge length of a macroblock */
 static const float ssim_precision = 0.05;
 static const float subdivision_threshold = 0.01;
-static const int frame_lookahead = 25;
 static const int output_queue = 10;     /* length of simulated player's frame queue */
 #if SLICE_SKIP
 static const float safety_margin_decode  = 1.1;

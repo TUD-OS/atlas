@@ -20,13 +20,17 @@ int slice_start(void)
 {
 	while (1) {
 		/* peek ahead to get the start code */
-		if (fread(proc.sideband.buf, 1, 4, proc.sideband.from) != 4)
+		if (fread(proc.sideband.buf, 1, 4, proc.sideband.from) != 4) {
 			printf("could not read NALU start code\n");
+			printf("source file position %lld\n", ftello(proc.sideband.from));
+			printf("target file position %lld\n", ftello(proc.sideband.to));
+			abort();
+		}
 		fseek(proc.sideband.from, -4, SEEK_CUR);
 		if (proc.sideband.buf[0] == 0 && proc.sideband.buf[1] == 0 && proc.sideband.buf[2] == 1)
 			break;
 		else
-		/* not at a nalu start, align */
+			/* not at a nalu start, align */
 			copy_nalu();
 	}
 	return ((proc.sideband.buf[3] & 0x1F) > 0 && (proc.sideband.buf[3] & 0x1F) < 6);
@@ -34,27 +38,30 @@ int slice_start(void)
 
 void copy_nalu(void)
 {
-	int i, bytes;
+	int write, read;
 	/* skip our own NALUs, if the file has already been preprocessed */
 	const int skip =
-    (proc.sideband.buf[0] == 0) &&
-    (proc.sideband.buf[1] == 0) &&
-    (proc.sideband.buf[2] == 1) &&
-    ((proc.sideband.buf[3] & 0x1F) == NAL_SIDEBAND_DATA);
+		(proc.sideband.buf[0] == 0) &&
+		(proc.sideband.buf[1] == 0) &&
+		(proc.sideband.buf[2] == 1) &&
+		((proc.sideband.buf[3] & 0x1F) == NAL_SIDEBAND_DATA);
 	
 	/* the start bytes are alredy in the buffer, take them from there and skip them in the file */
 	if (!skip)
 		fwrite(proc.sideband.buf, 1, 4, proc.sideband.to);
 	fseek(proc.sideband.from, 4, SEEK_CUR);
 	do {
-		bytes = fread(proc.sideband.buf, 1, sizeof(proc.sideband.buf), proc.sideband.from);
-		for (i = 0; i < bytes - 2; i++)
-			if (proc.sideband.buf[i] == 0 && proc.sideband.buf[i+1] == 0 && proc.sideband.buf[i+2] == 1)
+		read = fread(proc.sideband.buf, 1, sizeof(proc.sideband.buf), proc.sideband.from);
+		for (write = 0; write < read - 2; write++)
+			if (proc.sideband.buf[write] == 0 && proc.sideband.buf[write+1] == 0 && proc.sideband.buf[write+2] == 1)
 				break;
+		if (feof(proc.sideband.from) && write == read - 2)
+			// last NALU, write everything
+			write = read;
 		if (!skip)
-			fwrite(proc.sideband.buf, 1, i, proc.sideband.to);
-		fseek(proc.sideband.from, i - bytes, SEEK_CUR);
-	} while (i == bytes - 2);
+			fwrite(proc.sideband.buf, 1, write, proc.sideband.to);
+		fseek(proc.sideband.from, write - read, SEEK_CUR);
+	} while (write == read - 2);
 }
 
 void nalu_write_start(void)
