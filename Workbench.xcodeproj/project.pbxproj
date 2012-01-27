@@ -228,14 +228,14 @@
 		1DEB919008733D9F0010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CPPFLAGS = "-DSIDEBAND_READ -DLLSP_TRAIN_DECODE";
+				CPPFLAGS = "-DMETRICS_EXTRACT -DSIDEBAND_WRITE";
 			};
 			name = Debug;
 		};
 		1DEB919108733D9F0010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CPPFLAGS = "-DSIDEBAND_READ -DLLSP_TRAIN_DECODE";
+				CPPFLAGS = "-DMETRICS_EXTRACT -DSIDEBAND_WRITE";
 			};
 			name = Release;
 		};
@@ -295,6 +295,7 @@
 					LLSP_PREDICT,
 				);
 				HEADER_SEARCH_PATHS = FFmpeg;
+				PRODUCT_NAME = h264_workbench;
 			};
 			name = Debug;
 		};
@@ -311,6 +312,7 @@
 					LLSP_PREDICT,
 				);
 				HEADER_SEARCH_PATHS = FFmpeg;
+				PRODUCT_NAME = h264_workbench;
 			};
 			name = Release;
 		};
