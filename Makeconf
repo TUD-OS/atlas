@@ -9,13 +9,11 @@ CC = clang
 
 override CPPFLAGS := $(if $(DEBUG),-DDEBUG,) $(CPPFLAGS)
 override CPPFLAGS := -DTHREADS=$(CPUS) $(CPPFLAGS)
-override CPPFLAGS := -I$(WORKBENCH_BASE)/FFmpeg $(CPPFLAGS)
-override CPPFLAGS := -IProcessing $(CPPFLAGS)
+override CPPFLAGS := -I$(WORKBENCH_BASE)/FFmpeg -IProcessing $(CPPFLAGS)
 
 override CFLAGS := $(if $(DEBUG),-g -O0,-O3) $(CFLAGS)
-override CFLAGS := -march=$(ARCH) -fblocks $(CFLAGS)
-override CFLAGS := -std=gnu99 $(CFLAGS)
-override CFLAGS := -Wall $(if $(NOWARN),,-Werror) $(CFLAGS)
+override CFLAGS := -march=$(ARCH) -fblocks -std=gnu99 $(CFLAGS)
+override CFLAGS := -Wall $(CFLAGS)
 
 ifeq ($(shell uname),Linux)
 override LDFLAGS := -lBlocksRuntime -ldispatch $(LDFLAGS)
