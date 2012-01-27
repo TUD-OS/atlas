@@ -246,8 +246,6 @@ void destroy_replacement_tree(replacement_node_t *node)
 #if PREPROCESS
 void remember_slice_boundaries(const AVCodecContext *c)
 {
-	proc.frame->slice[proc.frame->slice_count].start_index = c->slice.start_index;
-	proc.frame->slice[proc.frame->slice_count].end_index   = c->slice.end_index;
 	proc.frame->slice[proc.frame->slice_count].rect.min_y = ((c->slice.start_index) / proc.mb_width) << mb_size_log;
 	proc.frame->slice[proc.frame->slice_count].rect.max_y = ((c->slice.end_index - 1) / proc.mb_width + 1) << mb_size_log;
 	if (c->slice.start_index / proc.mb_width == (c->slice.end_index - 1) / proc.mb_width) {

@@ -128,7 +128,7 @@ defined(SCHEDULE_EXECUTE)
 #if METRICS_EXTRACT && !FFMPEG_METRICS
 #  warning  FFmpeg is not configured correctly, check avcodec.h
 #endif
-#if SIDEBAND_WRITE && (!METRICS_EXTRACT || !PREPROCESS)
+#if SIDEBAND_WRITE && !METRICS_EXTRACT
 #  warning  extracted sideband data might be invalid
 #endif
 #if SLICE_SKIP && !SIDEBAND_READ
@@ -187,7 +187,7 @@ extern void hook_frame_end(const AVCodecContext *c) WEAK_SYMBOL;
 typedef struct replacement_node_s replacement_node_t;
 typedef struct frame_node_s frame_node_t;
 typedef float propagation_t[SLICE_MAX];
-#if !(PREPROCESS || SLICE_SKIP)
+#if !PREPROCESS
 typedef void change_rect_t;
 #endif
 

@@ -22,29 +22,23 @@ static void setup_frame(const AVCodecContext *c);
 static void destroy_frames_list(void);
 
 struct proc_s proc = {
-last_idr: NULL, frame: NULL,
+.last_idr = NULL, .frame = NULL,
 #if SIDEBAND_READ
-lookahead: NULL,
+.lookahead = NULL,
 #endif
 #ifdef SCHEDULE_EXECUTE
-propagation: { vis_frame: { data: { NULL, NULL, NULL, NULL } }, total_error: 0.0 },
+.propagation = { .vis_frame = { .data = { NULL, NULL, NULL, NULL } }, .total_error = 0.0 },
 #endif
 #if LLSP_TRAIN_DECODE || LLSP_TRAIN_REPLACE || LLSP_PREDICT
-llsp: { decode: NULL, replace: NULL },
-#endif
-#if LLSP_TRAIN_DECODE || LLSP_TRAIN_REPLACE
-llsp: { train_coeffs: "Coefficients.dat" },
-#endif
-#if LLSP_PREDICT
-llsp: { predict_coeffs: "Coefficients.dat" },
+.llsp = { .decode = NULL, .replace = NULL },
 #endif
 #ifdef SCHEDULE_EXECUTE
-schedule: { first_to_drop: -1 },
+.schedule = { .first_to_drop = -1 },
 #endif
 #if PREPROCESS || LLSP_TRAIN_REPLACE
-temp_frame: { data: { NULL, NULL, NULL, NULL } },
+.temp_frame = { .data = { NULL, NULL, NULL, NULL } },
 #endif
-mb_width: -1, mb_height: -1
+.mb_width =  -1, .mb_height =  -1
 };
 
 
@@ -97,17 +91,11 @@ void process_init(AVCodecContext *c, char *file)
 #endif
 #if LLSP_TRAIN_DECODE || LLSP_PREDICT
 	if (!proc.llsp.decode)
-		proc.llsp.decode  = llsp_new(LLSP_DECODE, METRICS_COUNT);
+		proc.llsp.decode  = llsp_new(METRICS_COUNT);
 #endif
 #if LLSP_TRAIN_REPLACE || LLSP_PREDICT
 	if (!proc.llsp.replace)
-		proc.llsp.replace = llsp_new(LLSP_REPLACE, 1);
-#endif
-#if LLSP_PREDICT
-	if (proc.llsp.predict_coeffs) {
-		llsp_load(proc.llsp.decode,  proc.llsp.predict_coeffs);
-		llsp_load(proc.llsp.replace, proc.llsp.predict_coeffs);
-	}
+		proc.llsp.replace = llsp_new(1);
 #endif
 	FFMPEG_TIME_START(c, total);
 }
@@ -138,14 +126,6 @@ void process_finish(AVCodecContext *c)
 		destroy_frames_list();
 #if SIDEBAND_READ
 	proc.lookahead = NULL;
-#endif
-#if LLSP_TRAIN_DECODE
-	if (proc.llsp.train_coeffs && llsp_finalize(proc.llsp.decode))
-		llsp_store(proc.llsp.decode,  proc.llsp.train_coeffs);
-#endif
-#if LLSP_TRAIN_REPLACE
-	if (proc.llsp.train_coeffs && llsp_finalize(proc.llsp.replace))
-		llsp_store(proc.llsp.replace, proc.llsp.train_coeffs);
 #endif
 #if LLSP_PREDICT && !LLSP_TRAIN_DECODE && !LLSP_TRAIN_REPLACE
 	/* we cannot free the handles during training, since we may want to train on multiple files */
@@ -202,7 +182,7 @@ static void process_slice(AVCodecContext *c)
 #if LLSP_TRAIN_DECODE
 			proc.llsp.decoding_time += get_time();
 			if (proc.llsp.train_coeffs)
-				llsp_accumulate(proc.llsp.decode, metrics_decode(proc.frame, proc.frame->slice_count), proc.llsp.decoding_time);
+				llsp_add(proc.llsp.decode, metrics_decode(proc.frame, proc.frame->slice_count), proc.llsp.decoding_time);
 #endif
 #if PREPROCESS
 			remember_slice_boundaries(c);
