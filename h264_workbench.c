@@ -30,7 +30,8 @@ static void video_decode(char *filename)
 		}
 	if (!codec_context)
 		return;
-#if defined(THREADS) && THREADS > 1
+#warn Multithreading is broken right now.
+#if 0 && defined(THREADS) && THREADS > 1
 	if (avcodec_thread_init(codec_context, THREADS) < 0)
 		return;
 #endif
