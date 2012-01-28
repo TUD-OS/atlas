@@ -17,7 +17,7 @@ FFMPEG_LIBS = \
 BUILD_WORKBENCH ?= $(wildcard h264_workbench.c)
 ifneq ($(BUILD_WORKBENCH),)
 h264_workbench: h264_workbench.c $(FFMPEG_LIBS) $(COMPONENTS) Makefile
-	$(CC) $(CPPFLAGS) $(CFLAGS) -MMD -MF .$@.d -o $@ $< $(FFMPEG_LIBS) $(COMPONENTS) -lz -lm -pthread
+	$(CC) $(CPPFLAGS) $(CFLAGS) -MMD -MF .$@.d -o $@ $(realpath $<) $(FFMPEG_LIBS) $(COMPONENTS) -lz -lm -pthread
 all:: h264_workbench
 clean::
 	rm -f h264_workbench
