@@ -3,8 +3,8 @@ all:: Demo.mp4
 WORKBENCH_BASE ?= ../..
 include $(WORKBENCH_BASE)/Makefile
 
-ssim_demo: ssim_demo.c $(PROCESSING_OBJS)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -MMD -MF .$@.d -o $@ $< $(PROCESSING_OBJS)
+ssim_demo: ssim_demo.c $(COMPONENTS)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -MMD -MF .$@.d -o $@ $< $(COMPONENTS)
 
 Demo.mp4: ../../Samples/bbc-r_m720p.mov ssim_demo
 	rm -f Clip1.yuv Clip2.yuv Demo.yuv

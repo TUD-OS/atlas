@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2011 Michael Roitzsch <mroi@os.inf.tu-dresden.de>
+ * Copyright (C) 2006-2012 Michael Roitzsch <mroi@os.inf.tu-dresden.de>
  * economic rights: Technische Universitaet Dresden (Germany)
  */
 
@@ -291,9 +291,7 @@ static void write_sideband_data(void)
 	frame_node_t *frame;
 	int i;
 	
-	if (!proc.frame) return;
-	/* process frame list up to and including proc.frame */
-	for (frame = proc.last_idr; frame != proc.frame->next; frame = frame->next) {
+	for (frame = proc.last_idr; frame; frame = frame->next) {
 		/* copy slices worth a full frame */
 		for (i = 0; i < frame->slice_count; i++) {
 			/* skip to the next slice start */
@@ -438,9 +436,7 @@ static void destroy_frames_list(void)
 {
 	frame_node_t *frame, *prev;
 	
-	if (!proc.frame) return;
-	/* destroy frame list up to and including proc.frame */
-	for (frame = proc.last_idr, prev = NULL; frame != proc.frame->next; prev = frame, frame = frame->next) {
+	for (frame = proc.last_idr, prev = NULL; frame; prev = frame, frame = frame->next) {
 #if PREPROCESS || SIDEBAND_READ
 		destroy_replacement_tree(frame->replacement);
 		frame->replacement = NULL;

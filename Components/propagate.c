@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2010 Michael Roitzsch <mroi@os.inf.tu-dresden.de>
+ * Copyright (C) 2006-2012 Michael Roitzsch <mroi@os.inf.tu-dresden.de>
  * economic rights: Technische Universitaet Dresden (Germany)
  */
 
@@ -126,7 +126,7 @@ void accumulate_quality_loss(frame_node_t *frame)
 		frame->slice[slice_here].emission_factor = 1.0;
 	
 	/* search all future frames for direct references to this one */
-	for (future = frame->next; future != proc.frame->next; future = future->next) {
+	for (future = frame->next; future; future = future->next) {
 		for (ref = -REF_MAX; ref <= REF_MAX; ref++) {
 			if (future->reference[ref] == frame) {
 				/* this future frame references our frame with reference number ref */

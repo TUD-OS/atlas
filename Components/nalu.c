@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2011 Michael Roitzsch <mroi@os.inf.tu-dresden.de>
+ * Copyright (C) 2006-2012 Michael Roitzsch <mroi@os.inf.tu-dresden.de>
  * economic rights: Technische Universitaet Dresden (Germany)
  */
 
@@ -16,7 +16,7 @@ static const uint8_t fibonacci[] = {
 
 #if SIDEBAND_WRITE
 
-int slice_start(void)
+bool slice_start(void)
 {
 	while (1) {
 		/* peek ahead to get the start code */
@@ -30,8 +30,7 @@ int slice_start(void)
 		if (proc.sideband.buf[0] == 0 && proc.sideband.buf[1] == 0 && proc.sideband.buf[2] == 1)
 			break;
 		else
-			/* not at a nalu start, align */
-			copy_nalu();
+			return false;
 	}
 	return ((proc.sideband.buf[3] & 0x1F) > 0 && (proc.sideband.buf[3] & 0x1F) < 6);
 }

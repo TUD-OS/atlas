@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2011 Michael Roitzsch <mroi@os.inf.tu-dresden.de>
+ * Copyright (C) 2006-2012 Michael Roitzsch <mroi@os.inf.tu-dresden.de>
  * economic rights: Technische Universitaet Dresden (Germany)
  */
 
@@ -460,7 +460,7 @@ void read_immission(frame_node_t *frame);
 
 /* sideband data read and write */
 #if SIDEBAND_WRITE
-int slice_start(void);
+bool slice_start(void);
 void copy_nalu(void);
 void nalu_write_start(void);
 void nalu_write_end(void);

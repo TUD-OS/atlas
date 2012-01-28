@@ -1,7 +1,7 @@
 WORKBENCH_BASE ?= .
 include $(WORKBENCH_BASE)/Makeconf
 
-PROCESSING_OBJS = $(patsubst %.c,%.o,$(wildcard Processing/*.c))
+COMPONENTS = $(patsubst %.c,%.o,$(wildcard Components/*.c))
 FFMPEG_LIBS = \
 	$(WORKBENCH_BASE)/FFmpeg/libavutil/libavutil.a \
 	$(WORKBENCH_BASE)/FFmpeg/libavdevice/libavdevice.a \
@@ -16,21 +16,21 @@ FFMPEG_LIBS = \
 
 BUILD_WORKBENCH ?= $(wildcard h264_workbench.c)
 ifneq ($(BUILD_WORKBENCH),)
-h264_workbench: h264_workbench.c $(FFMPEG_LIBS) $(PROCESSING_OBJS) Makefile
-	$(CC) $(CPPFLAGS) $(CFLAGS) -MMD -MF .$@.d -o $@ $< $(FFMPEG_LIBS) $(PROCESSING_OBJS) -lz -lm -pthread
+h264_workbench: h264_workbench.c $(FFMPEG_LIBS) $(COMPONENTS) Makefile
+	$(CC) $(CPPFLAGS) $(CFLAGS) -MMD -MF .$@.d -o $@ $< $(FFMPEG_LIBS) $(COMPONENTS) -lz -lm -pthread
 all:: h264_workbench
 clean::
 	rm -f h264_workbench
 endif
 
-BUILD_PROCESSING ?= $(wildcard Processing)
-ifneq ($(BUILD_PROCESSING),)
-$(PROCESSING_OBJS): Processing
+BUILD_COMPONENTS ?= $(wildcard Components)
+ifneq ($(BUILD_COMPONENTS),)
+$(COMPONENTS): Components
 	
-Processing Processing/: force
+Components Components/: force
 	$(MAKE) -j$(CPUS) -C $@
 clean::
-	$(MAKE) -C Processing $@
+	$(MAKE) -C Components $@
 endif
 
 

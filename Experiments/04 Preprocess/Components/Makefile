@@ -1,4 +1,4 @@
 CPPFLAGS = -DMETRICS_EXTRACT -DPREPROCESS -DSIDEBAND_WRITE
 
 WORKBENCH_BASE ?= ../../..
-include $(WORKBENCH_BASE)/Processing/Makefile
+include $(WORKBENCH_BASE)/Components/Makefile

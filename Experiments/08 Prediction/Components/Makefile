@@ -3,4 +3,4 @@ CPPFLAGS = -DSIDEBAND_READ -DLLSP_PREDICT
 CPPFLAGS += -DLLSP_PREDICTION
 
 WORKBENCH_BASE ?= ../../..
-include $(WORKBENCH_BASE)/Processing/Makefile
+include $(WORKBENCH_BASE)/Components/Makefile
