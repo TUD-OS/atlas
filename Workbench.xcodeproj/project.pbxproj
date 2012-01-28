@@ -42,6 +42,7 @@
 		4C24B9FF11EDE6D600E67981 /* ssim.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ssim.h; sourceTree = "<group>"; };
 		4C3E4E7F126D9BCF004DACE5 /* Makeconf */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = Makeconf; sourceTree = "<group>"; };
 		4C4847D114CED7F0009DDAAF /* ffplay.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = ffplay.c; path = Experiments/ffplay/ffplay.c; sourceTree = "<group>"; };
+		4C8CC59714D41C0800595140 /* nalu.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = nalu.h; sourceTree = "<group>"; };
 		4CAA9F08135C59C400AEA9EB /* h264_workbench */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = h264_workbench; sourceTree = BUILT_PRODUCTS_DIR; };
 		4CF0A7011202CA0800817B42 /* weak.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = weak.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -69,17 +70,18 @@
 			children = (
 				4C24B9F011EDE6D600E67981 /* Makefile */,
 				4C24B9EC11EDE6D600E67981 /* digits.h */,
-				4C24B9ED11EDE6D600E67981 /* llsp.c */,
 				4C24B9EE11EDE6D600E67981 /* llsp.h */,
+				4C24B9ED11EDE6D600E67981 /* llsp.c */,
 				4C24B9F111EDE6D600E67981 /* metrics.c */,
+				4C8CC59714D41C0800595140 /* nalu.h */,
 				4C24B9F311EDE6D600E67981 /* nalu.c */,
 				4C24B9F511EDE6D600E67981 /* process.c */,
 				4C24B9F611EDE6D600E67981 /* process.h */,
 				4C24B9F811EDE6D600E67981 /* propagate.c */,
 				4C24B9FA11EDE6D600E67981 /* replace.c */,
 				4C24B9FC11EDE6D600E67981 /* schedule.c */,
-				4C24B9FE11EDE6D600E67981 /* ssim.c */,
 				4C24B9FF11EDE6D600E67981 /* ssim.h */,
+				4C24B9FE11EDE6D600E67981 /* ssim.c */,
 				4CF0A7011202CA0800817B42 /* weak.c */,
 			);
 			path = Components;

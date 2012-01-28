@@ -39,7 +39,7 @@ struct proc_s proc = {
 };
 
 
-void process_init(AVCodecContext *c, char *file)
+void process_init(AVCodecContext *c, const char *file)
 {
 	// FIXME: we need to be single-threaded for now
 	c->thread_count = 1;
@@ -59,15 +59,11 @@ void process_init(AVCodecContext *c, char *file)
 	if (frame_storage_destroy)
 		c->release_buffer = frame_storage_destroy;
 	srandom(0);
+#if SIDEBAND_READ
+	proc.sideband.read = nalu_read_alloc();
+#endif
 #if SIDEBAND_WRITE
-	if (strcmp(&file[strlen(file) - sizeof(".h264") + 1], ".h264") == 0) {
-		proc.sideband.from = fopen(file, "r");
-		file[strlen(file) - sizeof("h264") + 1] = 'p';
-		proc.sideband.to   = fopen(file, "w");
-	} else {
-		printf("filename does not have the proper .h264 ending\n");
-		exit(1);
-	}
+	proc.sideband.write = nalu_write_alloc(file);
 #endif
 #if (SIDEBAND_WRITE && PREPROCESS) || (SIDEBAND_READ && !PREPROCESS && (SCHEDULING_METHOD == LIFETIME))
 	if (strcmp(&file[strlen(file) - sizeof(".p264") + 1], ".p264") == 0) {
@@ -99,22 +95,16 @@ void process_init(AVCodecContext *c, char *file)
 
 void process_finish(AVCodecContext *c)
 {
-#if SIDEBAND_WRITE
-	int bytes;
-#endif
 #if PREPROCESS
 	accumulate_quality_loss(proc.last_idr);
+#endif
+#if SIDEBAND_READ
+	nalu_read_free(proc.sideband.read);
 #endif
 #if SIDEBAND_WRITE
 	/* flush remaining frames */
 	write_sideband_data();
-	/* copy the remainder of the file */
-	do {
-		bytes = fread(proc.sideband.buf, 1, sizeof(proc.sideband.buf), proc.sideband.from);
-		fwrite(proc.sideband.buf, 1, bytes, proc.sideband.to);
-	} while (bytes);
-	fclose(proc.sideband.to);
-	fclose(proc.sideband.from);
+	nalu_write_free(proc.sideband.write);
 #endif
 #if (SIDEBAND_WRITE && PREPROCESS) || (SIDEBAND_READ && !PREPROCESS && (SCHEDULING_METHOD == LIFETIME))
 	if (proc.sideband.propagation) fclose(proc.sideband.propagation);
@@ -295,42 +285,43 @@ static void write_sideband_data(void)
 		/* copy slices worth a full frame */
 		for (i = 0; i < frame->slice_count; i++) {
 			/* skip to the next slice start */
-			while (!slice_start()) copy_nalu();
-			copy_nalu();
+			while (!check_slice_start(proc.sideband.write))
+				copy_nalu(proc.sideband.write);
+			copy_nalu(proc.sideband.write);
 		}
 		
 		/* write our sideband data as a custom NALU */
-		nalu_write_start();
-		nalu_write_uint16(proc.mb_width);
-		nalu_write_uint16(proc.mb_height);
-		nalu_write_uint8(frame->slice_count);
+		nalu_write_start(proc.sideband.write);
+		nalu_write_uint16(proc.sideband.write, proc.mb_width);
+		nalu_write_uint16(proc.sideband.write, proc.mb_height);
+		nalu_write_uint8(proc.sideband.write, frame->slice_count);
 #if METRICS_EXTRACT || SIDEBAND_READ
 		for (i = 0; i < frame->slice_count; i++)
 			write_metrics(frame, i);
 #else
 		for (i = 0; i < (1 + 13 * 3) * frame->slice_count; i++)
-			nalu_write_uint8(0);
+			nalu_write_uint8(proc.sideband.write, 0);
 #endif
 #if PREPROCESS || SIDEBAND_READ
 		write_replacement_tree(frame->replacement);
 		for (i = 0; i < frame->slice_count; i++) {
-			nalu_write_uint16(frame->slice[i].start_index);
+			nalu_write_uint16(proc.sideband.write, frame->slice[i].start_index);
 			if (frame->replacement)
-				nalu_write_float(frame->slice[i].direct_quality_loss);
+				nalu_write_float(proc.sideband.write, frame->slice[i].direct_quality_loss);
 		}
 #else
-		nalu_write_uint16(0);  /* empty replacement tree */
-		nalu_write_uint16(0);  /* first slice's start_index */
+		nalu_write_uint16(proc.sideband.write, 0);  /* empty replacement tree */
+		nalu_write_uint16(proc.sideband.write, 0);  /* first slice's start_index */
 		for (i = 0; i < frame->slice_count - 1; i++)
-			nalu_write_uint16(proc.mb_width * proc.mb_height);
+			nalu_write_uint16(proc.sideband.write, proc.mb_width * proc.mb_height);
 #endif
 		for (i = 0; i < frame->slice_count; i++)
 #if PREPROCESS || SIDEBAND_READ
-			nalu_write_float(frame->slice[i].emission_factor);
+			nalu_write_float(proc.sideband.write, frame->slice[i].emission_factor);
 #else
-			nalu_write_float(0.0);
+			nalu_write_float(proc.sideband.write, 0.0);
 #endif
-		nalu_write_end();
+		nalu_write_end(proc.sideband.write);
 		
 #if SIDEBAND_WRITE && PREPROCESS && !SIDEBAND_READ
 		/* store immission factors in a separate file, so we can use them for slice tracking later */
@@ -448,8 +439,7 @@ static void destroy_frames_list(void)
 			)
 			av_free(prev);
 	}
-	proc.last_idr = proc.frame->next;
-	proc.frame = NULL;
+	proc.last_idr = proc.frame = NULL;
 	if (prev
 #if PREPROCESS
 		&& !--prev->reference_count

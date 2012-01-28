@@ -4,20 +4,17 @@
  */
 
 #include "config.h"
-#define HAVE_AV_CONFIG_H
-
 #include "libavcodec/avcodec.h"
-
-/* FFmpeg wants to disable those, but I want to use them */
-#undef printf
-#undef fprintf
-#undef exit
 
 #if LLSP_TRAIN_DECODE || LLSP_TRAIN_REPLACE || LLSP_PREDICT || defined(LLSP_SUPPORT)
 #  include "llsp.h"
 #  define LLSP_SUPPORT 1
 #else
 #  define LLSP_SUPPORT 0
+#endif
+
+#if SIDEBAND_READ || SIDEBAND_WRITE
+#  include "nalu.h"
 #endif
 
 #if PREPROCESS || SLICE_SKIP
@@ -294,17 +291,11 @@ extern struct proc_s {
 	
 	/* state variables for sideband reading/writing */
 	struct {
-#if SIDEBAND_WRITE
-		FILE *from, *to;
-		uint8_t buf[4096];
-		uint8_t history[3];
-		uint32_t remain;
-		uint8_t remain_bits;
-#endif
 #if SIDEBAND_READ
-		const uint8_t * restrict nalu;
-		uint8_t byte;
-		uint8_t bits;
+		nalu_read_t *read;
+#endif
+#if SIDEBAND_WRITE
+		nalu_write_t *write;
 #endif
 #if (SIDEBAND_WRITE && PREPROCESS) || (SIDEBAND_READ && !PREPROCESS && (SCHEDULING_METHOD == LIFETIME))
 		/* the immission factors do not belong to the sideband data, but some of our
@@ -367,7 +358,7 @@ static const float safety_margin_replace = 1.0;
 #pragma mark Functions in process.c
 
 /* this is where it all begins */
-void process_init(AVCodecContext *c, char *file);
+void process_init(AVCodecContext *c, const char *file);
 void process_finish(AVCodecContext *c);
 #if LLSP_SUPPORT || defined(FINAL_SCHEDULING)
 double get_time(void);
@@ -451,36 +442,6 @@ void write_immission(const frame_node_t *frame);
 #endif
 #if SIDEBAND_READ && !PREPROCESS && (SCHEDULING_METHOD == LIFETIME)
 void read_immission(frame_node_t *frame);
-#endif
-
-#pragma mark -
-
-
-#pragma mark Functions in nalu.c
-
-/* sideband data read and write */
-#if SIDEBAND_WRITE
-bool slice_start(void);
-void copy_nalu(void);
-void nalu_write_start(void);
-void nalu_write_end(void);
-void nalu_write_uint8(uint8_t value);
-void nalu_write_uint16(uint16_t value);
-void nalu_write_uint24(uint32_t value);
-void nalu_write_uint32(uint32_t value);
-void nalu_write_int8(int8_t value);
-void nalu_write_int16(int16_t value);
-void nalu_write_float(float value);
-#endif
-#if SIDEBAND_READ
-void nalu_read_start(const uint8_t *nalu);
-uint8_t nalu_read_uint8(void);
-uint16_t nalu_read_uint16(void);
-uint32_t nalu_read_uint24(void);
-uint32_t nalu_read_uint32(void);
-int8_t nalu_read_int8(void);
-int16_t nalu_read_int16(void);
-float nalu_read_float(void);
 #endif
 
 #pragma mark -

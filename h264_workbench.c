@@ -7,7 +7,7 @@
 #include "libavformat/avformat.h"
 
 
-static void video_decode(char *filename)
+static void video_decode(const char *filename)
 {
 	AVInputFormat *format;
 	AVFormatContext *format_context;
@@ -30,7 +30,7 @@ static void video_decode(char *filename)
 		}
 	if (!codec_context)
 		return;
-#warn Multithreading is broken right now.
+#warning Multithreading is broken right now.
 #if 0 && defined(THREADS) && THREADS > 1
 	if (avcodec_thread_init(codec_context, THREADS) < 0)
 		return;
@@ -69,7 +69,7 @@ static void video_decode(char *filename)
 }
 
 
-int main(int argc, char **argv)
+int main(int argc, const char **argv)
 {
 	const char *filename;
 	int i;

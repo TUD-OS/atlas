@@ -27,36 +27,36 @@ void remember_metrics(const AVCodecContext *c)
 #if SIDEBAND_WRITE && (METRICS_EXTRACT || SIDEBAND_READ)
 void write_metrics(const frame_node_t *frame, int slice)
 {
-	nalu_write_uint8(frame->slice[slice].metrics.type);
-	nalu_write_uint24(frame->slice[slice].metrics.bits);
-	nalu_write_uint24(frame->slice[slice].metrics.intra_pcm);
-	nalu_write_uint24(frame->slice[slice].metrics.intra_4x4);
-	nalu_write_uint24(frame->slice[slice].metrics.intra_8x8);
-	nalu_write_uint24(frame->slice[slice].metrics.intra_16x16);
-	nalu_write_uint24(frame->slice[slice].metrics.inter_4x4);
-	nalu_write_uint24(frame->slice[slice].metrics.inter_8x8);
-	nalu_write_uint24(frame->slice[slice].metrics.inter_16x16);
-	nalu_write_uint24(frame->slice[slice].metrics.idct_4x4);
-	nalu_write_uint24(frame->slice[slice].metrics.idct_8x8);
-	nalu_write_uint24(frame->slice[slice].metrics.deblock_edges);
+	nalu_write_uint8(proc.sideband.write, frame->slice[slice].metrics.type);
+	nalu_write_uint24(proc.sideband.write, frame->slice[slice].metrics.bits);
+	nalu_write_uint24(proc.sideband.write, frame->slice[slice].metrics.intra_pcm);
+	nalu_write_uint24(proc.sideband.write, frame->slice[slice].metrics.intra_4x4);
+	nalu_write_uint24(proc.sideband.write, frame->slice[slice].metrics.intra_8x8);
+	nalu_write_uint24(proc.sideband.write, frame->slice[slice].metrics.intra_16x16);
+	nalu_write_uint24(proc.sideband.write, frame->slice[slice].metrics.inter_4x4);
+	nalu_write_uint24(proc.sideband.write, frame->slice[slice].metrics.inter_8x8);
+	nalu_write_uint24(proc.sideband.write, frame->slice[slice].metrics.inter_16x16);
+	nalu_write_uint24(proc.sideband.write, frame->slice[slice].metrics.idct_4x4);
+	nalu_write_uint24(proc.sideband.write, frame->slice[slice].metrics.idct_8x8);
+	nalu_write_uint24(proc.sideband.write, frame->slice[slice].metrics.deblock_edges);
 }
 #endif
 
 #if SIDEBAND_READ
 void read_metrics(frame_node_t *frame, int slice)
 {
-	frame->slice[slice].metrics.type          = nalu_read_uint8();
-	frame->slice[slice].metrics.bits          = nalu_read_uint24();
-	frame->slice[slice].metrics.intra_pcm     = nalu_read_uint24();
-	frame->slice[slice].metrics.intra_4x4     = nalu_read_uint24();
-	frame->slice[slice].metrics.intra_8x8     = nalu_read_uint24();
-	frame->slice[slice].metrics.intra_16x16   = nalu_read_uint24();
-	frame->slice[slice].metrics.inter_4x4     = nalu_read_uint24();
-	frame->slice[slice].metrics.inter_8x8     = nalu_read_uint24();
-	frame->slice[slice].metrics.inter_16x16   = nalu_read_uint24();
-	frame->slice[slice].metrics.idct_4x4      = nalu_read_uint24();
-	frame->slice[slice].metrics.idct_8x8      = nalu_read_uint24();
-	frame->slice[slice].metrics.deblock_edges = nalu_read_uint24();
+	frame->slice[slice].metrics.type          = nalu_read_uint8(proc.sideband.read);
+	frame->slice[slice].metrics.bits          = nalu_read_uint24(proc.sideband.read);
+	frame->slice[slice].metrics.intra_pcm     = nalu_read_uint24(proc.sideband.read);
+	frame->slice[slice].metrics.intra_4x4     = nalu_read_uint24(proc.sideband.read);
+	frame->slice[slice].metrics.intra_8x8     = nalu_read_uint24(proc.sideband.read);
+	frame->slice[slice].metrics.intra_16x16   = nalu_read_uint24(proc.sideband.read);
+	frame->slice[slice].metrics.inter_4x4     = nalu_read_uint24(proc.sideband.read);
+	frame->slice[slice].metrics.inter_8x8     = nalu_read_uint24(proc.sideband.read);
+	frame->slice[slice].metrics.inter_16x16   = nalu_read_uint24(proc.sideband.read);
+	frame->slice[slice].metrics.idct_4x4      = nalu_read_uint24(proc.sideband.read);
+	frame->slice[slice].metrics.idct_8x8      = nalu_read_uint24(proc.sideband.read);
+	frame->slice[slice].metrics.deblock_edges = nalu_read_uint24(proc.sideband.read);
 }
 #endif
 
