@@ -13,7 +13,7 @@
 #  define LLSP_SUPPORT 0
 #endif
 
-#if SIDEBAND_READ || SIDEBAND_WRITE
+#if METADATA_READ || METADATA_WRITE
 #  include "nalu.h"
 #endif
 
@@ -46,18 +46,18 @@
 #  define PREPROCESS           0
 #endif
 
-/* toggle writing of sideband-data-enriched H.264 file */
-#ifdef SIDEBAND_WRITE
-#  define SIDEBAND_WRITE       1
+/* toggle writing of metadata-enriched H.264 file */
+#ifdef METADATA_WRITE
+#  define METADATA_WRITE       1
 #else
-#  define SIDEBAND_WRITE       0
+#  define METADATA_WRITE       0
 #endif
 
-/* toggle parsing of sideband data from preprocessed H.264 file */
-#ifdef SIDEBAND_READ
-#  define SIDEBAND_READ        1
+/* toggle parsing of metadata from preprocessed H.264 file */
+#ifdef METADATA_READ
+#  define METADATA_READ        1
 #else
-#  define SIDEBAND_READ        0
+#  define METADATA_READ        0
 #endif
 
 /* toggle slice skipping and replacement based on some scheduling */
@@ -94,8 +94,8 @@ defined(SCHEDULE_EXECUTE)
 #undef METRICS_EXTRACT
 #undef PREPROCESS
 #undef PREPROCESS
-#undef SIDEBAND_WRITE
-#undef SIDEBAND_READ
+#undef METADATA_WRITE
+#undef METADATA_READ
 #undef SLICE_SKIP
 #undef LLSP_TRAIN
 #undef LLSP_PREDICT
@@ -104,8 +104,8 @@ defined(SCHEDULE_EXECUTE)
 #define METRICS_EXTRACT		0
 #define PREPROCESS		0
 #define PREPROCESS		0
-#define SIDEBAND_WRITE		0
-#define SIDEBAND_READ		1
+#define METADATA_WRITE		0
+#define METADATA_READ		1
 #define SLICE_SKIP		1
 #define LLSP_TRAIN		0
 #define LLSP_PREDICT		1
@@ -114,8 +114,8 @@ defined(SCHEDULE_EXECUTE)
 #define METRICS_EXTRACT		0
 #define PREPROCESS		0
 #define PREPROCESS		0
-#define SIDEBAND_WRITE		0
-#define SIDEBAND_READ		1
+#define METADATA_WRITE		0
+#define METADATA_READ		1
 #define SLICE_SKIP		1
 #define LLSP_TRAIN		0
 #define LLSP_PREDICT		0
@@ -125,20 +125,20 @@ defined(SCHEDULE_EXECUTE)
 #if METRICS_EXTRACT && !FFMPEG_METRICS
 #  warning  FFmpeg is not configured correctly, check avcodec.h
 #endif
-#if SIDEBAND_WRITE && !METRICS_EXTRACT
-#  warning  extracted sideband data might be invalid
+#if METADATA_WRITE && !METRICS_EXTRACT
+#  warning  extracted metadata will be invalid
 #endif
-#if SLICE_SKIP && !SIDEBAND_READ
-#  warning  slice skipping only works properly with sideband data available
+#if SLICE_SKIP && !METADATA_READ
+#  warning  slice skipping only works properly with metadata available
 #endif
-#if LLSP_PREDICT && !SIDEBAND_READ
-#  warning  execution time prediction only works properly with sideband data available
+#if LLSP_PREDICT && !METADATA_READ
+#  warning  execution time prediction only works properly with metadata available
 #endif
-#if (LLSP_TRAIN_DECODE || LLSP_TRAIN_REPLACE) && !(SIDEBAND_READ || (METRICS_EXTRACT && PREPROCESS))
+#if (LLSP_TRAIN_DECODE || LLSP_TRAIN_REPLACE) && !(METADATA_READ || (METRICS_EXTRACT && PREPROCESS))
 #  warning  training the predictor requires metrics and slice boundaries
 #endif
 #if SLICE_SKIP && (METRICS_EXTRACT || PREPROCESS)
-#  warning  slices will not be skipped for real as this would scramble the extracted sideband data
+#  warning  slices will not be skipped for real as this would scramble the extracted metadata
 #endif
 
 /* maximum supported number of slices per frame, must be less than 256 */
@@ -213,7 +213,7 @@ struct frame_node_s {
 	/* storage for per-slice data, slice[SLICE_MAX] is a pseudo-slice covering the whole frame */
 	struct {
 		/* decoding time metrics */
-#if METRICS_EXTRACT || SIDEBAND_READ
+#if METRICS_EXTRACT || METADATA_READ
 		struct {
 			int type, bits;
 			int intra_pcm, intra_4x4, intra_8x8, intra_16x16;
@@ -226,7 +226,7 @@ struct frame_node_s {
 		/* rectangle around the slice, min inclusive, max exclusive */
 		change_rect_t rect;
 #endif
-#if PREPROCESS || SIDEBAND_READ
+#if PREPROCESS || METADATA_READ
 		/* macroblock indices for the slice, start inclusive, end exclusive */
 		int start_index, end_index;
 		/* measured quality loss due to replacement */
@@ -253,7 +253,7 @@ struct frame_node_s {
 #endif
 	} slice[SLICE_MAX + 1];
 	
-#if PREPROCESS || SIDEBAND_READ
+#if PREPROCESS || METADATA_READ
 	/* the root of the replacement quadtree, NULL if no replacement is possible */
 	replacement_node_t *replacement;
 #endif
@@ -282,27 +282,27 @@ extern struct proc_s {
 	 * last_idr                frame
 	 * 
 	 * If the upcoming frame is an IDR, the list should be processed from last_idr
-	 * to frame->next. This will mark the end regardless of sideband reading. */
+	 * to frame->next. This will mark the end regardless of metadata reading. */
 	
 	/* anchor of the frame list */
 	frame_node_t *last_idr;
 	/* current frame */
 	frame_node_t *frame;
 	
-	/* state variables for sideband reading/writing */
+	/* state variables for metadata reading/writing */
 	struct {
-#if SIDEBAND_READ
+#if METADATA_READ
 		nalu_read_t *read;
 #endif
-#if SIDEBAND_WRITE
+#if METADATA_WRITE
 		nalu_write_t *write;
 #endif
-#if (SIDEBAND_WRITE && PREPROCESS) || (SIDEBAND_READ && !PREPROCESS && (SCHEDULING_METHOD == LIFETIME))
-		/* the immission factors do not belong to the sideband data, but some of our
+#if (METADATA_WRITE && PREPROCESS) || (METADATA_READ && !PREPROCESS && (SCHEDULING_METHOD == LIFETIME))
+		/* the immission factors do not belong to the metadata, but some of our
 		 * visualizations and measurements need them, so store them in an extra file */
 		FILE *propagation;
 #endif
-	} sideband;
+	} metadata;
 	
 #ifdef SCHEDULE_EXECUTE
 	/* just some helpers for error propagation visualization */
@@ -373,10 +373,10 @@ double get_time(void);
 #if METRICS_EXTRACT
 void remember_metrics(const AVCodecContext *c);
 #endif
-#if SIDEBAND_WRITE && (METRICS_EXTRACT || SIDEBAND_READ)
+#if METADATA_WRITE && (METRICS_EXTRACT || METADATA_READ)
 void write_metrics(const frame_node_t *frame, int slice);
 #endif
-#if SIDEBAND_READ
+#if METADATA_READ
 void read_metrics(frame_node_t *frame, int slice);
 #endif
 #if LLSP_SUPPORT
@@ -404,7 +404,7 @@ int schedule_skip(const AVCodecContext *c, int current_slice);
 #if PREPROCESS
 void search_replacements(const AVCodecContext *c, replacement_node_t *node);
 #endif
-#if PREPROCESS || SIDEBAND_READ
+#if PREPROCESS || METADATA_READ
 void destroy_replacement_tree(replacement_node_t *node);
 #endif
 #if PREPROCESS
@@ -417,10 +417,10 @@ void replacement_time(AVCodecContext *c);
 #if PREPROCESS || SLICE_SKIP || LLSP_TRAIN_REPLACE
 float do_replacement(const AVCodecContext *c, const AVPicture *frame, int slice, const change_rect_t *rect);
 #endif
-#if SIDEBAND_WRITE && (PREPROCESS || SIDEBAND_READ)
+#if METADATA_WRITE && (PREPROCESS || METADATA_READ)
 void write_replacement_tree(const replacement_node_t *node);
 #endif
-#if SIDEBAND_READ
+#if METADATA_READ
 void read_replacement_tree(replacement_node_t *node);
 #endif
 
@@ -437,10 +437,10 @@ void accumulate_quality_loss(frame_node_t *frame);
 #ifdef SCHEDULE_EXECUTE
 void propagation_visualize(const AVCodecContext *c);
 #endif
-#if SIDEBAND_WRITE && PREPROCESS && !SIDEBAND_READ
+#if METADATA_WRITE && PREPROCESS && !METADATA_READ
 void write_immission(const frame_node_t *frame);
 #endif
-#if SIDEBAND_READ && !PREPROCESS && (SCHEDULING_METHOD == LIFETIME)
+#if METADATA_READ && !PREPROCESS && (SCHEDULING_METHOD == LIFETIME)
 void read_immission(frame_node_t *frame);
 #endif
 

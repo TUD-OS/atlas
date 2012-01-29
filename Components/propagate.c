@@ -235,13 +235,13 @@ static void update_total_error(const AVCodecContext *c, const AVPicture *quad)
 }
 #endif
 
-#if SIDEBAND_WRITE && PREPROCESS && !SIDEBAND_READ
+#if METADATA_WRITE && PREPROCESS && !METADATA_READ
 void write_immission(const frame_node_t *frame)
 {
 	uint8_t buf[sizeof(uint32_t)];
 	int slice_here, slice_there, ref;
 	
-	if (!proc.sideband.propagation) return;
+	if (!proc.metadata.propagation) return;
 	
 	for (slice_here = 0; slice_here < frame->slice_count; slice_here++) {
 		for (ref = -REF_MAX; ref <= REF_MAX; ref++) {
@@ -258,26 +258,26 @@ void write_immission(const frame_node_t *frame)
 					buf[1] = (convert.out >> 16) & 0xFF;
 					buf[2] = (convert.out >>  8) & 0xFF;
 					buf[3] = (convert.out >>  0) & 0xFF;
-					fwrite(buf, sizeof(buf[0]), 4, proc.sideband.propagation);
+					fwrite(buf, sizeof(buf[0]), 4, proc.metadata.propagation);
 					buf[0] = (uint8_t)ref;
 					buf[1] = slice_there;
-					fwrite(buf, sizeof(buf[0]), 2, proc.sideband.propagation);
+					fwrite(buf, sizeof(buf[0]), 2, proc.metadata.propagation);
 				}
 			}
 		}
 		/* end marker */
 		buf[0] = buf[1] = buf[2] = buf[3] = 0;
-		fwrite(buf, sizeof(buf[0]), 4, proc.sideband.propagation);
+		fwrite(buf, sizeof(buf[0]), 4, proc.metadata.propagation);
 	}
 	buf[0] = (frame->reference_lifetime >> 24) & 0xFF;
 	buf[1] = (frame->reference_lifetime >> 16) & 0xFF;
 	buf[2] = (frame->reference_lifetime >>  8) & 0xFF;
 	buf[3] = (frame->reference_lifetime >>  0) & 0xFF;
-	fwrite(buf, sizeof(buf[0]), 4, proc.sideband.propagation);
+	fwrite(buf, sizeof(buf[0]), 4, proc.metadata.propagation);
 }
 #endif
 
-#if SIDEBAND_READ && !PREPROCESS && (SCHEDULING_METHOD == LIFETIME)
+#if METADATA_READ && !PREPROCESS && (SCHEDULING_METHOD == LIFETIME)
 void read_immission(frame_node_t *frame)
 {
 	uint8_t buf[sizeof(uint32_t)];
@@ -289,7 +289,7 @@ void read_immission(frame_node_t *frame)
 		frame->slice[slice_here].immission = frame->slice[slice_here].immission_base + REF_MAX;
 	}
 	
-	if (!proc.sideband.propagation) return;
+	if (!proc.metadata.propagation) return;
 	
 	for (slice_here = 0; slice_here < frame->slice_count; slice_here++) {
 		while (1) {
@@ -299,16 +299,16 @@ void read_immission(frame_node_t *frame)
 			} convert;
 			
 			assert(sizeof(float) == sizeof(uint32_t));
-			fread(buf, sizeof(buf[0]), 4, proc.sideband.propagation);
+			fread(buf, sizeof(buf[0]), 4, proc.metadata.propagation);
 			convert.in = ((uint32_t)buf[0] << 24) | ((uint32_t)buf[1] << 16) | ((uint32_t)buf[2] << 8) | ((uint32_t)buf[3] << 0);
 			if (!convert.in) break;
-			fread(buf, sizeof(buf[0]), 2, proc.sideband.propagation);
+			fread(buf, sizeof(buf[0]), 2, proc.metadata.propagation);
 			ref = (int8_t)buf[0];
 			slice_there = buf[1];
 			frame->slice[slice_here].immission[ref][slice_there] = convert.out;
 		}
 	}
-	fread(buf, sizeof(buf[0]), 4, proc.sideband.propagation);
+	fread(buf, sizeof(buf[0]), 4, proc.metadata.propagation);
 	frame->reference_lifetime = ((uint32_t)buf[0] << 24) | ((uint32_t)buf[1] << 16) | ((uint32_t)buf[2] << 8) | ((uint32_t)buf[3] << 0);
 }
 #endif

@@ -11,11 +11,11 @@
 #include "process.h"
 
 static void process_slice(AVCodecContext *c);
-#if SIDEBAND_READ
-static void process_sideband(const uint8_t *);
+#if METADATA_READ
+static void process_metadata(const uint8_t *);
 #endif
-#if SIDEBAND_WRITE
-static void write_sideband_data(void);
+#if METADATA_WRITE
+static void write_metadata(void);
 #endif
 static void resize_storage(int mb_width, int mb_height);
 static void setup_frame(const AVCodecContext *c);
@@ -49,29 +49,29 @@ void process_init(AVCodecContext *c, const char *file)
 	memset(&c->reference, 0, sizeof(c->reference));
 	memset(&c->frame,     0, sizeof(c->frame    ));
 	c->process_slice = (void (*)(void *))process_slice;
-#if SIDEBAND_READ
-	c->process_sideband = process_sideband;
+#if METADATA_READ
+	c->process_metadata = process_metadata;
 #else
-	c->process_sideband = NULL;
+	c->process_metadata = NULL;
 #endif
 	if (frame_storage_alloc)
 		c->get_buffer = frame_storage_alloc;
 	if (frame_storage_destroy)
 		c->release_buffer = frame_storage_destroy;
 	srandom(0);
-#if SIDEBAND_READ
-	proc.sideband.read = nalu_read_alloc();
+#if METADATA_READ
+	proc.metadata.read = nalu_read_alloc();
 #endif
-#if SIDEBAND_WRITE
-	proc.sideband.write = nalu_write_alloc(file);
+#if METADATA_WRITE
+	proc.metadata.write = nalu_write_alloc(file);
 #endif
-#if (SIDEBAND_WRITE && PREPROCESS) || (SIDEBAND_READ && !PREPROCESS && (SCHEDULING_METHOD == LIFETIME))
+#if (METADATA_WRITE && PREPROCESS) || (METADATA_READ && !PREPROCESS && (SCHEDULING_METHOD == LIFETIME))
 	if (strcmp(&file[strlen(file) - sizeof(".p264") + 1], ".p264") == 0) {
 		file[strlen(file) - sizeof("p264") + 2] = 'r';
 		file[strlen(file) - sizeof("p264") + 3] = 'o';
 		file[strlen(file) - sizeof("p264") + 4] = 'p';
-		proc.sideband.propagation = fopen(file,
-#if SIDEBAND_READ
+		proc.metadata.propagation = fopen(file,
+#if METADATA_READ
 										  "r"
 #else
 										  "w"
@@ -98,16 +98,16 @@ void process_finish(AVCodecContext *c)
 #if PREPROCESS
 	accumulate_quality_loss(proc.last_idr);
 #endif
-#if SIDEBAND_READ
-	nalu_read_free(proc.sideband.read);
+#if METADATA_READ
+	nalu_read_free(proc.metadata.read);
 #endif
-#if SIDEBAND_WRITE
+#if METADATA_WRITE
 	// flush remaining frames
-	write_sideband_data();
-	nalu_write_free(proc.sideband.write);
+	write_metadata();
+	nalu_write_free(proc.metadata.write);
 #endif
-#if (SIDEBAND_WRITE && PREPROCESS) || (SIDEBAND_READ && !PREPROCESS && (SCHEDULING_METHOD == LIFETIME))
-	if (proc.sideband.propagation) fclose(proc.sideband.propagation);
+#if (METADATA_WRITE && PREPROCESS) || (METADATA_READ && !PREPROCESS && (SCHEDULING_METHOD == LIFETIME))
+	if (proc.metadata.propagation) fclose(proc.metadata.propagation);
 #endif
 	while (proc.last_idr)
 		destroy_frames_list();
@@ -136,8 +136,8 @@ static void process_slice(AVCodecContext *c)
 #if PREPROCESS
 				accumulate_quality_loss(proc.last_idr);
 #endif
-#if SIDEBAND_WRITE
-				write_sideband_data();
+#if METADATA_WRITE
+				write_metadata();
 #endif
 				destroy_frames_list();
 			}
@@ -173,7 +173,7 @@ static void process_slice(AVCodecContext *c)
 			remember_reference_frames(c);
 			remember_dependencies(c);
 #endif
-#if !SIDEBAND_READ || METRICS_EXTRACT || PREPROCESS || LLSP_SUPPORT || defined(LLSP_PREDICTION)
+#if !METADATA_READ || METRICS_EXTRACT || PREPROCESS || LLSP_SUPPORT || defined(LLSP_PREDICTION)
 			if (++proc.frame->slice_count == SLICE_MAX) {
 				printf("ERROR: maximum number of slices exceeded\n");
 				exit(1);
@@ -210,73 +210,68 @@ static void process_slice(AVCodecContext *c)
 #endif
 }
 
-#if SIDEBAND_READ
-static void process_sideband(const uint8_t *nalu)
+#if METADATA_READ
+static void process_metadata(const uint8_t *nalu)
 {
-	frame_node_t *frame;
 	uint16_t mb_width, mb_height;
 	int i;
-	
-	frame = (frame_node_t *)av_malloc(sizeof(frame_node_t));
-	if (!proc.last_idr)
-		proc.last_idr = frame;
 	
 	nalu_read_start(nalu);
 	mb_width  = nalu_read_uint16();
 	mb_height = nalu_read_uint16();
 	resize_storage(mb_width, mb_height);
-	frame->slice_count = nalu_read_uint8();
-	for (i = 0; i < frame->slice_count; i++)
-		read_metrics(frame, i);
+	proc.frame->slice_count = nalu_read_uint8();
+	for (i = 0; i < proc.frame->slice_count; i++)
+		read_metrics(proc.frame, i);
 	read_replacement_tree(NULL);
-	for (i = 0; i < frame->slice_count; i++) {
-		frame->slice[i].start_index = nalu_read_uint16();
+	for (i = 0; i < proc.frame->slice_count; i++) {
+		proc.frame->slice[i].start_index = nalu_read_uint16();
 		if (i > 0)
-			frame->slice[i-1].end_index = frame->slice[i].start_index;
-		if (i == frame->slice_count - 1)
-			frame->slice[i].end_index = proc.mb_width * proc.mb_height;
-		if (frame->replacement)
-			frame->slice[i].direct_quality_loss = nalu_read_float();
+			proc.frame->slice[i-1].end_index = proc.frame->slice[i].start_index;
+		if (i == proc.frame->slice_count - 1)
+			proc.frame->slice[i].end_index = proc.mb_width * proc.mb_height;
+		if (proc.frame->replacement)
+			proc.frame->slice[i].direct_quality_loss = nalu_read_float();
 	}
-	for (i = 0; i < frame->slice_count; i++)
-		frame->slice[i].emission_factor = nalu_read_float();
+	for (i = 0; i < proc.frame->slice_count; i++)
+		proc.frame->slice[i].emission_factor = nalu_read_float();
 	
-#if SIDEBAND_READ && !PREPROCESS && (SCHEDULING_METHOD == LIFETIME)
+#if METADATA_READ && !PREPROCESS && (SCHEDULING_METHOD == LIFETIME)
 	/* read immission factors for slice tracking from separate file */
-	read_immission(frame);
+	read_immission(proc.frame);
 #endif
 	
 #if LLSP_PREDICT
-	for (i = 0; i < frame->slice_count; i++) {
+	for (i = 0; i < proc.frame->slice_count; i++) {
 		/* calculate the benefit value for each slice */
-		frame->slice[i].decoding_time    = llsp_predict(proc.llsp.decode, metrics_decode(frame, i));
-		frame->slice[i].replacement_time = llsp_predict(proc.llsp.replace, metrics_replace(frame, i));
-		if (!frame->replacement || frame->slice[i].decoding_time <= frame->slice[i].replacement_time)
-			frame->slice[i].benefit = HUGE_VAL;
+		proc.frame->slice[i].decoding_time    = llsp_predict(proc.llsp.decode, metrics_decode(proc.frame, i));
+		proc.frame->slice[i].replacement_time = llsp_predict(proc.llsp.replace, metrics_replace(proc.frame, i));
+		if (!proc.frame->replacement || proc.frame->slice[i].decoding_time <= proc.frame->slice[i].replacement_time)
+			proc.frame->slice[i].benefit = HUGE_VAL;
 		else
 #if SCHEDULING_METHOD == COST
-			frame->slice[i].benefit = 1 / frame->slice[i].decoding_time;
+			proc.frame->slice[i].benefit = 1 / proc.frame->slice[i].decoding_time;
 #elif SCHEDULING_METHOD == DIRECT_ERROR
-		frame->slice[i].benefit = frame->slice[i].direct_quality_loss;
+		proc.frame->slice[i].benefit = proc.frame->slice[i].direct_quality_loss;
 #elif SCHEDULING_METHOD == LIFETIME
-		frame->slice[i].benefit =
-		(frame->slice[i].direct_quality_loss * (1 + frame->reference_lifetime)) /
-		(frame->slice[i].decoding_time - frame->slice[i].replacement_time);
+		proc.frame->slice[i].benefit =
+		(proc.frame->slice[i].direct_quality_loss * (1 + proc.frame->reference_lifetime)) /
+		(proc.frame->slice[i].decoding_time - proc.frame->slice[i].replacement_time);
 #else
-		frame->slice[i].benefit =
-		(frame->slice[i].direct_quality_loss * frame->slice[i].emission_factor) /
-		(frame->slice[i].decoding_time - frame->slice[i].replacement_time);
+		proc.frame->slice[i].benefit =
+		(proc.frame->slice[i].direct_quality_loss * proc.frame->slice[i].emission_factor) /
+		(proc.frame->slice[i].decoding_time - proc.frame->slice[i].replacement_time);
 #endif
 		/* safety margin */
-		frame->slice[i].decoding_time    *= safety_margin_decode;
-		frame->slice[i].replacement_time *= safety_margin_replace;
+		proc.frame->slice[i].decoding_time    *= safety_margin_decode;
+		proc.frame->slice[i].replacement_time *= safety_margin_replace;
 	}
 #endif
 }
 #endif
 
-#if SIDEBAND_WRITE
-static void write_sideband_data(void)
+#if METADATA_WRITE
+static void write_metadata(void)
 {
 	frame_node_t *frame;
 	int i;
@@ -285,46 +280,46 @@ static void write_sideband_data(void)
 		/* copy slices worth a full frame */
 		for (i = 0; i < frame->slice_count; i++) {
 			// forward to the next slice start
-			while (!check_slice_start(proc.sideband.write))
-				copy_nalu(proc.sideband.write);
+			while (!check_slice_start(proc.metadata.write))
+				copy_nalu(proc.metadata.write);
 			// now copy the actual slice
-			copy_nalu(proc.sideband.write);
+			copy_nalu(proc.metadata.write);
 		}
 		
-		/* write our sideband data as a custom NALU */
-		nalu_write_start(proc.sideband.write);
-		nalu_write_uint16(proc.sideband.write, proc.mb_width);
-		nalu_write_uint16(proc.sideband.write, proc.mb_height);
-		nalu_write_uint8(proc.sideband.write, frame->slice_count);
-#if METRICS_EXTRACT || SIDEBAND_READ
+		/* write our metadata as a custom NALU */
+		nalu_write_start(proc.metadata.write);
+		nalu_write_uint16(proc.metadata.write, proc.mb_width);
+		nalu_write_uint16(proc.metadata.write, proc.mb_height);
+		nalu_write_uint8(proc.metadata.write, frame->slice_count);
+#if METRICS_EXTRACT || METADATA_READ
 		for (i = 0; i < frame->slice_count; i++)
 			write_metrics(frame, i);
 #else
 		for (i = 0; i < (1 + 13 * 3) * frame->slice_count; i++)
-			nalu_write_uint8(proc.sideband.write, 0);
+			nalu_write_uint8(proc.metadata.write, 0);
 #endif
-#if PREPROCESS || SIDEBAND_READ
+#if PREPROCESS || METADATA_READ
 		write_replacement_tree(frame->replacement);
 		for (i = 0; i < frame->slice_count; i++) {
-			nalu_write_uint16(proc.sideband.write, frame->slice[i].start_index);
+			nalu_write_uint16(proc.metadata.write, frame->slice[i].start_index);
 			if (frame->replacement)
-				nalu_write_float(proc.sideband.write, frame->slice[i].direct_quality_loss);
+				nalu_write_float(proc.metadata.write, frame->slice[i].direct_quality_loss);
 		}
 #else
-		nalu_write_uint16(proc.sideband.write, 0);  /* empty replacement tree */
-		nalu_write_uint16(proc.sideband.write, 0);  /* first slice's start_index */
+		nalu_write_uint16(proc.metadata.write, 0);  /* empty replacement tree */
+		nalu_write_uint16(proc.metadata.write, 0);  /* first slice's start_index */
 		for (i = 0; i < frame->slice_count - 1; i++)
-			nalu_write_uint16(proc.sideband.write, proc.mb_width * proc.mb_height);
+			nalu_write_uint16(proc.metadata.write, proc.mb_width * proc.mb_height);
 #endif
 		for (i = 0; i < frame->slice_count; i++)
-#if PREPROCESS || SIDEBAND_READ
-			nalu_write_float(proc.sideband.write, frame->slice[i].emission_factor);
+#if PREPROCESS || METADATA_READ
+			nalu_write_float(proc.metadata.write, frame->slice[i].emission_factor);
 #else
-			nalu_write_float(proc.sideband.write, 0.0);
+			nalu_write_float(proc.metadata.write, 0.0);
 #endif
-		nalu_write_end(proc.sideband.write);
+		nalu_write_end(proc.metadata.write);
 		
-#if SIDEBAND_WRITE && PREPROCESS && !SIDEBAND_READ
+#if METADATA_WRITE && PREPROCESS && !METADATA_READ
 		/* store immission factors in a separate file, so we can use them for slice tracking later */
 		write_immission(frame);
 #endif
@@ -361,17 +356,6 @@ static void setup_frame(const AVCodecContext *c)
 	int slice;
 #endif
 	
-#if SIDEBAND_READ
-	/* frame node has already been allocated by sideband lookahead */
-	if (!proc.frame)
-		proc.frame = proc.last_idr;
-	else if (proc.frame->next)
-		proc.frame = proc.frame->next;
-	else
-    /* we fell off the frames list, bad thing */
-		destroy_frames_list();
-	if (!proc.frame) return;
-#else
 	frame_node_t *frame;
 	
 	/* allocate new frame node */
@@ -383,9 +367,8 @@ static void setup_frame(const AVCodecContext *c)
 	proc.frame = frame;
 	/* initialize */
 	proc.frame->next = NULL;
-#endif
 	
-#if PREPROCESS && SIDEBAND_READ
+#if PREPROCESS && METADATA_READ
 	/* lookahead already created a replacement tree, which we want to re-create from scratch */
 	destroy_replacement_tree(proc.frame->replacement);
 #endif
@@ -411,7 +394,7 @@ static void setup_frame(const AVCodecContext *c)
 	proc.frame->reference = proc.frame->reference_base + REF_MAX;
 #endif
 	
-#if !SIDEBAND_READ || METRICS_EXTRACT || PREPROCESS || LLSP_SUPPORT || defined(LLSP_PREDICTION)
+#if !METADATA_READ || METRICS_EXTRACT || PREPROCESS || LLSP_SUPPORT || defined(LLSP_PREDICTION)
 	proc.frame->slice_count = 0;
 #endif
 #if PREPROCESS
@@ -429,7 +412,7 @@ static void destroy_frames_list(void)
 	frame_node_t *frame, *prev;
 	
 	for (frame = proc.last_idr, prev = NULL; frame; prev = frame, frame = frame->next) {
-#if PREPROCESS || SIDEBAND_READ
+#if PREPROCESS || METADATA_READ
 		destroy_replacement_tree(frame->replacement);
 		frame->replacement = NULL;
 #endif

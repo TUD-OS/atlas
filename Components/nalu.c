@@ -28,14 +28,14 @@ struct nalu_write_s {
 };
 
 
-/* sideband data is compressed using Fibonacci coding,
+/* metadata is compressed using Fibonacci coding,
  * see http://en.wikipedia.org/wiki/Fibonacci_coding for details */
 static const uint8_t fibonacci[] = {
 	1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233
 };
 
 
-#pragma mark Sideband NALU Reading
+#pragma mark Metadata NALU Reading
 
 nalu_read_t *nalu_read_alloc(void)
 {
@@ -132,7 +132,7 @@ void nalu_read_free(nalu_read_t *read)
 #pragma mark -
 
 
-#pragma mark Sideband NALU Writing
+#pragma mark Metadata NALU Writing
 
 nalu_write_t *nalu_write_alloc(const char *source)
 {
@@ -155,7 +155,7 @@ nalu_write_t *nalu_write_alloc(const char *source)
 
 void nalu_write_start(nalu_write_t *write)
 {
-	const uint8_t custom[4] = { 0x00, 0x00, 0x01, NAL_SIDEBAND_DATA };
+	const uint8_t custom[4] = { 0x00, 0x00, 0x01, NAL_METADATA };
 	
 	fwrite(custom, 1, 4, write->to);
 	write->history[2] = 0xFF;
@@ -314,7 +314,7 @@ void copy_nalu(nalu_write_t *write)
 		(write->buf[0] == 0) &&
 		(write->buf[1] == 0) &&
 		(write->buf[2] == 1) &&
-		((write->buf[3] & 0x1F) == NAL_SIDEBAND_DATA);
+		((write->buf[3] & 0x1F) == NAL_METADATA);
 	
 	/* the start bytes are alredy in the buffer, take them from there and skip them in the file */
 	if (!skip)

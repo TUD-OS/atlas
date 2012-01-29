@@ -21,7 +21,7 @@ void process_init(AVCodecContext *c, const char *file)
 	c->debug    |= FF_DEBUG_VIS_MB_TYPE;
 #endif
 	c->process_slice = (void (*)(void *))process_slice;
-	c->process_sideband = NULL;
+	c->process_metadata = NULL;
 }
 
 void process_finish(AVCodecContext *c)

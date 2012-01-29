@@ -6,7 +6,7 @@
 #include "process.h"
 #include "libavcodec/mpegvideo.h"
 
-#if PREPROCESS || SIDEBAND_READ
+#if PREPROCESS || METADATA_READ
 static int fill_coordinates(replacement_node_t *node);
 #endif
 
@@ -231,7 +231,7 @@ static void cut_nodes(const AVCodecContext *c, replacement_node_t *node,
 
 #endif
 
-#if PREPROCESS || SIDEBAND_READ
+#if PREPROCESS || METADATA_READ
 void destroy_replacement_tree(replacement_node_t *node)
 {
 	if (!node) return;
@@ -538,7 +538,7 @@ float do_replacement(const AVCodecContext *c, const AVPicture *frame, int slice,
 
 #endif
 
-#if SIDEBAND_WRITE && (PREPROCESS || SIDEBAND_READ)
+#if METADATA_WRITE && (PREPROCESS || METADATA_READ)
 void write_replacement_tree(const replacement_node_t *node)
 {
 	if (!node) {
@@ -560,7 +560,7 @@ void write_replacement_tree(const replacement_node_t *node)
 }
 #endif
 
-#if PREPROCESS || SIDEBAND_READ
+#if PREPROCESS || METADATA_READ
 /* quadtree coordinate calculation, actually it's more like bit shuffling */
 static inline unsigned index_to_x(unsigned i)
 {
@@ -618,7 +618,7 @@ static int fill_coordinates(replacement_node_t *node)
 }
 #endif
 
-#if SIDEBAND_READ
+#if METADATA_READ
 void read_replacement_tree(replacement_node_t *node)
 {
 	static const int read_next_depth = -1;
