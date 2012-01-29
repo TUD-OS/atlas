@@ -294,9 +294,6 @@ static void write_metadata(void)
 #if METRICS_EXTRACT || METADATA_READ
 		for (i = 0; i < frame->slice_count; i++)
 			write_metrics(frame, i);
-#else
-		for (i = 0; i < (1 + 13 * 3) * frame->slice_count; i++)
-			nalu_write_uint8(proc.metadata.write, 0);
 #endif
 #if PREPROCESS || METADATA_READ
 		write_replacement_tree(frame->replacement);
