@@ -102,7 +102,7 @@ void process_finish(AVCodecContext *c)
 	nalu_read_free(proc.sideband.read);
 #endif
 #if SIDEBAND_WRITE
-	/* flush remaining frames */
+	// flush remaining frames
 	write_sideband_data();
 	nalu_write_free(proc.sideband.write);
 #endif
@@ -284,9 +284,10 @@ static void write_sideband_data(void)
 	for (frame = proc.last_idr; frame; frame = frame->next) {
 		/* copy slices worth a full frame */
 		for (i = 0; i < frame->slice_count; i++) {
-			/* skip to the next slice start */
+			// forward to the next slice start
 			while (!check_slice_start(proc.sideband.write))
 				copy_nalu(proc.sideband.write);
+			// now copy the actual slice
 			copy_nalu(proc.sideband.write);
 		}
 		
