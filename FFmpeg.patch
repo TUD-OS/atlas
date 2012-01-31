@@ -1,7 +1,6 @@
-diff -ru FFmpeg.orig/libavcodec/avcodec.h FFmpeg/libavcodec/avcodec.h
---- libavcodec/avcodec.h	2011-12-30 12:32:39.000000000 +0100
-+++ libavcodec/avcodec.h	2011-12-30 13:25:54.000000000 +0100
-@@ -3210,6 +3210,93 @@
+--- libavcodec/avcodec.h	2012-01-26 22:44:59.000000000 +0100
++++ libavcodec/avcodec.h	2012-01-31 10:50:44.000000000 +0100
+@@ -3241,6 +3241,93 @@
      int64_t pts_correction_last_pts;       /// PTS of the last frame
      int64_t pts_correction_last_dts;       /// DTS of the last frame
  
@@ -95,9 +94,8 @@ diff -ru FFmpeg.orig/libavcodec/avcodec.h FFmpeg/libavcodec/avcodec.h
  } AVCodecContext;
  
  /**
-diff -ru FFmpeg.orig/libavcodec/h264.c FFmpeg/libavcodec/h264.c
---- libavcodec/h264.c	2011-12-30 12:32:39.000000000 +0100
-+++ libavcodec/h264.c	2011-12-30 14:22:47.000000000 +0100
+--- libavcodec/h264.c	2012-01-26 22:44:59.000000000 +0100
++++ libavcodec/h264.c	2012-01-31 10:55:41.000000000 +0100
 @@ -64,6 +64,17 @@
      PIX_FMT_NONE
  };
@@ -239,7 +237,7 @@ diff -ru FFmpeg.orig/libavcodec/h264.c FFmpeg/libavcodec/h264.c
                                      idct_dc_add(ptr, h->mb + (i*16+p*256 << pixel_shift), linesize);
                                  else
 @@ -1821,12 +1856,17 @@
-                             }else if(CONFIG_SVQ3_DECODER)
+                             } else if (CONFIG_SVQ3_DECODER)
                                  ff_svq3_add_idct_c(ptr, h->mb + i*16+p*256, linesize, qscale, 0);
                          }
 +                        FFMPEG_TIME_STOP(s->avctx, idct);
@@ -258,7 +256,7 @@ diff -ru FFmpeg.orig/libavcodec/h264.c FFmpeg/libavcodec/h264.c
                  if(!transform_bypass)
 @@ -1840,6 +1880,7 @@
              }
-         }else if(CONFIG_SVQ3_DECODER)
+         } else if (CONFIG_SVQ3_DECODER)
              ff_svq3_luma_dc_dequant_idct_c(h->mb+p*256, h->mb_luma_dc[p], qscale);
 +        FFMPEG_TIME_STOP(s->avctx, idct);
      }
@@ -309,7 +307,7 @@ diff -ru FFmpeg.orig/libavcodec/h264.c FFmpeg/libavcodec/h264.c
 +                    FFMPEG_TIME_STOP(s->avctx, idct);
                  }
              }
-         }else if(CONFIG_SVQ3_DECODER) {
+         } else if (CONFIG_SVQ3_DECODER) {
 @@ -1953,6 +2008,7 @@
      }
  
@@ -389,10 +387,10 @@ diff -ru FFmpeg.orig/libavcodec/h264.c FFmpeg/libavcodec/h264.c
                                                h->mb, uvlinesize,
                                                h->non_zero_count_cache);
 +                    FFMPEG_TIME_STOP(s->avctx, idct);
-                 }
- #if CONFIG_SVQ3_DECODER
-                 else{
-@@ -2150,6 +2221,7 @@
+                 } else if (CONFIG_SVQ3_DECODER) {
+                     h->h264dsp.h264_chroma_dc_dequant_idct(h->mb + 16*16*1, h->dequant4_coeff[IS_INTRA(mb_type) ? 1:4][h->chroma_qp[0]][0]);
+                     h->h264dsp.h264_chroma_dc_dequant_idct(h->mb + 16*16*2, h->dequant4_coeff[IS_INTRA(mb_type) ? 2:5][h->chroma_qp[1]][0]);
+@@ -2147,6 +2218,7 @@
      }
  
      if (!simple && IS_INTRA_PCM(mb_type)) {
@@ -400,7 +398,7 @@ diff -ru FFmpeg.orig/libavcodec/h264.c FFmpeg/libavcodec/h264.c
          if (pixel_shift) {
              const int bit_depth = h->sps.bit_depth_luma;
              GetBitContext gb;
-@@ -2171,20 +2243,26 @@
+@@ -2168,20 +2240,26 @@
          }
      } else {
          if(IS_INTRA(mb_type)){
@@ -427,7 +425,7 @@ diff -ru FFmpeg.orig/libavcodec/h264.c FFmpeg/libavcodec/h264.c
          }
  
          for (p = 0; p < plane_count; p++)
-@@ -3495,6 +3573,7 @@
+@@ -3492,6 +3570,7 @@
      const int pixel_shift = h->pixel_shift;
      const int block_h = 16 >> s->chroma_y_shift;
  
@@ -435,7 +433,7 @@ diff -ru FFmpeg.orig/libavcodec/h264.c FFmpeg/libavcodec/h264.c
      if(h->deblocking_filter) {
          for(mb_x= start_x; mb_x<end_x; mb_x++){
              for(mb_y=end_mb_y - FRAME_MBAFF; mb_y<= end_mb_y; mb_y++){
-@@ -3540,6 +3619,7 @@
+@@ -3537,6 +3616,7 @@
              }
          }
      }
@@ -443,7 +441,7 @@ diff -ru FFmpeg.orig/libavcodec/h264.c FFmpeg/libavcodec/h264.c
      h->slice_type= old_slice_type;
      s->mb_x= end_x;
      s->mb_y= end_mb_y - FRAME_MBAFF;
-@@ -3597,7 +3677,49 @@
+@@ -3594,7 +3674,49 @@
      MpegEncContext * const s = &h->s;
      const int part_mask= s->partitioned_frame ? (ER_AC_END|ER_AC_ERROR) : 0x7F;
      int lf_x_start = s->mb_x;
@@ -466,7 +464,7 @@ diff -ru FFmpeg.orig/libavcodec/h264.c FFmpeg/libavcodec/h264.c
 +                        s->avctx->slice.start_index / s->mb_width,
 +                        s->avctx->slice.end_index % s->mb_width - 1,
 +                        s->avctx->slice.end_index / s->mb_width,
-+                        (AC_END|DC_END|MV_END) & 0x7F);
++                        ER_MB_END & 0x7F);
 +    if (avctx->process_slice) {
 +        emms_c();
 +        avctx->process_slice(s->avctx);
@@ -493,7 +491,7 @@ diff -ru FFmpeg.orig/libavcodec/h264.c FFmpeg/libavcodec/h264.c
      s->mb_skip_run= -1;
  
      h->is_complex = FRAME_MBAFF || s->picture_structure != PICT_FRAME || s->codec_id != CODEC_ID_H264 ||
-@@ -3608,16 +3730,20 @@
+@@ -3605,16 +3727,20 @@
          align_get_bits( &s->gb );
  
          /* init cabac */
@@ -514,7 +512,7 @@ diff -ru FFmpeg.orig/libavcodec/h264.c FFmpeg/libavcodec/h264.c
              int eos;
  //STOP_TIMER("decode_mb_cabac")
  
-@@ -3626,12 +3752,25 @@
+@@ -3623,12 +3749,25 @@
              if( ret >= 0 && FRAME_MBAFF ) { //FIXME optimal? or let mb_decode decode 16x32 ?
                  s->mb_y++;
  
@@ -540,7 +538,7 @@ diff -ru FFmpeg.orig/libavcodec/h264.c FFmpeg/libavcodec/h264.c
  
              if((s->workaround_bugs & FF_BUG_TRUNCATED) && h->cabac.bytestream > h->cabac.bytestream_end + 2){
                  ff_er_add_slice(s, s->resync_mb_x, s->resync_mb_y, s->mb_x-1, s->mb_y, ER_MB_END&part_mask);
-@@ -3666,18 +3805,31 @@
+@@ -3663,18 +3802,31 @@
  
      } else {
          for(;;){
@@ -572,7 +570,7 @@ diff -ru FFmpeg.orig/libavcodec/h264.c FFmpeg/libavcodec/h264.c
              if(ret<0){
                  av_log(h->s.avctx, AV_LOG_ERROR, "error while decoding MB %d %d\n", s->mb_x, s->mb_y);
                  ff_er_add_slice(s, s->resync_mb_x, s->resync_mb_y, s->mb_x, s->mb_y, ER_MB_ERROR&part_mask);
-@@ -4000,6 +4152,12 @@
+@@ -4001,6 +4153,12 @@
          case NAL_SPS_EXT:
          case NAL_AUXILIARY_SLICE:
              break;
@@ -585,7 +583,7 @@ diff -ru FFmpeg.orig/libavcodec/h264.c FFmpeg/libavcodec/h264.c
          default:
              av_log(avctx, AV_LOG_DEBUG, "Unknown NAL code: %d (%d bits)\n", hx->nal_unit_type, bit_length);
          }
-@@ -4077,6 +4235,13 @@
+@@ -4078,6 +4236,13 @@
              *pict= *(AVFrame*)out;
          }
  
@@ -596,10 +594,10 @@ diff -ru FFmpeg.orig/libavcodec/h264.c FFmpeg/libavcodec/h264.c
 +            avctx->process_slice(avctx);
 +        }
 +
-         return buf_size;
+         return buf_index;
      }
      if(h->is_avc && buf_size >= 9 && buf[0]==1 && buf[2]==0 && (buf[4]&0xFC)==0xFC && (buf[5]&0x1F) && buf[8]==0x67){
-@@ -4101,11 +4266,29 @@
+@@ -4102,11 +4267,29 @@
          return ff_h264_decode_extradata(h, buf, buf_size);
      }
  not_extra:
@@ -619,7 +617,7 @@ diff -ru FFmpeg.orig/libavcodec/h264.c FFmpeg/libavcodec/h264.c
 +                        s->avctx->slice.start_index / s->mb_width,
 +                        s->avctx->slice.end_index % s->mb_width - 1,
 +                        s->avctx->slice.end_index / s->mb_width,
-+                        (AC_END|DC_END|MV_END) & 0x7F);
++                        ER_MB_END & 0x7F);
 +    if (avctx->process_slice) {
 +        emms_c();
 +        avctx->process_slice(s->avctx);
@@ -628,7 +626,7 @@ diff -ru FFmpeg.orig/libavcodec/h264.c FFmpeg/libavcodec/h264.c
 +
      if (!s->current_picture_ptr && h->nal_unit_type == NAL_END_SEQUENCE) {
          av_assert0(buf_index <= buf_size);
-         buf_size = buf_index;
+         goto out;
 @@ -4120,6 +4303,7 @@
          return -1;
      }
@@ -637,8 +635,8 @@ diff -ru FFmpeg.orig/libavcodec/h264.c FFmpeg/libavcodec/h264.c
      if(!(s->flags2 & CODEC_FLAG2_CHUNKS) || (s->mb_y >= s->mb_height && s->mb_height)){
  
          if(s->flags2 & CODEC_FLAG2_CHUNKS) decode_postinit(h, 1);
-@@ -4134,6 +4318,14 @@
-             }
+@@ -4132,6 +4316,14 @@
+                 *pict = *(AVFrame*)h->next_output_pic;
          }
      }
 +    FFMPEG_TIME_STOP(avctx, frame_end);
@@ -652,10 +650,9 @@ diff -ru FFmpeg.orig/libavcodec/h264.c FFmpeg/libavcodec/h264.c
  
      assert(pict->data[0] || !*data_size);
      ff_print_debug_info(s, pict);
-diff -ru FFmpeg.orig/libavcodec/h264_loopfilter.c FFmpeg/libavcodec/h264_loopfilter.c
---- libavcodec/h264_loopfilter.c	2011-12-30 12:32:39.000000000 +0100
-+++ libavcodec/h264_loopfilter.c	2011-12-30 14:44:27.000000000 +0100
-@@ -106,6 +106,7 @@
+--- libavcodec/h264_loopfilter.c	2012-01-26 22:44:59.000000000 +0100
++++ libavcodec/h264_loopfilter.c	2012-01-31 10:50:44.000000000 +0100
+@@ -110,6 +110,7 @@
      const int alpha = alpha_table[index_a];
      const int beta  = beta_table[qp + b];
      if (alpha ==0 || beta == 0) return;
@@ -663,7 +660,7 @@ diff -ru FFmpeg.orig/libavcodec/h264_loopfilter.c FFmpeg/libavcodec/h264_loopfil
  
      if( bS[0] < 4 || !intra ) {
          int8_t tc[4];
-@@ -123,6 +124,7 @@
+@@ -132,6 +133,7 @@
      const int alpha = alpha_table[index_a];
      const int beta  = beta_table[qp + b];
      if (alpha ==0 || beta == 0) return;
@@ -671,7 +668,7 @@ diff -ru FFmpeg.orig/libavcodec/h264_loopfilter.c FFmpeg/libavcodec/h264_loopfil
  
      if( bS[0] < 4 || !intra ) {
          int8_t tc[4];
-@@ -141,6 +143,7 @@
+@@ -155,6 +157,7 @@
      const int alpha = alpha_table[index_a];
      const int beta  = beta_table[qp + b];
      if (alpha ==0 || beta == 0) return;
@@ -679,7 +676,7 @@ diff -ru FFmpeg.orig/libavcodec/h264_loopfilter.c FFmpeg/libavcodec/h264_loopfil
  
      if( bS[0] < 4 || !intra ) {
          int8_t tc[4];
-@@ -158,6 +161,7 @@
+@@ -178,6 +181,7 @@
      const int alpha = alpha_table[index_a];
      const int beta  = beta_table[qp + b];
      if (alpha ==0 || beta == 0) return;
@@ -687,7 +684,7 @@ diff -ru FFmpeg.orig/libavcodec/h264_loopfilter.c FFmpeg/libavcodec/h264_loopfil
  
      if( bS[0] < 4 || !intra ) {
          int8_t tc[4];
-@@ -176,6 +180,7 @@
+@@ -200,6 +204,7 @@
      const int alpha = alpha_table[index_a];
      const int beta  = beta_table[qp + b];
      if (alpha ==0 || beta == 0) return;
@@ -695,7 +692,7 @@ diff -ru FFmpeg.orig/libavcodec/h264_loopfilter.c FFmpeg/libavcodec/h264_loopfil
  
      if( bS[0] < 4 || !intra ) {
          int8_t tc[4];
-@@ -194,6 +199,7 @@
+@@ -222,6 +227,7 @@
      const int alpha = alpha_table[index_a];
      const int beta  = beta_table[qp + b];
      if (alpha ==0 || beta == 0) return;
