@@ -7,13 +7,13 @@
 +
 +    /* callback for external slice processing */
 +    void (*process_slice)(void *);
-+    /* callback for sideband data processing */
-+    void (*process_sideband)(const uint8_t *);
++    /* callback for metadata processing */
++    void (*process_metadata)(const uint8_t *);
 +    /* callback for external macroblock processing */
 +    void (*process_mb)(void *);
 +
-+    /* NALU type number for our custom sideband data NALUs */
-+#define NAL_SIDEBAND_DATA   0x1F
++    /* NALU type number for our custom metadata NALUs */
++#define NAL_METADATA   0x1F
 +    /* pseudo slices */
 +#define PSEUDO_SLICE_FRAME_START  -1
 +#define PSEUDO_SLICE_FRAME_END    -2
@@ -574,10 +574,10 @@
          case NAL_SPS_EXT:
          case NAL_AUXILIARY_SLICE:
              break;
-+        case NAL_SIDEBAND_DATA:
-+            if (s->avctx->process_sideband) {
++        case NAL_METADATA:
++            if (s->avctx->process_metadata) {
 +                emms_c();
-+                s->avctx->process_sideband(ptr);
++                s->avctx->process_metadata(ptr);
 +            }
 +            break;
          default:
