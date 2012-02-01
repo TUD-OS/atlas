@@ -31,6 +31,7 @@ static void video_decode(const char *filename)
 	if (!codec_context)
 		return;
 #warning Multithreading is broken right now.
+	codec_context->thread_count = 1;
 #if 0 && defined(THREADS) && THREADS > 1
 	if (avcodec_thread_init(codec_context, THREADS) < 0)
 		return;
