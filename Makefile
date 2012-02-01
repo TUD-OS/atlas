@@ -49,7 +49,7 @@ FFmpeg/config.mak: FFmpeg/configure
 		--enable-decoder=h264 --enable-parser=h264 --enable-demuxer=h264 --enable-protocol=file --enable-rdft
 FFmpeg/configure:
 	rm -rf FFmpeg
-	curl 'http://git.videolan.org/?p=ffmpeg.git;a=snapshot;h=HEAD;sf=tgz' | tar xz
+	curl 'http://git.videolan.org/?p=ffmpeg.git;a=snapshot;h=7e16636995fd6710164f7622cd77abc94c27a064;sf=tgz' | tar xz
 	mv ffmpeg* FFmpeg
 	patch -d FFmpeg -p0 < FFmpeg.patch
 endif
@@ -65,7 +65,7 @@ x264/config.mak: x264/configure
 	cd x264 && CC=gcc CPPFLAGS= CFLAGS= ./configure --extra-cflags=-march=$(ARCH)
 x264/configure:
 	rm -rf x264
-	curl 'http://git.videolan.org/?p=x264.git;a=snapshot;h=HEAD;sf=tgz' | tar xz
+	curl 'http://git.videolan.org/?p=x264.git;a=snapshot;h=f33c8cb0f8fff7a83100b3e9d15baba53c6f6a35;sf=tgz' | tar xz
 	mv x264* x264
 endif
 
@@ -100,8 +100,8 @@ clean::
 cleanall: clean
 	$(MAKE) -C Samples clean
 	$(MAKE) -C Experiments clean
-	$(MAKE) -C FFmpeg distclean
-	$(MAKE) -C x264 clean
+	-$(MAKE) -C FFmpeg distclean
+	-$(MAKE) -C x264 clean
 
 update: cleanall
 	rm -f FFmpeg/configure x264/configure

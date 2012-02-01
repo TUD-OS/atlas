@@ -5,6 +5,7 @@
 
 #include <stdbool.h>
 
+/* opaque handles for NALU access */
 typedef struct nalu_read_s nalu_read_t;
 typedef struct nalu_write_s nalu_write_t;
 
