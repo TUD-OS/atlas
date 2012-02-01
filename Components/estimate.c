@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <pthread.h>
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <assert.h>
@@ -28,7 +29,7 @@ struct estimator_s {
 static const unsigned initial_metrics_size = 256;
 
 static pthread_mutex_t estimator_lock = PTHREAD_MUTEX_INITIALIZER;  // TODO: finegrained locking
-static struct estimator_s *estimator_list;
+static struct estimator_s *estimator_list = NULL;
 
 
 static struct estimator_s *estimator_alloc(unsigned id)
@@ -55,15 +56,42 @@ static struct estimator_s *estimator_alloc(unsigned id)
 
 void thread_checkin(unsigned id)
 {
-#ifdef __linux__
 	pid_t tid;
+#ifdef __linux__
 	tid = gettid();
+#else
+	tid = 0;
 #endif
+	
+	pthread_mutex_lock(&estimator_lock);
+	
+	struct estimator_s *estimator;
+	for (estimator = estimator_list; estimator; estimator = estimator->next)
+		if (estimator->id == id) break;
+	if (!estimator)
+		estimator = estimator_alloc(id);
+	
+	pthread_mutex_unlock(&estimator_lock);
+	// TODO: notify scheduler
 }
 
 void thread_checkout(unsigned id)
 {
+	pthread_mutex_lock(&estimator_lock);
 	
+	struct estimator_s *estimator, *prev;
+	for (estimator = estimator_list, prev = NULL; estimator; prev = estimator, estimator = estimator->next)
+		if (estimator->id == id) break;
+	if (estimator) {
+		if (prev)
+			prev->next = estimator->next;
+		else
+			estimator_list = estimator->next;
+		free(estimator);
+	}
+	
+	pthread_mutex_unlock(&estimator_lock);
+	// TODO: notify scheduler
 }
 
 #pragma mark -
@@ -78,8 +106,9 @@ void job_submit(unsigned target, double deadline, unsigned count, const double m
 	struct estimator_s *estimator;
 	for (estimator = estimator_list; estimator; estimator = estimator->next)
 		if (estimator->id == target) break;
-	if (!estimator) {
+	if (!estimator)
 		estimator = estimator_alloc(target);
+	if (!estimator->llsp) {
 		estimator->metrics_count = count;
 		estimator->llsp = llsp_new(count);
 	}
@@ -97,6 +126,7 @@ void job_submit(unsigned target, double deadline, unsigned count, const double m
 		prediction = llsp_predict(estimator->llsp, metrics);
 	
 	pthread_mutex_unlock(&estimator_lock);
+	// TODO: notify scheduler
 	
 	static unsigned job_id = 0;
 	printf("job %u submitted: %lf, %lf\n", job_id++, deadline, prediction);
@@ -130,9 +160,11 @@ void job_next(unsigned id)
 		}
 		llsp_add(estimator->llsp, metrics, time - estimator->time);
 	}
+	
+	pthread_mutex_unlock(&estimator_lock);
+	// TODO: notify scheduler
+	
 	static unsigned job_id = 0;
 	printf("job %u finished: %lf, %lf\n", job_id++, time, time - estimator->time);
 	estimator->time = time;
-	
-	pthread_mutex_unlock(&estimator_lock);
 }
