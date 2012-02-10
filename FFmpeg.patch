@@ -22,9 +22,9 @@
 +    /* toggle metrics extraction */
 +#define FFMPEG_METRICS 1
 +#if FFMPEG_METRICS
-+#  define FFMPEG_METRICS_EXTRACT(x) x
++#   define FFMPEG_METRICS_EXTRACT(x) x
 +#else
-+#  define FFMPEG_METRICS_EXTRACT(x)
++#   define FFMPEG_METRICS_EXTRACT(x)
 +#endif
 +    struct {
 +        int type;
@@ -45,11 +45,11 @@
 +    /* toggle time measurement */
 +#define FFMPEG_TIME 0
 +#if FFMPEG_TIME
-+#  define FFMPEG_TIME_START(context,slot) context->timing.slot -= read_time()
-+#  define FFMPEG_TIME_STOP(context,slot) context->timing.slot += read_time()
++#   define FFMPEG_TIME_START(context,slot) context->timing.slot -= read_time()
++#   define FFMPEG_TIME_STOP(context,slot) context->timing.slot += read_time()
 +#else
-+#  define FFMPEG_TIME_START(context,slot)
-+#  define FFMPEG_TIME_STOP(context,slot)
++#   define FFMPEG_TIME_START(context,slot)
++#   define FFMPEG_TIME_STOP(context,slot)
 +#endif
 +    struct {
 +        uint64_t decoder_prep;      /* cabac init */
@@ -700,3 +700,136 @@
  
      if( bS[0] < 4 || !intra ) {
          int8_t tc[4];
+--- ffplay.c	2012-01-26 22:44:59.000000000 +0100
++++ ffplay.c	2012-02-06 16:51:17.000000000 +0100
+@@ -57,6 +57,10 @@
+ 
+ #include "cmdutils.h"
+ 
++#define METRICS_COUNT 12
++#include "nalu.h"
++#include "estimate.h"
++
+ #include <unistd.h>
+ #include <assert.h>
+ 
+@@ -1465,8 +1469,10 @@
+ {
+     int got_picture, i;
+ 
++    job_start_blocking(SDL_ThreadID());
+     if (packet_queue_get(&is->videoq, pkt, 1) < 0)
+         return -1;
++    job_stop_blocking(SDL_ThreadID());
+ 
+     if (pkt->data == flush_pkt.data) {
+         avcodec_flush_buffers(is->video_st->codec);
+@@ -1663,8 +1669,13 @@
+     AVPacket pkt;
+     int ret;
+ 
+-    while (!(ret = get_video_frame(priv->is, priv->frame, &pts, &pkt)))
++    while (!(ret = get_video_frame(priv->is, priv->frame, &pts, &pkt))) {
++        int is_flush = (pkt.data == flush_pkt.data);
+         av_free_packet(&pkt);
++        if (!is_flush)
++            // something was decoded, but no picture came out
++            job_next(SDL_ThreadID());
++    }
+     if (ret < 0)
+         return -1;
+ 
+@@ -1796,6 +1807,8 @@
+     int64_t pts_int = AV_NOPTS_VALUE, pos = -1;
+     double pts;
+     int ret;
++    
++    thread_checkin(SDL_ThreadID());
+ 
+ #if CONFIG_AVFILTER
+     AVFilterGraph *graph = avfilter_graph_alloc();
+@@ -1855,6 +1868,9 @@
+         if (ret < 0)
+             goto the_end;
+ 
++        // ffmpeg detects double frame rate for raw H.264 streams
++        is->video_st->codec->time_base.num = 2;
++        
+         is->frame_last_filter_delay = av_gettime() / 1000000.0 - is->frame_last_returned_time;
+         if (fabs(is->frame_last_filter_delay) > AV_NOSYNC_THRESHOLD / 10.0)
+             is->frame_last_filter_delay = 0;
+@@ -1866,19 +1882,24 @@
+ 
+         pts = pts_int * av_q2d(is->video_st->time_base);
+ 
++        job_start_blocking(SDL_ThreadID());
+         ret = queue_picture(is, frame, pts, pos);
++        job_stop_blocking(SDL_ThreadID());
+ 
+         if (ret < 0)
+             goto the_end;
+ 
+         if (is->step)
+             stream_toggle_pause(is);
++        
++        job_next(SDL_ThreadID());
+     }
+  the_end:
+ #if CONFIG_AVFILTER
+     avfilter_graph_free(&graph);
+ #endif
+     av_free(frame);
++    thread_checkout(SDL_ThreadID());
+     return 0;
+ }
+ 
+@@ -2441,6 +2462,7 @@
+     AVPacket pkt1, *pkt = &pkt1;
+     int eof = 0;
+     int pkt_in_play_range = 0;
++    nalu_read_t *nalu = nalu_read_alloc();
+     AVDictionaryEntry *t;
+     AVDictionary **opts;
+     int orig_nb_streams;
+@@ -2655,6 +2677,33 @@
+         if (pkt->stream_index == is->audio_stream && pkt_in_play_range) {
+             packet_queue_put(&is->audioq, pkt);
+         } else if (pkt->stream_index == is->video_stream && pkt_in_play_range) {
++            /* extract metadata from custom NALU and submit job */
++            double metrics[METRICS_COUNT] = { 0.0 };
++            const uint8_t *metadata;
++            uint_fast16_t mb_width, mb_height;
++            uint_fast8_t slice_count;
++            uint_fast8_t slice_type;
++            
++            // the metadata NALU is at the end
++            for (metadata = pkt->data + pkt->size; metadata >= pkt->data + 4; metadata--)
++                if (metadata[-4] == 0 && metadata[-3] == 0 && metadata[-2] == 1 && metadata[-1] == NAL_METADATA)
++                    break;
++            
++            nalu_read_start(nalu, metadata);
++            mb_width = nalu_read_uint16(nalu);
++            mb_height = nalu_read_uint16(nalu);
++            metrics[0] = mb_width * mb_height;
++            slice_count = nalu_read_uint8(nalu);
++            for (; slice_count; slice_count--) {
++                slice_type = nalu_read_uint8(nalu);
++                for (unsigned i = 1; i < METRICS_COUNT; i++)
++                    metrics[i] += nalu_read_uint24(nalu);
++            }
++            
++            double deadline = is->frame_timer + (is->videoq.nb_packets + is->pictq_size - 1) * av_q2d(is->video_st->codec->time_base);
++            
++            job_submit(SDL_GetThreadID(is->video_tid), deadline, METRICS_COUNT, metrics);
++            
+             packet_queue_put(&is->videoq, pkt);
+         } else if (pkt->stream_index == is->subtitle_stream && pkt_in_play_range) {
+             packet_queue_put(&is->subtitleq, pkt);
+@@ -2679,6 +2728,7 @@
+     if (is->ic) {
+         avformat_close_input(&is->ic);
+     }
++    nalu_read_free(nalu);
+ 
+     if (ret != 0) {
+         SDL_Event event;
