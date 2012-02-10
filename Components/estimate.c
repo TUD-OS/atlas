@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <pthread.h>
 #include <unistd.h>
+#include <time.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <assert.h>
@@ -87,6 +88,7 @@ void thread_checkout(unsigned queue)
 			prev->next = estimator->next;
 		else
 			estimator_list = estimator->next;
+		llsp_dispose(estimator->llsp);
 		free(estimator);
 	}
 	
@@ -136,7 +138,9 @@ void job_next(unsigned queue)
 {
 	double time;
 #ifdef __linux__
-	// FIXME: clock_gettime on Linux for per-thread clock
+	struct timespec ts;
+	clock_gettime(CLOCK_THREAD_CPUTIME_ID, &ts);
+	time = (double)ts.tv_sec + (double)ts.tv_nsec / 1000000000.0;
 #else
 #	warning falling back to gettimeofday() which includes blocking time, results may be wrong
 	struct timeval tv;
