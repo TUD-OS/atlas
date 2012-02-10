@@ -2,8 +2,8 @@
 
 .INTERMEDIATE: $(patsubst %.opt,%.y4m,$(wildcard *.opt))
 
-X264_CBR = --input-res $(SIZE) --bitrate $(BITRATE) --slices $(SLICES) --sliced-threads --threads $(SLICES)
-X264_CRF = --input-res $(SIZE) --crf $(QUALITY) --slices $(SLICES) --sliced-threads --threads $(SLICES)
+X264_CBR = --input-res $(SIZE) --fps $(FPS) --bitrate $(BITRATE) --slices $(SLICES) --sliced-threads --threads $(SLICES)
+X264_CRF = --input-res $(SIZE) --fps $(FPS) --crf $(QUALITY) --slices $(SLICES) --sliced-threads --threads $(SLICES)
 
 X264_HIGH = --ref $(REFERENCES) --mixed-refs --bframes 8 --b-pyramid normal --weightb --weightp 2 --8x8dct --cqm flat --b-adapt 2 --direct auto --me umh  --merange 16 --partitions all --subme 9 --trellis 2 --rc-lookahead 60
 X264_MAIN = --no-cabac --ref $(REFERENCES) --bframes 8 --b-pyramid none --no-weightb --weightp 0 --no-8x8dct --cqm flat --b-adapt 2 --direct auto --me umh --merange 16 --partitions all --subme 9 --trellis 2 --rc-lookahead 60
@@ -41,7 +41,7 @@ endif
 
 # some demo video
 bbc-r_m720p.opt:
-	echo 'MODE = CBR\nPROFILE = MAIN\nSLICES = 4\nBITRATE = 4000\nREFERENCES = 3\nSIZE = 1280x720\nURL = http://movies.apple.com/movies/us/hd_gallery/gl1800/bbc-r_m720p.mov' > $@
+	echo 'MODE = CBR\nPROFILE = MAIN\nSLICES = 4\nBITRATE = 4000\nREFERENCES = 3\nSIZE = 1280x720\nFPS = 24\nURL = http://movies.apple.com/movies/us/hd_gallery/gl1800/bbc-r_m720p.mov' > $@
 
 clean:
 	rm -f *.h264 *.p264 *.prop
