@@ -10,6 +10,9 @@ FFMPEG_LIBS = \
 	$(WORKBENCH_BASE)/FFmpeg/libavcodec/libavcodec.a \
 	$(WORKBENCH_BASE)/FFmpeg/libswresample/libswresample.a \
 	$(WORKBENCH_BASE)/FFmpeg/libswscale/libswscale.a
+SDL_LIBS = \
+	$(WORKBENCH_BASE)/SDL/build/.libs/libSDL.a \
+	$(WORKBENCH_BASE)/SDL/build/.libs/libSDLmain.a
 
 .PHONY: all debug clean cleanall update force
 
@@ -17,7 +20,7 @@ FFMPEG_LIBS = \
 BUILD_WORKBENCH ?= $(wildcard h264_workbench.c)
 ifneq ($(BUILD_WORKBENCH),)
 h264_workbench: h264_workbench.c $(FFMPEG_LIBS) $(COMPONENTS) Makefile
-	$(CC) $(CPPFLAGS) $(CFLAGS) -MMD -MF .$@.d -o $@ $(realpath $<) $(FFMPEG_LIBS) $(COMPONENTS) -lz -lm -pthread
+	$(CC) $(CPPFLAGS) $(CFLAGS) -MMD -MF .$@.d -o $@ $(realpath $<) $(FFMPEG_LIBS) $(COMPONENTS) -lz -lm -pthread $(LDFLAGS)
 all:: h264_workbench
 clean::
 	rm -f h264_workbench
@@ -36,6 +39,8 @@ endif
 
 BUILD_FFMPEG ?= $(filter .,$(WORKBENCH_BASE))$(wildcard FFmpeg)
 ifneq ($(BUILD_FFMPEG),)
+ffplay: FFmpeg/ffplay.c FFmpeg/cmdutils.c $(FFMPEG_LIBS) $(SDL_LIBS) $(COMPONENTS)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -MMD -MF .$@.d -o $@ $(realpath $<) FFmpeg/cmdutils.c $(FFMPEG_LIBS) $(SDL_LIBS) $(COMPONENTS) $(SDL_EXTRA_LIBS) $(LDFLAGS)
 $(FFMPEG_LIBS): FFmpeg
 	
 FFmpeg FFmpeg/: FFmpeg/config.mak force
@@ -51,7 +56,22 @@ FFmpeg/configure:
 	rm -rf FFmpeg
 	curl 'http://git.videolan.org/?p=ffmpeg.git;a=snapshot;h=$(if $(UPDATE),HEAD,7e16636995fd6710164f7622cd77abc94c27a064);sf=tgz' | tar xz
 	mv ffmpeg* FFmpeg
-	patch -d FFmpeg -p0 < FFmpeg.patch
+	patch -b -d FFmpeg -p0 < FFmpeg.patch
+endif
+
+
+BUILD_SDL ?= $(filter .,$(WORKBENCH_BASE))$(wildcard SDL)
+ifneq ($(BUILD_SDL),)
+$(SDL_LIBS): SDL
+	
+SDL SDL/: SDL/config.status force
+	$(MAKE) -j$(CPUS) -C $@
+SDL/config.status: SDL/configure
+	cd SDL && CC=$(CC) CPPFLAGS= CFLAGS= ./configure --disable-assembly
+SDL/configure:
+	rm -rf SDL
+	curl http://www.libsdl.org/release/SDL-1.2.15.tar.gz | tar xz
+	mv SDL* SDL
 endif
 
 
@@ -104,7 +124,7 @@ cleanall: clean
 	-$(MAKE) -C x264 clean
 
 update: cleanall
-	rm -f FFmpeg/configure x264/configure
+	rm -f FFmpeg/configure SDL/configure x264/configure
 	$(MAKE) all UPDATE=true
 
 force:
