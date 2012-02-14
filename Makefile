@@ -20,7 +20,7 @@ SDL_LIBS = \
 BUILD_WORKBENCH ?= $(wildcard h264_workbench.c)
 ifneq ($(BUILD_WORKBENCH),)
 h264_workbench: h264_workbench.c $(FFMPEG_LIBS) $(COMPONENTS) Makefile
-	$(CC) $(CPPFLAGS) $(CFLAGS) -MMD -MF .$@.d -o $@ $(realpath $<) $(FFMPEG_LIBS) $(COMPONENTS) -lz -lm -pthread $(LDFLAGS)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -MMD -MF .$@.d -o $@ "$(realpath $<)" $(FFMPEG_LIBS) $(COMPONENTS) -lz -lm -pthread $(LDFLAGS)
 all:: h264_workbench
 clean::
 	rm -f h264_workbench
@@ -40,7 +40,7 @@ endif
 BUILD_FFMPEG ?= $(filter .,$(WORKBENCH_BASE))$(wildcard FFmpeg)
 ifneq ($(BUILD_FFMPEG),)
 ffplay: FFmpeg/ffplay.c FFmpeg/cmdutils.c $(FFMPEG_LIBS) $(SDL_LIBS) $(COMPONENTS)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -MMD -MF .$@.d -o $@ $(realpath $<) FFmpeg/cmdutils.c $(FFMPEG_LIBS) $(SDL_LIBS) $(COMPONENTS) $(SDL_EXTRA_LIBS) $(LDFLAGS)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -MMD -MF .$@.d -o $@ "$(realpath $<)" FFmpeg/cmdutils.c $(FFMPEG_LIBS) $(SDL_LIBS) $(COMPONENTS) $(SDL_EXTRA_LIBS) $(LDFLAGS)
 $(FFMPEG_LIBS): FFmpeg
 	
 FFmpeg FFmpeg/: FFmpeg/config.mak force
