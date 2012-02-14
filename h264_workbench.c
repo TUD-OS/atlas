@@ -19,18 +19,17 @@ static void video_decode(const char *filename)
 	
 	if (!(format = av_find_input_format("h264")))
 		return;
-	if (av_open_input_file(&format_context, filename, format, 0, NULL) != 0)
+	if (!(format_context = avformat_alloc_context()))
 		return;
-	if (av_find_stream_info(format_context) < 0)
+	if (avformat_open_input(&format_context, filename, format, NULL) < 0)
 		return;
-	for (video_stream = 0; video_stream < format_context->nb_streams; video_stream++)
-		if (format_context->streams[video_stream]->codec->codec_type == AVMEDIA_TYPE_VIDEO) {
-			codec_context = format_context->streams[video_stream]->codec;
-			break;
-		}
-	if (!codec_context)
+	if (avformat_find_stream_info(format_context, NULL) < 0)
 		return;
-#warning Multithreading is broken right now.
+	if ((video_stream = av_find_best_stream(format_context, AVMEDIA_TYPE_VIDEO, -1, -1, &codec, 0)) < 0)
+		return;
+	if (!(codec_context = format_context->streams[video_stream]->codec))
+		return;
+#warning Multithreading is broken right now. FIXME.
 	codec_context->thread_count = 1;
 #if 0 && defined(THREADS) && THREADS > 1
 	if (avcodec_thread_init(codec_context, THREADS) < 0)
@@ -38,7 +37,7 @@ static void video_decode(const char *filename)
 #endif
 	if (!(codec = avcodec_find_decoder(codec_context->codec_id)))
 		return;
-	if (avcodec_open(codec_context, codec) < 0)
+	if (avcodec_open2(codec_context, codec, NULL) < 0)
 		return;
 	if (!(frame = avcodec_alloc_frame()))
 		return;
@@ -66,7 +65,7 @@ static void video_decode(const char *filename)
 	
 	av_free(frame);
 	avcodec_close(codec_context);
-	av_close_input_file(format_context);
+	avformat_close_input(&format_context);
 }
 
 
@@ -75,7 +74,7 @@ int main(int argc, const char **argv)
 	const char *filename;
 	int i;
 	
-	avcodec_init();
+	avcodec_register_all();
 	av_register_all();
 	
 	if (argc <= 1)
