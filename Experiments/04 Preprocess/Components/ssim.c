@@ -1,1 +1,1 @@
-../../../Processing/ssim.c
+../../../Components/ssim.c

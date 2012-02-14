@@ -1,1 +1,1 @@
-../../../Processing/weak.c
+../../../Components/weak.c
