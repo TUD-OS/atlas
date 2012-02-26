@@ -3,13 +3,13 @@ include $(WORKBENCH_BASE)/Makeconf
 
 COMPONENTS = $(patsubst %.c,%.o,$(wildcard Components/*.c))
 FFMPEG_LIBS = \
-	$(WORKBENCH_BASE)/FFmpeg/libavutil/libavutil.a \
 	$(WORKBENCH_BASE)/FFmpeg/libavdevice/libavdevice.a \
 	$(WORKBENCH_BASE)/FFmpeg/libavfilter/libavfilter.a \
 	$(WORKBENCH_BASE)/FFmpeg/libavformat/libavformat.a \
 	$(WORKBENCH_BASE)/FFmpeg/libavcodec/libavcodec.a \
 	$(WORKBENCH_BASE)/FFmpeg/libswresample/libswresample.a \
-	$(WORKBENCH_BASE)/FFmpeg/libswscale/libswscale.a
+	$(WORKBENCH_BASE)/FFmpeg/libswscale/libswscale.a \
+	$(WORKBENCH_BASE)/FFmpeg/libavutil/libavutil.a
 SDL_LIBS = \
 	$(WORKBENCH_BASE)/SDL/build/.libs/libSDL.a \
 	$(WORKBENCH_BASE)/SDL/build/.libs/libSDLmain.a

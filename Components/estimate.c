@@ -58,7 +58,7 @@ static struct estimator_s *estimator_alloc(unsigned queue)
 void thread_checkin(unsigned queue)
 {
 	pid_t tid;
-#ifdef __linux__
+#if 0
 	tid = gettid();
 #else
 	tid = 0;
@@ -144,7 +144,7 @@ void job_next(unsigned queue)
 #else
 #	warning falling back to gettimeofday() which includes blocking time, results may be wrong
 	struct timeval tv;
-    gettimeofday(&tv, NULL);
+	gettimeofday(&tv, NULL);
 	time = (double)tv.tv_sec + (double)tv.tv_usec / 1000000.0;
 #endif
 	
