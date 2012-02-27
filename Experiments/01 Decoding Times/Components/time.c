@@ -3,7 +3,11 @@
  * economic rights: Technische Universitaet Dresden (Germany)
  */
 
-#include <sys/time.h>
+#ifdef __linux__
+#	include <time.h>
+#else
+#	include <sys/time.h>
+#endif
 
 #include "process.h"
 
