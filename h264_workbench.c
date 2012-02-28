@@ -29,20 +29,16 @@ static void video_decode(const char *filename)
 		return;
 	if (!(codec_context = format_context->streams[video_stream]->codec))
 		return;
-#warning Multithreading is broken right now. FIXME.
-	codec_context->thread_count = 1;
-#if 0 && defined(THREADS) && THREADS > 1
-	if (avcodec_thread_init(codec_context, THREADS) < 0)
-		return;
-#endif
 	if (!(codec = avcodec_find_decoder(codec_context->codec_id)))
 		return;
+	
+	process_init(codec_context, filename);
+	
 	if (avcodec_open2(codec_context, codec, NULL) < 0)
 		return;
 	if (!(frame = avcodec_alloc_frame()))
 		return;
 	
-	process_init(codec_context, filename);
 	while (av_read_frame(format_context, &packet) >= 0) {
 		if (packet.stream_index == video_stream) {
 			AVPacket working_packet = packet;
@@ -61,10 +57,10 @@ static void video_decode(const char *filename)
 		if (avcodec_decode_video2(codec_context, frame, &frame_finished, &packet) < 0)
 			return;
 	} while (frame_finished);
-	process_finish(codec_context);
 	
 	av_free(frame);
 	avcodec_close(codec_context);
+	process_finish(codec_context);
 	avformat_close_input(&format_context);
 }
 
