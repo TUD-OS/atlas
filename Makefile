@@ -81,11 +81,10 @@ Samples Samples/:: x264
 x264 x264/: x264/config.mak force
 	$(MAKE) -j$(CPUS) -C $@
 x264/config.mak: x264/configure
-	# FIXME: clang-compiled x264 crashes when encoding the demo BBC video
-	cd x264 && CC=gcc CPPFLAGS= CFLAGS= ./configure --extra-cflags=-march=$(ARCH)
+	cd x264 && CC=$(CC) CPPFLAGS= CFLAGS= ./configure --extra-cflags=-march=$(ARCH)
 x264/configure:
 	rm -rf x264
-	curl 'http://git.videolan.org/?p=x264.git;a=snapshot;h=$(if $(UPDATE),HEAD,f33c8cb0f8fff7a83100b3e9d15baba53c6f6a35);sf=tgz' | tar xz
+	curl 'http://git.videolan.org/?p=x264.git;a=snapshot;h=$(if $(UPDATE),HEAD,02c3d5ec58d6bcbc5e22715ae80d53d8556f3c8f);sf=tgz' | tar xz
 	mv x264* x264
 endif
 
