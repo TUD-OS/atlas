@@ -48,6 +48,7 @@
 		4C8CC59A14D81B2400595140 /* estimate.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = estimate.c; sourceTree = "<group>"; };
 		4C8CC59C14D81B4000595140 /* estimate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = estimate.h; sourceTree = "<group>"; };
 		4CAA9F08135C59C400AEA9EB /* h264_workbench */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = h264_workbench; sourceTree = BUILT_PRODUCTS_DIR; };
+		4CEC1A7A150F8C05009814F5 /* SDL */ = {isa = PBXFileReference; lastKnownFileType = folder; path = SDL; sourceTree = "<group>"; };
 		4CF0A7011202CA0800817B42 /* weak.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = weak.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -65,6 +66,7 @@
 				4C8CC59914D7F27F00595140 /* FFmpeg.patch */,
 				4C24B8FB11EDE6B900E67981 /* FFmpeg */,
 				4C24B8FD11EDE6B900E67981 /* x264 */,
+				4CEC1A7A150F8C05009814F5 /* SDL */,
 				4C4847D414CED846009DDAAF /* Shortcuts */,
 			);
 			name = Workbench;
