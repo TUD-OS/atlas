@@ -41,6 +41,8 @@ BUILD_FFMPEG ?= $(filter .,$(WORKBENCH_BASE))$(wildcard FFmpeg)
 ifneq ($(BUILD_FFMPEG),)
 ffplay: FFmpeg/ffplay.c FFmpeg/cmdutils.c $(FFMPEG_LIBS) $(SDL_LIBS) $(COMPONENTS)
 	$(CC) $(CPPFLAGS) $(CFLAGS) -MMD -MF .$@.d -o $@ "$(realpath $<)" FFmpeg/cmdutils.c $(FFMPEG_LIBS) $(SDL_LIBS) $(COMPONENTS) $(SDL_EXTRA_LIBS) $(LDFLAGS)
+clean::
+	rm -f ffplay
 $(FFMPEG_LIBS): FFmpeg
 	
 FFmpeg FFmpeg/: FFmpeg/config.mak force
@@ -121,6 +123,7 @@ cleanall: clean
 	$(MAKE) -C Experiments clean
 	-$(MAKE) -C FFmpeg distclean
 	-$(MAKE) -C x264 clean
+	-$(MAKE) -C SDL distclean
 
 update: cleanall
 	rm -f FFmpeg/configure SDL/configure x264/configure
