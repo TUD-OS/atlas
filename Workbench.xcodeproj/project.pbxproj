@@ -306,6 +306,7 @@
 					LLSP_TRAIN_REPLACE,
 					LLSP_PREDICT,
 				);
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = FFmpeg;
 				PRODUCT_NAME = h264_workbench;
 			};
@@ -323,6 +324,7 @@
 					LLSP_TRAIN_REPLACE,
 					LLSP_PREDICT,
 				);
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = FFmpeg;
 				PRODUCT_NAME = h264_workbench;
 			};
