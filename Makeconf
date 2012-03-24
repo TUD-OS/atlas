@@ -5,7 +5,7 @@ ARCH ?= core2
 CPUS ?= $(shell case `uname` in (Darwin) ioreg | fgrep -c ' AppleACPICPU ' ;; (Linux) grep -c ^processor /proc/cpuinfo ;; esac)
 
 # a compiler with blocks support is required
-CC ?= clang
+CC = clang
 
 override CPPFLAGS := $(if $(DEBUG),-DDEBUG,) $(CPPFLAGS)
 override CPPFLAGS := -DTHREADS=$(CPUS) $(CPPFLAGS)
