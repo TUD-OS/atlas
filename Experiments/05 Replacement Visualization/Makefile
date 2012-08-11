@@ -8,7 +8,7 @@ include $(WORKBENCH_BASE)/Makefile
 	rm -f Visualization.yuv
 	mkfifo Visualization.yuv
 	./h264_workbench $< > /dev/null &
-	ffmpeg -threads $(CPUS) -f rawvideo -s 2560x1440 -r 12 -i Visualization.yuv -b 8M -s 1280x720 -y $@
+	ffmpeg -threads $(CPUS) -f rawvideo -s 2560x1440 -r 12 -i Visualization.yuv -b:v 8M -s 1280x720 -y $@
 	rm Visualization.yuv
 
 clean::

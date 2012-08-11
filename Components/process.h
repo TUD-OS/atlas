@@ -184,9 +184,6 @@ extern void hook_frame_end(const AVCodecContext *c) WEAK_SYMBOL;
 typedef struct replacement_node_s replacement_node_t;
 typedef struct frame_node_s frame_node_t;
 typedef float propagation_t[SLICE_MAX];
-#if !PREPROCESS
-typedef void change_rect_t;
-#endif
 
 /* node in the quadtree describing frame replacement */
 struct replacement_node_s {

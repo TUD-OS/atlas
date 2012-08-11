@@ -66,11 +66,14 @@ void process_init(AVCodecContext *c, const char *file)
 	proc.metadata.write = nalu_write_alloc(file);
 #endif
 #if (METADATA_WRITE && PREPROCESS) || (METADATA_READ && !PREPROCESS && (SCHEDULING_METHOD == LIFETIME))
-	if (strcmp(&file[strlen(file) - sizeof(".p264") + 1], ".p264") == 0) {
-		file[strlen(file) - sizeof("p264") + 2] = 'r';
-		file[strlen(file) - sizeof("p264") + 3] = 'o';
-		file[strlen(file) - sizeof("p264") + 4] = 'p';
-		proc.metadata.propagation = fopen(file,
+	size_t length = strlen(file);
+	if (strcmp(&file[length - sizeof("264") + 1], "264") == 0) {
+		char *propfile = strdup(file);
+		propfile[length - sizeof("p264") + 1] = 'p';
+		propfile[length - sizeof("p264") + 2] = 'r';
+		propfile[length - sizeof("p264") + 3] = 'o';
+		propfile[length - sizeof("p264") + 4] = 'p';
+		proc.metadata.propagation = fopen(propfile,
 #if METADATA_READ
 										  "r"
 #else
@@ -78,7 +81,7 @@ void process_init(AVCodecContext *c, const char *file)
 #endif
 										  );
 	} else {
-		printf("filename does not have the proper .p264 ending\n");
+		printf("filename does not have the proper .?264 ending\n");
 		exit(1);
 	}
 #endif
@@ -216,25 +219,25 @@ static void process_metadata(const uint8_t *nalu)
 	uint16_t mb_width, mb_height;
 	int i;
 	
-	nalu_read_start(nalu);
-	mb_width  = nalu_read_uint16();
-	mb_height = nalu_read_uint16();
+	nalu_read_start(proc.metadata.read, nalu);
+	mb_width  = nalu_read_uint16(proc.metadata.read);
+	mb_height = nalu_read_uint16(proc.metadata.read);
 	resize_storage(mb_width, mb_height);
-	proc.frame->slice_count = nalu_read_uint8();
+	proc.frame->slice_count = nalu_read_uint8(proc.metadata.read);
 	for (i = 0; i < proc.frame->slice_count; i++)
 		read_metrics(proc.frame, i);
 	read_replacement_tree(NULL);
 	for (i = 0; i < proc.frame->slice_count; i++) {
-		proc.frame->slice[i].start_index = nalu_read_uint16();
+		proc.frame->slice[i].start_index = nalu_read_uint16(proc.metadata.read);
 		if (i > 0)
 			proc.frame->slice[i-1].end_index = proc.frame->slice[i].start_index;
 		if (i == proc.frame->slice_count - 1)
 			proc.frame->slice[i].end_index = proc.mb_width * proc.mb_height;
 		if (proc.frame->replacement)
-			proc.frame->slice[i].direct_quality_loss = nalu_read_float();
+			proc.frame->slice[i].direct_quality_loss = nalu_read_float(proc.metadata.read);
 	}
 	for (i = 0; i < proc.frame->slice_count; i++)
-		proc.frame->slice[i].emission_factor = nalu_read_float();
+		proc.frame->slice[i].emission_factor = nalu_read_float(proc.metadata.read);
 	
 #if METADATA_READ && !PREPROCESS && (SCHEDULING_METHOD == LIFETIME)
 	/* read immission factors for slice tracking from separate file */

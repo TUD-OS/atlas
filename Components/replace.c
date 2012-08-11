@@ -246,6 +246,8 @@ void destroy_replacement_tree(replacement_node_t *node)
 #if PREPROCESS
 void remember_slice_boundaries(const AVCodecContext *c)
 {
+	proc.frame->slice[proc.frame->slice_count].start_index = c->slice.start_index;
+	proc.frame->slice[proc.frame->slice_count].end_index   = c->slice.end_index;
 	proc.frame->slice[proc.frame->slice_count].rect.min_y = ((c->slice.start_index) / proc.mb_width) << mb_size_log;
 	proc.frame->slice[proc.frame->slice_count].rect.max_y = ((c->slice.end_index - 1) / proc.mb_width + 1) << mb_size_log;
 	if (c->slice.start_index / proc.mb_width == (c->slice.end_index - 1) / proc.mb_width) {
@@ -543,14 +545,14 @@ void write_replacement_tree(const replacement_node_t *node)
 {
 	if (!node) {
 		/* this must be the root node, so treat as a special case, since we must write something */
-		nalu_write_uint16(0);
+		nalu_write_uint16(proc.metadata.write, 0);
 		return;
 	}
 	if (!node->node[0]) {
-		nalu_write_uint8(node->depth);
-		nalu_write_int8(node->reference);
-		nalu_write_int16(node->x);
-		nalu_write_int16(node->y);
+		nalu_write_uint8(proc.metadata.write, node->depth);
+		nalu_write_int8(proc.metadata.write, node->reference);
+		nalu_write_int16(proc.metadata.write, node->x);
+		nalu_write_int16(proc.metadata.write, node->y);
 	} else {
 		write_replacement_tree(node->node[0]);
 		write_replacement_tree(node->node[1]);
@@ -627,7 +629,7 @@ void read_replacement_tree(replacement_node_t *node)
 	if (!node) {
 		/* initialize the root node */
 		node = (replacement_node_t *)av_malloc(sizeof(replacement_node_t));
-		proc.lookahead->replacement = node;
+		proc.frame->replacement = node;
 		node->depth = 0;
 		node->index = 0;
 		node->node[0] = node->node[1] = node->node[2] = node->node[3] = NULL;
@@ -637,21 +639,21 @@ void read_replacement_tree(replacement_node_t *node)
 	
 	while (1) {
 		if (node->node[0] && node->node[1] && node->node[2] && node->node[3])
-		/* nothing left to do here, this subtree is finished */
+			/* nothing left to do here, this subtree is finished */
 			return;
 		if (depth == read_next_depth)
-			depth = nalu_read_uint8();
+			depth = nalu_read_uint8(proc.metadata.read);
 		if (depth == node->depth) {
 			/* this is our node */
-			node->reference = nalu_read_int8();
+			node->reference = nalu_read_int8(proc.metadata.read);
 			if (!node->reference) {
 				/* special case: empty root node */
 				av_free(node);
-				proc.lookahead->replacement = NULL;
+				proc.frame->replacement = NULL;
 				return;
 			}
-			node->x = nalu_read_int16();
-			node->y = nalu_read_int16();
+			node->x = nalu_read_int16(proc.metadata.read);
+			node->y = nalu_read_int16(proc.metadata.read);
 			depth = read_next_depth;
 			return;
 		}

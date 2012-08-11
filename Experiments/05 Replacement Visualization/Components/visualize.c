@@ -110,7 +110,7 @@ void hook_slice_end(const AVCodecContext *c)
 	const int height = (2 * (c->height + ((1 << mb_size_log) - 1)) >> mb_size_log) << mb_size_log;
 	AVPicture quad;
 	
-	if (c->metrics.type >= 0 || c->slice.flag_last) {
+	if (c->slice.flag_last) {
 		/* use per-frame storage to keep the replaced image */
 		avpicture_fill(&quad, private_data(c->frame.current), c->pix_fmt, width, height);
 		/* left upper quadrant: original */
