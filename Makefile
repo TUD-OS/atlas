@@ -48,17 +48,17 @@ $(FFMPEG_LIBS): FFmpeg
 FFmpeg FFmpeg/: FFmpeg/config.mak force
 	$(MAKE) -j$(CPUS) -C $@
 FFmpeg/config.mak: FFmpeg/configure
-	cd FFmpeg && CPPFLAGS= CFLAGS= ./configure \
+	cd $(@D) && CPPFLAGS= CFLAGS= ./configure \
 		--cc=$(CC) --cpu=$(ARCH) --enable-pthreads \
 		--disable-doc --disable-ffplay --disable-ffprobe --disable-ffserver \
 		--disable-decoders --disable-encoders --disable-parsers --disable-demuxers --disable-muxers \
 		--disable-protocols --disable-filters --disable-bsfs --disable-indevs --disable-outdevs --disable-hwaccels \
 		--enable-decoder=h264 --enable-parser=h264 --enable-demuxer=h264 --enable-protocol=file --enable-rdft
 FFmpeg/configure:
-	rm -rf FFmpeg
-	curl 'http://git.videolan.org/?p=ffmpeg.git;a=snapshot;h=$(if $(UPDATE),HEAD,7e16636995fd6710164f7622cd77abc94c27a064);sf=tgz' | tar xz
-	mv ffmpeg* FFmpeg
-	patch -b -d FFmpeg -p0 < FFmpeg.patch
+	rm -rf $(@D)
+	curl 'http://git.videolan.org/?p=ffmpeg.git;a=snapshot;h=$(if $(UPDATE),HEAD,39fe8033bbf94cac7935d749849fdf67ba8fc16a);sf=tgz' | tar xz
+	mv ffmpeg* $(@D)
+	patch -b -d $(@D) -p0 < FFmpeg.patch
 endif
 
 
@@ -69,11 +69,11 @@ $(SDL_LIBS): SDL
 SDL SDL/: SDL/config.status force
 	$(MAKE) -j$(CPUS) -C $@
 SDL/config.status: SDL/configure
-	cd SDL && CC=$(CC) CPPFLAGS= CFLAGS= ./configure --disable-assembly
+	cd $(@D) && CC=$(CC) CPPFLAGS= CFLAGS= ./configure --disable-assembly
 SDL/configure:
-	rm -rf SDL
+	rm -rf $(@D)
 	curl http://www.libsdl.org/release/SDL-1.2.15.tar.gz | tar xz
-	mv SDL* SDL
+	mv SDL* $(@D)
 endif
 
 
@@ -83,11 +83,11 @@ Samples Samples/:: x264
 x264 x264/: x264/config.mak force
 	$(MAKE) -j$(CPUS) -C $@
 x264/config.mak: x264/configure
-	cd x264 && CC=$(CC) CPPFLAGS= CFLAGS= ./configure --extra-cflags=-march=$(ARCH)
+	cd $(@D) && CC=$(CC) CPPFLAGS= CFLAGS= ./configure --extra-cflags=-march=$(ARCH)
 x264/configure:
-	rm -rf x264
+	rm -rf $(@D)
 	curl 'http://git.videolan.org/?p=x264.git;a=snapshot;h=$(if $(UPDATE),HEAD,02c3d5ec58d6bcbc5e22715ae80d53d8556f3c8f);sf=tgz' | tar xz
-	mv x264* x264
+	mv x264* $(@D)
 endif
 
 
