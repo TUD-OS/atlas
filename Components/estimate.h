@@ -6,11 +6,9 @@
 #include <stdint.h>
 
 /* thread registration */
-void thread_checkin(unsigned queue);
-void thread_checkout(unsigned queue);
+void atlas_thread_checkin(unsigned queue);
+void atlas_thread_checkout(unsigned queue);
 
 /* job management */
-void job_submit(unsigned target, double deadline, unsigned count, const double metrics[]);
-void job_next(unsigned queue);
-void job_start_blocking(unsigned queue);
-void job_stop_blocking(unsigned queue);
+void atlas_job_submit(unsigned target, double deadline, unsigned count, const double metrics[]);
+void atlas_job_next(unsigned queue);

@@ -8,6 +8,7 @@
 #include <pthread.h>
 #include <unistd.h>
 #include <time.h>
+#include <math.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <assert.h>
@@ -55,7 +56,7 @@ static struct estimator_s *estimator_alloc(unsigned queue)
 
 #pragma mark Thread Registration
 
-void thread_checkin(unsigned queue)
+void atlas_thread_checkin(unsigned queue)
 {
 	pid_t tid;
 #if 0
@@ -76,7 +77,7 @@ void thread_checkin(unsigned queue)
 	// TODO: notify scheduler
 }
 
-void thread_checkout(unsigned queue)
+void atlas_thread_checkout(unsigned queue)
 {
 	pthread_mutex_lock(&estimator_lock);
 	
@@ -101,7 +102,7 @@ void thread_checkout(unsigned queue)
 
 #pragma mark Job Management
 
-void job_submit(unsigned target, double deadline, unsigned count, const double metrics[])
+void atlas_job_submit(unsigned target, double deadline, unsigned count, const double metrics[])
 {
 	pthread_mutex_lock(&estimator_lock);
 	
@@ -130,11 +131,14 @@ void job_submit(unsigned target, double deadline, unsigned count, const double m
 	pthread_mutex_unlock(&estimator_lock);
 	// TODO: notify scheduler
 	
+	static double previous_deadline = 0.0;
+	assert(deadline >= previous_deadline);
+	
 	static unsigned job_id = 0;
 	printf("job %u submitted: %lf, %lf\n", job_id++, deadline, prediction);
 }
 
-void job_next(unsigned queue)
+void atlas_job_next(unsigned queue)
 {
 	double time;
 #ifdef __linux__
@@ -142,7 +146,7 @@ void job_next(unsigned queue)
 	clock_gettime(CLOCK_THREAD_CPUTIME_ID, &ts);
 	time = (double)ts.tv_sec + (double)ts.tv_nsec / 1000000000.0;
 #else
-#	warning falling back to gettimeofday() which includes blocking time, results may be wrong
+#	warning falling back to gettimeofday() which includes blocking and waiting time, results will be wrong
 	struct timeval tv;
 	gettimeofday(&tv, NULL);
 	time = (double)tv.tv_sec + (double)tv.tv_usec / 1000000.0;
@@ -170,48 +174,6 @@ void job_next(unsigned queue)
 	// TODO: notify scheduler
 	
 	static unsigned job_id = 0;
-	printf("job %u finished: %lf, %lf\n", job_id++, time, time - estimator->time);
+	printf("job %u finished: %lf, %lf\n", job_id++, time, estimator->time > 0.0 ? time - estimator->time : NAN);
 	estimator->time = time;
-}
-
-void job_start_blocking(unsigned queue)
-{
-#ifndef __linux__
-	/* Linux does not need this, because it has per-thread CPU clocks
-	 * that do not include blocking time */
-	struct timeval tv;
-    gettimeofday(&tv, NULL);
-	double time = (double)tv.tv_sec + (double)tv.tv_usec / 1000000.0;
-	
-	pthread_mutex_lock(&estimator_lock);
-	
-	struct estimator_s *estimator;
-	for (estimator = estimator_list; estimator; estimator = estimator->next)
-		if (estimator->queue == queue) break;
-	if (estimator && estimator->time != 0.0)
-		estimator->time -= time;
-	
-	pthread_mutex_unlock(&estimator_lock);
-#endif
-}
-
-void job_stop_blocking(unsigned queue)
-{
-#ifndef __linux__
-	/* Linux does not need this, because it has per-thread CPU clocks
-	 * that do not include blocking time */
-	struct timeval tv;
-    gettimeofday(&tv, NULL);
-	double time = (double)tv.tv_sec + (double)tv.tv_usec / 1000000.0;
-	
-	pthread_mutex_lock(&estimator_lock);
-	
-	struct estimator_s *estimator;
-	for (estimator = estimator_list; estimator; estimator = estimator->next)
-		if (estimator->queue == queue) break;
-	if (estimator && estimator->time != 0.0)
-		estimator->time += time;
-	
-	pthread_mutex_unlock(&estimator_lock);
-#endif
 }
