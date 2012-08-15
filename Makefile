@@ -14,7 +14,7 @@ SDL_LIBS = \
 	$(WORKBENCH_BASE)/SDL/build/.libs/libSDL.a \
 	$(WORKBENCH_BASE)/SDL/build/.libs/libSDLmain.a
 
-.PHONY: all debug clean cleanall update force
+.PHONY: all debug clean cleanall force
 
 
 BUILD_WORKBENCH ?= $(wildcard h264_workbench.c)
@@ -54,11 +54,28 @@ FFmpeg/config.mak: FFmpeg/configure
 		--disable-decoders --disable-encoders --disable-parsers --disable-demuxers --disable-muxers \
 		--disable-protocols --disable-filters --disable-bsfs --disable-indevs --disable-outdevs --disable-hwaccels \
 		--enable-decoder=h264 --enable-parser=h264 --enable-demuxer=h264 --enable-protocol=file --enable-rdft
-FFmpeg/configure:
-	rm -rf $(@D)
-	curl 'http://git.videolan.org/?p=ffmpeg.git;a=snapshot;h=$(if $(UPDATE),HEAD,39fe8033bbf94cac7935d749849fdf67ba8fc16a);sf=tgz' | tar xz
-	mv ffmpeg* $(@D)
-	patch -b -d $(@D) -p0 < FFmpeg.patch
+FFmpeg/configure: FFmpeg/.git/config
+	cd $(@D) && git checkout 39fe8033bbf94cac7935d749849fdf67ba8fc16a
+	patch -d $(@D) -p1 < $(@D).patch
+	cd $(@D) && git add --all
+FFmpeg/.git/config:
+	rm -rf $(dir $(@D))
+	git clone -n git://git.videolan.org/ffmpeg.git $(dir $(@D))
+endif
+
+
+BUILD_X264 ?= $(filter .,$(WORKBENCH_BASE))$(wildcard x264)
+ifneq ($(BUILD_X264),)
+Samples Samples/:: x264
+x264 x264/: x264/config.mak force
+	$(MAKE) -j$(CPUS) -C $@
+x264/config.mak: x264/configure
+	cd $(@D) && CC=$(CC) CPPFLAGS= CFLAGS= ./configure --extra-cflags=-march=$(ARCH)
+x264/configure: x264/.git/config
+	cd $(@D) && git checkout 37be55213a39db40cf159ada319bd482a1b00680
+x264/.git/config:
+	rm -rf $(dir $(@D))
+	git clone -n git://git.videolan.org/x264.git $(dir $(@D))
 endif
 
 
@@ -77,17 +94,24 @@ SDL/configure:
 endif
 
 
-BUILD_X264 ?= $(filter .,$(WORKBENCH_BASE))$(wildcard x264)
-ifneq ($(BUILD_X264),)
-Samples Samples/:: x264
-x264 x264/: x264/config.mak force
-	$(MAKE) -j$(CPUS) -C $@
-x264/config.mak: x264/configure
-	cd $(@D) && CC=$(CC) CPPFLAGS= CFLAGS= ./configure --extra-cflags=-march=$(ARCH)
-x264/configure:
-	rm -rf $(@D)
-	curl 'http://git.videolan.org/?p=x264.git;a=snapshot;h=$(if $(UPDATE),HEAD,02c3d5ec58d6bcbc5e22715ae80d53d8556f3c8f);sf=tgz' | tar xz
-	mv x264* $(@D)
+BUILD_LINUX ?= $(filter .,$(WORKBENCH_BASE))$(wildcard Linux)
+ifneq ($(BUILD_LINUX),)
+Linux Linux/: Linux/.config force
+	$(MAKE) -j$(CPUS) -C $@ KERNELVERSION=3.5.0-10-atlas bzImage
+Linux/.config: Linux/Makefile
+	cd $(@D) && unset MAKELEVEL && \
+		fakeroot debian/rules clean && \
+		fakeroot debian/rules binary-indep && \
+		fakeroot debian/rules binary-perarch && \
+		fakeroot debian/rules binary-atlas
+	cp $(@D)/debian/build/build-atlas/.config $(@D)
+Linux/Makefile: Linux/.git/config
+	cd $(@D) && git checkout 5c4e748a6bff1a1d829fea1141e68e467353665b
+	patch -d $(@D) -p1 < $(@D).patch
+	cd $(@D) && git add --all
+Linux/.git/config:
+	rm -rf $(dir $(@D))
+	git clone -n git://kernel.ubuntu.com/ubuntu/ubuntu-precise.git $(dir $(@D))
 endif
 
 
@@ -124,10 +148,7 @@ cleanall: clean
 	-$(MAKE) -C FFmpeg distclean
 	-$(MAKE) -C x264 clean
 	-$(MAKE) -C SDL distclean
-
-update: cleanall
-	rm -f FFmpeg/configure SDL/configure x264/configure
-	$(MAKE) all UPDATE=true
+	-$(MAKE) -C Linux clean
 
 force:
 	
