@@ -3,6 +3,10 @@
  * economic rights: Technische Universitaet Dresden (Germany)
  */
 
+#ifdef __linux__
+#define _GNU_SOURCE
+#endif
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <pthread.h>
@@ -13,13 +17,16 @@
 #include <sys/time.h>
 #include <assert.h>
 
+#include "scheduler.h"
 #include "llsp.h"
 #include "estimate.h"
 
 struct estimator_s {
 	struct estimator_s *next;
-	unsigned queue;
+	unsigned id;
+	pid_t tid;
 	double time;
+	double previous_deadline;
 	llsp_t *llsp;
 	unsigned metrics_count;
 	unsigned size;
@@ -34,13 +41,15 @@ static pthread_mutex_t estimator_lock = PTHREAD_MUTEX_INITIALIZER;  // TODO: fin
 static struct estimator_s *estimator_list = NULL;
 
 
-static struct estimator_s *estimator_alloc(unsigned queue)
+static struct estimator_s *estimator_alloc(unsigned id)
 {
 	struct estimator_s *estimator;
 	
 	estimator = malloc(sizeof(struct estimator_s) + sizeof(double) * initial_metrics_size);
-	estimator->queue = queue;
+	estimator->id = id;
+	estimator->tid = 0;
 	estimator->time = 0.0;
+	estimator->previous_deadline = 0.0;
 	estimator->llsp = NULL;
 	estimator->metrics_count = 0;
 	estimator->size = initial_metrics_size;
@@ -56,34 +65,29 @@ static struct estimator_s *estimator_alloc(unsigned queue)
 
 #pragma mark Thread Registration
 
-void atlas_thread_checkin(unsigned queue)
+void atlas_thread_checkin(unsigned id)
 {
-	pid_t tid;
-#if 0
-	tid = gettid();
-#else
-	tid = 0;
-#endif
+	pid_t tid = gettid();
 	
 	pthread_mutex_lock(&estimator_lock);
 	
 	struct estimator_s *estimator;
 	for (estimator = estimator_list; estimator; estimator = estimator->next)
-		if (estimator->queue == queue) break;
+		if (estimator->id == id) break;
 	if (!estimator)
-		estimator = estimator_alloc(queue);
+		estimator = estimator_alloc(id);
+	estimator->tid = tid;
 	
 	pthread_mutex_unlock(&estimator_lock);
-	// TODO: notify scheduler
 }
 
-void atlas_thread_checkout(unsigned queue)
+void atlas_thread_checkout(unsigned id)
 {
 	pthread_mutex_lock(&estimator_lock);
 	
 	struct estimator_s *estimator, *prev;
 	for (estimator = estimator_list, prev = NULL; estimator; prev = estimator, estimator = estimator->next)
-		if (estimator->queue == queue) break;
+		if (estimator->id == id) break;
 	if (estimator) {
 		if (prev)
 			prev->next = estimator->next;
@@ -94,7 +98,6 @@ void atlas_thread_checkout(unsigned queue)
 	}
 	
 	pthread_mutex_unlock(&estimator_lock);
-	// TODO: notify scheduler
 }
 
 #pragma mark -
@@ -108,13 +111,16 @@ void atlas_job_submit(unsigned target, double deadline, unsigned count, const do
 	
 	struct estimator_s *estimator;
 	for (estimator = estimator_list; estimator; estimator = estimator->next)
-		if (estimator->queue == target) break;
+		if (estimator->id == target) break;
 	if (!estimator)
 		estimator = estimator_alloc(target);
 	if (!estimator->llsp) {
 		estimator->metrics_count = count;
 		estimator->llsp = llsp_new(count);
 	}
+	
+	assert(deadline >= estimator->previous_deadline);
+	estimator->previous_deadline = deadline;
 	
 	assert(estimator->metrics_count == count);
 	for (unsigned i = 0; i < estimator->metrics_count; i++) {
@@ -128,17 +134,23 @@ void atlas_job_submit(unsigned target, double deadline, unsigned count, const do
 	if (llsp_solve(estimator->llsp))
 		prediction = llsp_predict(estimator->llsp, metrics);
 	
-	pthread_mutex_unlock(&estimator_lock);
-	// TODO: notify scheduler
+	struct timeval tv_deadline = {
+		.tv_sec = deadline,
+		.tv_usec = 1000000 * (deadline - (long)deadline)
+	};
+	struct timeval tv_exectime = {
+		.tv_sec = prediction,
+		.tv_usec = 1000000 * (prediction - (long)prediction)
+	};
+	atlas_submit(estimator->tid, &tv_exectime, &tv_deadline);
 	
-	static double previous_deadline = 0.0;
-	assert(deadline >= previous_deadline);
+	pthread_mutex_unlock(&estimator_lock);
 	
 	static unsigned job_id = 0;
 	printf("job %u submitted: %lf, %lf\n", job_id++, deadline, prediction);
 }
 
-void atlas_job_next(unsigned queue)
+void atlas_job_next(unsigned id)
 {
 	double time;
 #ifdef __linux__
@@ -156,9 +168,9 @@ void atlas_job_next(unsigned queue)
 	
 	struct estimator_s *estimator;
 	for (estimator = estimator_list; estimator; estimator = estimator->next)
-		if (estimator->queue == queue) break;
+		if (estimator->id == id) break;
 	if (!estimator)
-		estimator = estimator_alloc(queue);
+		estimator = estimator_alloc(id);
 	if (estimator->read_pos != estimator->write_pos) {
 		double metrics[estimator->metrics_count];
 		for (unsigned i = 0; i < estimator->metrics_count; i++) {
@@ -171,9 +183,11 @@ void atlas_job_next(unsigned queue)
 	}
 	
 	pthread_mutex_unlock(&estimator_lock);
-	// TODO: notify scheduler
+	
+	atlas_next();
 	
 	static unsigned job_id = 0;
 	printf("job %u finished: %lf, %lf\n", job_id++, time, estimator->time > 0.0 ? time - estimator->time : NAN);
 	estimator->time = time;
 }
+
