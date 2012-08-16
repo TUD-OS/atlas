@@ -119,7 +119,10 @@ void atlas_job_submit(unsigned target, double deadline, unsigned count, const do
 		estimator->llsp = llsp_new(count);
 	}
 	
-	assert(deadline >= estimator->previous_deadline);
+	if (deadline < estimator->previous_deadline) {
+		printf("WARNING: deadlines not ordered (%lf < %lf)\n", deadline, estimator->previous_deadline);
+		deadline = estimator->previous_deadline;
+	}
 	estimator->previous_deadline = deadline;
 	
 	assert(estimator->metrics_count == count);
