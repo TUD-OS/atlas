@@ -50,6 +50,12 @@ inline int atlas_debug(void)
 
 #include <sys/types.h>
 #include <sys/time.h>
+#include <errno.h>
+
+static inline pid_t gettid(void)
+{
+	return 0;
+}
 
 static inline int atlas_submit(pid_t pid, struct timeval *exectime, struct timeval *deadline)
 {
