@@ -1,12 +1,11 @@
 diff --git a/ffplay.c b/ffplay.c
-index 779c879..00c10ae 100644
+index 779c879..1aaa1b4 100644
 --- a/ffplay.c
 +++ b/ffplay.c
-@@ -56,6 +56,11 @@
+@@ -56,6 +56,10 @@
  
  #include "cmdutils.h"
  
-+#include "dispatch.h"
 +#define METRICS_COUNT 12
 +#include "nalu.h"
 +#include "estimate.h"
@@ -14,7 +13,7 @@ index 779c879..00c10ae 100644
  #include <unistd.h>
  #include <assert.h>
  
-@@ -1688,8 +1693,13 @@ static int input_request_frame(AVFilterLink *link)
+@@ -1688,8 +1692,13 @@ static int input_request_frame(AVFilterLink *link)
      AVPacket pkt;
      int ret;
  
@@ -29,35 +28,35 @@ index 779c879..00c10ae 100644
      if (ret < 0)
          return -1;
  
-@@ -1832,6 +1842,8 @@ static int video_thread(void *arg)
-     int64_t pts_int = AV_NOPTS_VALUE, pos = -1;
+@@ -1833,6 +1842,8 @@ static int video_thread(void *arg)
      double pts;
      int ret;
-+    
-+    atlas_thread_checkin(SDL_ThreadID());
  
++    atlas_thread_checkin(SDL_ThreadID());
++
  #if CONFIG_AVFILTER
      AVFilterGraph *graph = avfilter_graph_alloc();
-@@ -1901,6 +1913,9 @@ static int video_thread(void *arg)
+     AVFilterContext *filt_out = NULL;
+@@ -1856,6 +1867,8 @@ static int video_thread(void *arg)
+         AVFilterBufferRef *picref;
+         AVRational tb = filt_out->inputs[0]->time_base;
+ #endif
++        atlas_job_next(SDL_ThreadID());
++
+         while (is->paused && !is->videoq.abort_request)
+             SDL_Delay(10);
+ #if CONFIG_AVFILTER
+@@ -1901,6 +1914,9 @@ static int video_thread(void *arg)
          if (ret < 0)
              goto the_end;
  
 +        // ffmpeg detects double frame rate for raw H.264 streams
 +        is->video_st->codec->time_base.num = 2;
-+        
++
          is->frame_last_filter_delay = av_gettime() / 1000000.0 - is->frame_last_returned_time;
          if (fabs(is->frame_last_filter_delay) > AV_NOSYNC_THRESHOLD / 10.0)
              is->frame_last_filter_delay = 0;
-@@ -1919,6 +1934,8 @@ static int video_thread(void *arg)
- 
-         if (is->step)
-             stream_toggle_pause(is);
-+        
-+        atlas_job_next(SDL_ThreadID());
-     }
-  the_end:
-     avcodec_flush_buffers(is->video_st->codec);
-@@ -1927,6 +1944,7 @@ static int video_thread(void *arg)
+@@ -1927,6 +1943,7 @@ static int video_thread(void *arg)
      avfilter_graph_free(&graph);
  #endif
      av_free(frame);
@@ -65,7 +64,7 @@ index 779c879..00c10ae 100644
      return 0;
  }
  
-@@ -2493,6 +2511,7 @@ static int read_thread(void *arg)
+@@ -2493,6 +2510,7 @@ static int read_thread(void *arg)
      AVPacket pkt1, *pkt = &pkt1;
      int eof = 0;
      int pkt_in_play_range = 0;
@@ -73,7 +72,7 @@ index 779c879..00c10ae 100644
      AVDictionaryEntry *t;
      AVDictionary **opts;
      int orig_nb_streams;
-@@ -2707,6 +2726,33 @@ static int read_thread(void *arg)
+@@ -2707,6 +2725,33 @@ static int read_thread(void *arg)
          if (pkt->stream_index == is->audio_stream && pkt_in_play_range) {
              packet_queue_put(&is->audioq, pkt);
          } else if (pkt->stream_index == is->video_stream && pkt_in_play_range) {
@@ -107,7 +106,7 @@ index 779c879..00c10ae 100644
              packet_queue_put(&is->videoq, pkt);
          } else if (pkt->stream_index == is->subtitle_stream && pkt_in_play_range) {
              packet_queue_put(&is->subtitleq, pkt);
-@@ -2731,6 +2777,7 @@ static int read_thread(void *arg)
+@@ -2731,6 +2776,7 @@ static int read_thread(void *arg)
      if (is->ic) {
          avformat_close_input(&is->ic);
      }
