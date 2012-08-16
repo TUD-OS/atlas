@@ -104,11 +104,15 @@ Linux/.config: Linux/Makefile
 		fakeroot debian/rules binary-indep && \
 		fakeroot debian/rules binary-perarch && \
 		fakeroot debian/rules binary-atlas
+	touch $(@D)/.scmversion  # prevent kernel build from using git for version string
 	cp $(@D)/debian/build/build-atlas/.config $(@D)
 Linux/Makefile: Linux/.git/config
 	cd $(@D) && git checkout 5c4e748a6bff1a1d829fea1141e68e467353665b
 	patch -d $(@D) -p1 < $(@D).patch
-	cd $(@D) && git add --all
+	cd $(@D) && \
+		git add --all debian.quantal && \
+		git commit --message='build infrastructure' && \
+		git add --all
 Linux/.git/config:
 	rm -rf $(dir $(@D))
 	git clone -n git://kernel.ubuntu.com/ubuntu/ubuntu-precise.git $(dir $(@D))
