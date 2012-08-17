@@ -3,16 +3,16 @@ include $(WORKBENCH_BASE)/Makeconf
 
 COMPONENTS = $(patsubst %.c,%.o,$(wildcard Components/*.c))
 FFMPEG_LIBS = \
-	$(WORKBENCH_BASE)/FFmpeg/libavdevice/libavdevice.a \
-	$(WORKBENCH_BASE)/FFmpeg/libavfilter/libavfilter.a \
-	$(WORKBENCH_BASE)/FFmpeg/libavformat/libavformat.a \
-	$(WORKBENCH_BASE)/FFmpeg/libavcodec/libavcodec.a \
-	$(WORKBENCH_BASE)/FFmpeg/libswresample/libswresample.a \
-	$(WORKBENCH_BASE)/FFmpeg/libswscale/libswscale.a \
-	$(WORKBENCH_BASE)/FFmpeg/libavutil/libavutil.a
+	FFmpeg/libavdevice/libavdevice.a \
+	FFmpeg/libavfilter/libavfilter.a \
+	FFmpeg/libavformat/libavformat.a \
+	FFmpeg/libavcodec/libavcodec.a \
+	FFmpeg/libswresample/libswresample.a \
+	FFmpeg/libswscale/libswscale.a \
+	FFmpeg/libavutil/libavutil.a
 SDL_LIBS = \
-	$(WORKBENCH_BASE)/SDL/build/.libs/libSDL.a \
-	$(WORKBENCH_BASE)/SDL/build/.libs/libSDLmain.a
+	SDL/build/.libs/libSDL.a \
+	SDL/build/.libs/libSDLmain.a
 
 .PHONY: all debug clean cleanall force
 
@@ -47,7 +47,7 @@ clean::
 .ffplay.d: FFmpeg/ffplay.c
 $(FFMPEG_LIBS): FFmpeg
 	
-FFmpeg FFmpeg/: FFmpeg/config.mak force
+FFmpeg FFmpeg/: FFmpeg/config.mak FFmpeg.patch force
 	$(MAKE) -j$(CPUS) -C $@
 FFmpeg/config.mak: FFmpeg/configure
 	cd $(@D) && CPPFLAGS= CFLAGS= ./configure \
@@ -58,10 +58,10 @@ FFmpeg/config.mak: FFmpeg/configure
 		--enable-decoder=h264 --enable-parser=h264 --enable-demuxer=h264 --enable-protocol=file --enable-rdft
 FFmpeg/configure FFmpeg/ffplay.c FFmpeg/cmdutils.c: FFmpeg/.git/config
 	cd $(@D) && git checkout 39fe8033bbf94cac7935d749849fdf67ba8fc16a
-	patch -d $(@D) -p1 < $(@D).patch
+	patch -d $(@D) -p1 < FFmpeg.patch
 	cd $(@D) && git add --all
 FFmpeg/.git/config:
-	rm -rf $(dir $(@D))
+	rm -rf "$(realpath FFmpeg)" && mkdir "$(realpath FFmpeg)"
 	git clone -n git://git.videolan.org/ffmpeg.git $(dir $(@D))
 endif
 
@@ -76,7 +76,7 @@ x264/config.mak: x264/configure
 x264/configure: x264/.git/config
 	cd $(@D) && git checkout 37be55213a39db40cf159ada319bd482a1b00680
 x264/.git/config:
-	rm -rf $(dir $(@D))
+	rm -rf "$(realpath x264)" && mkdir "$(realpath x264)"
 	git clone -n git://git.videolan.org/x264.git $(dir $(@D))
 endif
 
@@ -90,15 +90,15 @@ SDL SDL/: SDL/config.status force
 SDL/config.status: SDL/configure
 	cd $(@D) && CC=$(CC) CPPFLAGS= CFLAGS= ./configure --disable-assembly
 SDL/configure:
-	rm -rf $(@D)
+	rm -rf "$(realpath SDL)" && mkdir "$(realpath SDL)"
 	curl http://www.libsdl.org/release/SDL-1.2.15.tar.gz | tar xz
-	mv SDL* $(@D)
+	mv SDL-*/* $(@D)/ && rm -rf SDL-*/*
 endif
 
 
 BUILD_LINUX ?= $(filter .,$(WORKBENCH_BASE))$(wildcard Linux)
 ifneq ($(BUILD_LINUX),)
-Linux Linux/: Linux/.config force
+Linux Linux/: Linux/.config Linux.patch force
 	$(MAKE) -j$(CPUS) -C $@ KERNELVERSION=3.5.0-10-atlas bzImage
 Linux/.config: Linux/Makefile
 	cd $(@D) && unset MAKELEVEL && \
@@ -110,13 +110,13 @@ Linux/.config: Linux/Makefile
 	cp $(@D)/debian/build/build-atlas/.config $(@D)
 Linux/Makefile: Linux/.git/config
 	cd $(@D) && git checkout 5c4e748a6bff1a1d829fea1141e68e467353665b
-	patch -d $(@D) -p1 < $(@D).patch
+	patch -d $(@D) -p1 < Linux.patch
 	cd $(@D) && \
 		git add --all debian.quantal && \
 		git commit --message='build infrastructure' && \
 		git add --all
 Linux/.git/config:
-	rm -rf $(dir $(@D))
+	rm -rf "$(realpath Linux)" && mkdir "$(realpath Linux)"
 	git clone -n git://kernel.ubuntu.com/ubuntu/ubuntu-precise.git $(dir $(@D))
 endif
 
