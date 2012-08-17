@@ -5,6 +5,7 @@
 
 #ifdef __linux__
 #define _GNU_SOURCE
+#include <sched.h>
 #endif
 
 #include <stdlib.h>
@@ -79,6 +80,15 @@ void atlas_thread_checkin(unsigned id)
 	estimator->tid = tid;
 	
 	pthread_mutex_unlock(&estimator_lock);
+	
+#ifdef __linux__
+	cpu_set_t cpu_set;
+	
+	CPU_ZERO(&cpu_set);
+	CPU_SET(0, &cpu_set);
+	
+	sched_setaffinity(0, sizeof(cpu_set), &cpu_set);
+#endif	
 }
 
 void atlas_thread_checkout(unsigned id)
