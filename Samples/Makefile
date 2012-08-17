@@ -15,14 +15,14 @@ endif
 
 all: $(patsubst %.opt,%.h264,$(if $(wildcard *.opt),$(wildcard *.opt),bbc-r_m720p.opt))
 
-%.h264: %.mov %.opt ../x264/x264
+%.h264: %.mov %.opt ../x264/x264 Makefile
 ifeq ($(MODE),)
 	$(MAKE) $@ INCLUDE=$*.opt
 else
 	ffmpeg -i $< -f rawvideo - 2> /dev/null | ../x264/x264 $(X264_$(MODE)) $(X264_$(PROFILE)) -o $@ -
 endif
 
-%.h264: %.y4m %.opt ../x264/x264
+%.h264: %.y4m %.opt ../x264/x264 Makefile
 ifeq ($(MODE),)
 	$(MAKE) $@ INCLUDE=$*.opt
 else
@@ -40,7 +40,7 @@ endif
 	$(MAKE) -C .. x264
 
 # some demo video
-bbc-r_m720p.opt:
+bbc-r_m720p.opt: Makefile
 	echo 'MODE = CBR\nPROFILE = MAIN\nSLICES = 4\nBITRATE = 4000\nREFERENCES = 3\nSIZE = 1280x720\nFPS = 24\nURL = http://movies.apple.com/movies/us/hd_gallery/gl1800/bbc-r_m720p.mov' > $@
 
 clean:
