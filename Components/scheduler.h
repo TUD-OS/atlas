@@ -1,6 +1,8 @@
 /*
  * Copyright (C) 2006-2012 Michael Roitzsch <mroi@os.inf.tu-dresden.de>
  * economic rights: Technische Universitaet Dresden (Germany)
+ *
+ * Copyright (C) 2012 Stefan Wächtler
  */
 
 #ifdef __linux__
@@ -12,13 +14,13 @@
 #include <errno.h>
 
 #if defined(__x86_64__)
-#define __NR_atlas_next   313
-#define __NR_atlas_submit 314
-#define __NR_atlas_debug  315
+#define SYS_atlas_next   313
+#define SYS_atlas_submit 314
+#define SYS_atlas_debug  315
 #elif defined(__i386__)
-#define __NR_atlas_next   350
-#define __NR_atlas_submit 351
-#define __NR_atlas_debug  352
+#define SYS_atlas_next   350
+#define SYS_atlas_submit 351
+#define SYS_atlas_debug  352
 #else
 #error Architecture not supported.
 #endif
@@ -30,20 +32,20 @@ static inline pid_t gettid(void)
 
 static inline int atlas_submit(pid_t pid, struct timeval *exectime, struct timeval *deadline)
 {
-	if (syscall(__NR_atlas_submit, pid, exectime, deadline))
-		return errno;
-	else
+	if (syscall(SYS_atlas_submit, pid, exectime, deadline) == 0)
 		return 0;
+	else
+		return errno;
 }
 
 inline int atlas_next(void)
 {
-	return syscall(__NR_atlas_next);
+	return syscall(SYS_atlas_next);
 }
 
 inline int atlas_debug(void)
 {
-	return syscall(__NR_atlas_debug);
+	return syscall(SYS_atlas_debug);
 }
 
 #else
