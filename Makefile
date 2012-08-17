@@ -54,7 +54,7 @@ FFmpeg/config.mak: FFmpeg/configure
 		--disable-decoders --disable-encoders --disable-parsers --disable-demuxers --disable-muxers \
 		--disable-protocols --disable-filters --disable-bsfs --disable-indevs --disable-outdevs --disable-hwaccels \
 		--enable-decoder=h264 --enable-parser=h264 --enable-demuxer=h264 --enable-protocol=file --enable-rdft
-FFmpeg/configure: FFmpeg/.git/config
+FFmpeg/configure FFmpeg/ffplay.c FFmpeg/cmdutils.c: FFmpeg/.git/config
 	cd $(@D) && git checkout 39fe8033bbf94cac7935d749849fdf67ba8fc16a
 	patch -d $(@D) -p1 < $(@D).patch
 	cd $(@D) && git add --all
