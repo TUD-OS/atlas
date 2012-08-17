@@ -154,7 +154,7 @@ cleanall: clean
 	-$(MAKE) -C FFmpeg distclean
 	-$(MAKE) -C x264 clean
 	-$(MAKE) -C SDL distclean
-	-$(MAKE) -C Linux clean
+	-$(MAKE) -C Linux distclean
 
 force:
 	
