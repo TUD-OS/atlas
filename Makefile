@@ -19,12 +19,12 @@ SDL_LIBS = \
 
 BUILD_WORKBENCH ?= $(wildcard h264_workbench.c)
 ifneq ($(BUILD_WORKBENCH),)
-h264_workbench: %: %.c $(FFMPEG_LIBS) $(COMPONENTS) .%.d Makefile $(WORKBENCH_BASE)/Makeconf
+h264_workbench: %: %.c $(FFMPEG_LIBS) $(COMPONENTS) Makefile $(WORKBENCH_BASE)/Makefile $(WORKBENCH_BASE)/Makeconf
+	$(CC) $(CPPFLAGS) -MM $< > $@
 	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ "$(realpath $<)" $(FFMPEG_LIBS) $(COMPONENTS) -lz -lm -pthread $(LDFLAGS)
 all:: h264_workbench
 clean::
 	rm -f h264_workbench
-.h264_workbench.d: h264_workbench.c
 endif
 
 BUILD_COMPONENTS ?= $(wildcard Components)
@@ -40,11 +40,11 @@ endif
 
 BUILD_FFMPEG ?= $(filter .,$(WORKBENCH_BASE))$(wildcard FFmpeg)
 ifneq ($(BUILD_FFMPEG),)
-ffplay: %: FFmpeg/%.c FFmpeg/cmdutils.c $(FFMPEG_LIBS) $(SDL_LIBS) $(COMPONENTS) .%.d Makefile $(WORKBENCH_BASE)/Makeconf
+ffplay: %: FFmpeg/%.c FFmpeg/cmdutils.c $(FFMPEG_LIBS) $(SDL_LIBS) $(COMPONENTS) Makefile $(WORKBENCH_BASE)/Makefile $(WORKBENCH_BASE)/Makeconf
+	$(CC) $(CPPFLAGS) -MM $< > $@
 	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ "$(realpath $<)" FFmpeg/cmdutils.c $(FFMPEG_LIBS) $(SDL_LIBS) $(COMPONENTS) $(SDL_EXTRA_LIBS) $(LDFLAGS)
 clean::
 	rm -f ffplay
-.ffplay.d: FFmpeg/ffplay.c
 $(FFMPEG_LIBS): FFmpeg
 	
 FFmpeg FFmpeg/: FFmpeg/config.mak FFmpeg.patch force
@@ -98,9 +98,10 @@ endif
 
 BUILD_LINUX ?= $(filter .,$(WORKBENCH_BASE))$(wildcard Linux)
 ifneq ($(BUILD_LINUX),)
+all:: Linux
 Linux Linux/: Linux/.config Linux.patch force
 	$(MAKE) -j$(CPUS) -C $@ KERNELVERSION=3.5.0-10-atlas bzImage
-Linux/.config: Linux/Makefile
+Linux/.config: Linux/debian
 	cd $(@D) && unset MAKELEVEL && \
 		fakeroot debian/rules clean && \
 		fakeroot debian/rules binary-indep && \
@@ -108,7 +109,9 @@ Linux/.config: Linux/Makefile
 		fakeroot debian/rules binary-atlas
 	touch $(@D)/.scmversion  # prevent kernel build from using git for version string
 	cp $(@D)/debian/build/build-atlas/.config $(@D)
-Linux/Makefile: Linux/.git/config
+	@echo *** Install the kernel packages and come back here afterwards. ***
+	@false
+Linux/debian: Linux/.git/config
 	cd $(@D) && git checkout 5c4e748a6bff1a1d829fea1141e68e467353665b
 	patch -d $(@D) -p1 < Linux.patch
 	cd $(@D) && \
@@ -123,13 +126,12 @@ endif
 
 BUILD_SAMPLES ?= $(wildcard Samples)
 ifneq ($(BUILD_SAMPLES),)
-all:: Samples
 Samples/%.h264: Samples
 Samples Samples/:: force
 	$(MAKE) -C $@
 endif
 
-%.h264 %.mov:
+%.h264 %.mov: force
 	$(MAKE) -C $(@D) $(@F)
 
 
@@ -159,7 +161,4 @@ cleanall: clean
 force:
 	
 
-include $(wildcard .*.d)
-
-.%.d:
-	$(CC) $(CPPFLAGS) -MM $< > $@
+-include $(wildcard .*.d)

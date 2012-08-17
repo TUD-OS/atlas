@@ -6,6 +6,7 @@ include $(WORKBENCH_BASE)/Makeconf
 all: $(patsubst %.c,%.o,$(wildcard *.c))
 
 %.o: %.c .%.d Makefile $(WORKBENCH_BASE)/Makeconf
+	$(CC) $(CPPFLAGS) -MM $< > $@
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c -o $@ "$(realpath $<)"
 
 debug:
@@ -14,7 +15,4 @@ debug:
 clean:
 	rm -f *.o .*.d
 
-include $(wildcard .*.d)
-
-.%.d: %.c
-	$(CC) $(CPPFLAGS) -MM $< > $@
+-include $(wildcard .*.d)
