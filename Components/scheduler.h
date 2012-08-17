@@ -52,6 +52,8 @@ inline int atlas_debug(void)
 #include <sys/time.h>
 #include <errno.h>
 
+#warning Jobs will not be forwarded to the scheduler.
+
 static inline pid_t gettid(void)
 {
 	return 0;
