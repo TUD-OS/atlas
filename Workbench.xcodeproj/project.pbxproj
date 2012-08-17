@@ -47,9 +47,9 @@
 		4C8CC59914D7F27F00595140 /* FFmpeg.patch */ = {isa = PBXFileReference; lastKnownFileType = text; path = FFmpeg.patch; sourceTree = "<group>"; };
 		4C8CC59A14D81B2400595140 /* estimate.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = estimate.c; sourceTree = "<group>"; };
 		4C8CC59C14D81B4000595140 /* estimate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = estimate.h; sourceTree = "<group>"; };
-		4C93FEB215D670A90073DA23 /* dispatch.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = dispatch.h; sourceTree = "<group>"; };
 		4C93FEB315D6A49F0073DA23 /* Linux.patch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Linux.patch; sourceTree = "<group>"; };
 		4CAA9F08135C59C400AEA9EB /* h264_workbench */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = h264_workbench; sourceTree = BUILT_PRODUCTS_DIR; };
+		4CC4C87C15DD44BC004D06C2 /* scheduler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = scheduler.h; sourceTree = "<group>"; };
 		4CEC1A7A150F8C05009814F5 /* SDL */ = {isa = PBXFileReference; lastKnownFileType = folder; path = SDL; sourceTree = "<group>"; };
 		4CF0A7011202CA0800817B42 /* weak.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = weak.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -80,7 +80,6 @@
 			children = (
 				4C24B9F011EDE6D600E67981 /* Makefile */,
 				4C24B9EC11EDE6D600E67981 /* digits.h */,
-				4C93FEB215D670A90073DA23 /* dispatch.h */,
 				4C8CC59C14D81B4000595140 /* estimate.h */,
 				4C8CC59A14D81B2400595140 /* estimate.c */,
 				4C24B9EE11EDE6D600E67981 /* llsp.h */,
@@ -92,6 +91,7 @@
 				4C24B9F611EDE6D600E67981 /* process.h */,
 				4C24B9F811EDE6D600E67981 /* propagate.c */,
 				4C24B9FA11EDE6D600E67981 /* replace.c */,
+				4CC4C87C15DD44BC004D06C2 /* scheduler.h */,
 				4C24B9FC11EDE6D600E67981 /* schedule.c */,
 				4C24B9FF11EDE6D600E67981 /* ssim.h */,
 				4C24B9FE11EDE6D600E67981 /* ssim.c */,
