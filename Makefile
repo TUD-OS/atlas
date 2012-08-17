@@ -61,8 +61,8 @@ FFmpeg/configure FFmpeg/ffplay.c FFmpeg/cmdutils.c: FFmpeg/.git/config
 	patch -d $(@D) -p1 < FFmpeg.patch
 	cd $(@D) && git add --all
 FFmpeg/.git/config:
-	rm -rf "$(realpath FFmpeg)" && mkdir "$(realpath FFmpeg)"
-	git clone -n git://git.videolan.org/ffmpeg.git $(dir $(@D))
+	test -d FFmpeg && rm -rf FFmpeg
+	git clone -n git://git.videolan.org/ffmpeg.git FFmpeg
 endif
 
 
@@ -76,8 +76,8 @@ x264/config.mak: x264/configure
 x264/configure: x264/.git/config
 	cd $(@D) && git checkout 37be55213a39db40cf159ada319bd482a1b00680
 x264/.git/config:
-	rm -rf "$(realpath x264)" && mkdir "$(realpath x264)"
-	git clone -n git://git.videolan.org/x264.git $(dir $(@D))
+	test -d x264 && rm -rf x264
+	git clone -n git://git.videolan.org/x264.git x264
 endif
 
 
@@ -90,9 +90,9 @@ SDL SDL/: SDL/config.status force
 SDL/config.status: SDL/configure
 	cd $(@D) && CC=$(CC) CPPFLAGS= CFLAGS= ./configure --disable-assembly
 SDL/configure:
-	rm -rf "$(realpath SDL)" && mkdir "$(realpath SDL)"
+	test -d SDL && rm -rf SDL
 	curl http://www.libsdl.org/release/SDL-1.2.15.tar.gz | tar xz
-	mv SDL-*/* $(@D)/ && rm -rf SDL-*/*
+	mv SDL* SDL
 endif
 
 
@@ -119,8 +119,8 @@ Linux/debian: Linux/.git/config
 		git commit --message='build infrastructure' && \
 		git add --all
 Linux/.git/config:
-	rm -rf "$(realpath Linux)" && mkdir "$(realpath Linux)"
-	git clone -n git://kernel.ubuntu.com/ubuntu/ubuntu-precise.git $(dir $(@D))
+	test -d Linux && rm -rf Linux
+	git clone -n git://kernel.ubuntu.com/ubuntu/ubuntu-precise.git Linux
 endif
 
 
