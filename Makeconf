@@ -18,7 +18,7 @@ override CFLAGS := -Wall $(CFLAGS)
 
 ifeq ($(shell uname),Linux)
 override LDFLAGS := -lBlocksRuntime -lrt $(LDFLAGS)
-SDL_EXTRA_LIBS = -lm
+SDL_EXTRA_LIBS = -pthread -lm -ldl
 endif
 
 ifeq ($(shell uname),Darwin)
