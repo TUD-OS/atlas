@@ -5,6 +5,8 @@
  * Copyright (C) 2012 Stefan Wächtler
  */
 
+#pragma mark ATLAS scheduler syscalls
+
 #ifdef __linux__
 
 #include <sys/types.h>
@@ -25,12 +27,7 @@
 #error Architecture not supported.
 #endif
 
-static inline pid_t gettid(void)
-{
-	return syscall(SYS_gettid);
-}
-
-static inline int atlas_submit(pid_t pid, struct timeval *exectime, struct timeval *deadline)
+static inline int sched_submit(pid_t pid, struct timeval *exectime, struct timeval *deadline)
 {
 	if (syscall(SYS_atlas_submit, pid, exectime, deadline) == 0)
 		return 0;
@@ -38,12 +35,12 @@ static inline int atlas_submit(pid_t pid, struct timeval *exectime, struct timev
 		return errno;
 }
 
-inline int atlas_next(void)
+inline int sched_next(void)
 {
 	return syscall(SYS_atlas_next);
 }
 
-inline int atlas_debug(void)
+inline int sched_debug(void)
 {
 	return syscall(SYS_atlas_debug);
 }
@@ -56,25 +53,64 @@ inline int atlas_debug(void)
 
 #warning Jobs will not be forwarded to the scheduler.
 
-static inline pid_t gettid(void)
-{
-	return 0;
-}
-
-static inline int atlas_submit(pid_t pid, struct timeval *exectime, struct timeval *deadline)
+static inline int sched_submit(pid_t pid, struct timeval *exectime, struct timeval *deadline)
 {
 	return ENOTSUP;
 }
 
-inline int atlas_next(void)
+inline int sched_next(void)
 {
 	return ENOTSUP;
 }
 
-inline int atlas_debug(void)
+inline int sched_debug(void)
 {
 	return ENOTSUP;
 }
 
 #endif
 
+#pragma mark -
+
+
+#pragma mark Compatibility Functions
+
+static inline pid_t gettid(void)
+{
+#ifdef __linux__
+	return syscall(SYS_gettid);
+#else
+	return 0;
+#endif
+}
+
+#ifdef __APPLE__
+
+#include <libkern/OSAtomic.h>
+
+typedef OSSpinLock pthread_spinlock_t;
+
+static inline int pthread_spin_init(pthread_spinlock_t *lock, int shared)
+{
+	*lock = OS_SPINLOCK_INIT;
+	return 0;
+}
+
+static inline int pthread_spin_lock(pthread_spinlock_t *lock)
+{
+	OSSpinLockLock(lock);
+	return 0;
+}
+
+static inline int pthread_spin_unlock(pthread_spinlock_t *lock)
+{
+	OSSpinLockUnlock(lock);
+	return 0;
+}
+
+static inline int pthread_spin_destroy(pthread_spinlock_t *lock)
+{
+	return 0;
+}
+
+#endif

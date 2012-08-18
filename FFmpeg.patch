@@ -1,5 +1,5 @@
 diff --git a/ffplay.c b/ffplay.c
-index 779c879..1aaa1b4 100644
+index 779c879..fafa9bf 100644
 --- a/ffplay.c
 +++ b/ffplay.c
 @@ -56,6 +56,10 @@
@@ -8,7 +8,7 @@ index 779c879..1aaa1b4 100644
  
 +#define METRICS_COUNT 12
 +#include "nalu.h"
-+#include "estimate.h"
++#include "jobs.h"
 +
  #include <unistd.h>
  #include <assert.h>
@@ -23,7 +23,7 @@ index 779c879..1aaa1b4 100644
          av_free_packet(&pkt);
 +        if (!is_flush)
 +            // something was decoded, but no picture came out
-+            atlas_job_next(SDL_ThreadID());
++            atlas_job_next(priv->is->video_tid);
 +    }
      if (ret < 0)
          return -1;
@@ -32,7 +32,7 @@ index 779c879..1aaa1b4 100644
      double pts;
      int ret;
  
-+    atlas_thread_checkin(SDL_ThreadID());
++    atlas_job_queue_checkin(is->video_tid);
 +
  #if CONFIG_AVFILTER
      AVFilterGraph *graph = avfilter_graph_alloc();
@@ -41,7 +41,7 @@ index 779c879..1aaa1b4 100644
          AVFilterBufferRef *picref;
          AVRational tb = filt_out->inputs[0]->time_base;
  #endif
-+        atlas_job_next(SDL_ThreadID());
++        atlas_job_next(is->video_tid);
 +
          while (is->paused && !is->videoq.abort_request)
              SDL_Delay(10);
@@ -60,7 +60,7 @@ index 779c879..1aaa1b4 100644
      avfilter_graph_free(&graph);
  #endif
      av_free(frame);
-+    atlas_thread_checkout(SDL_ThreadID());
++    atlas_job_queue_terminate(is->video_tid);
      return 0;
  }
  
@@ -101,7 +101,7 @@ index 779c879..1aaa1b4 100644
 +            
 +            double deadline = is->frame_timer + (is->videoq.nb_packets + is->pictq_size - 1) * av_q2d(is->video_st->codec->time_base);
 +            
-+            atlas_job_submit(SDL_GetThreadID(is->video_tid), deadline, METRICS_COUNT, metrics);
++            atlas_job_submit_absolute(is->video_tid, deadline, METRICS_COUNT, metrics);
 +            
              packet_queue_put(&is->videoq, pkt);
          } else if (pkt->stream_index == is->subtitle_stream && pkt_in_play_range) {
