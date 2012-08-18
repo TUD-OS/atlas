@@ -5,7 +5,7 @@ include $(WORKBENCH_BASE)/Makeconf
 
 all: $(patsubst %.c,%.o,$(wildcard *.c))
 
-%.o: %.c .%.d Makefile $(WORKBENCH_BASE)/Makeconf
+%.o: %.c Makefile $(WORKBENCH_BASE)/Makeconf
 	$(CC) $(CPPFLAGS) -MM $< > .$*.d
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c -o $@ "$(realpath $<)"
 
