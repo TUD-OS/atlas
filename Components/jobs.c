@@ -41,12 +41,17 @@ struct estimator_s {
 
 static const unsigned initial_metrics_size = 256;
 
+static pthread_spinlock_t estimator_enqueue;
 static struct estimator_s *estimator_list = NULL;
 
 
+static void __attribute__((constructor)) estimator_init(void)
+{
+	pthread_spin_init(&estimator_enqueue, PTHREAD_PROCESS_PRIVATE);
+}
+
 static struct estimator_s *estimator_alloc(void *code)
 {
-	static pthread_spinlock_t estimator_enqueue = 0;
 	struct estimator_s *estimator;
 	
 	estimator = malloc(sizeof(struct estimator_s) + sizeof(double) * initial_metrics_size);

@@ -35,12 +35,12 @@ static inline int sched_submit(pid_t pid, struct timeval *exectime, struct timev
 		return errno;
 }
 
-inline int sched_next(void)
+static inline int sched_next(void)
 {
 	return syscall(SYS_atlas_next);
 }
 
-inline int sched_debug(void)
+static inline int sched_debug(void)
 {
 	return syscall(SYS_atlas_debug);
 }
@@ -58,12 +58,12 @@ static inline int sched_submit(pid_t pid, struct timeval *exectime, struct timev
 	return ENOTSUP;
 }
 
-inline int sched_next(void)
+static inline int sched_next(void)
 {
 	return ENOTSUP;
 }
 
-inline int sched_debug(void)
+static inline int sched_debug(void)
 {
 	return ENOTSUP;
 }
