@@ -164,6 +164,7 @@ void atlas_job_submit_absolute(void *code, double deadline, unsigned count, cons
 	gettimeofday(&tv, NULL);
 	double time = (double)tv.tv_sec + (double)tv.tv_usec / 1000000.0;
 	deadline -= time;
+	if (deadline < 0.0) deadline = 0.0;
 	
 	struct timeval tv_deadline = {
 		.tv_sec = deadline,
