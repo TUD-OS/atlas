@@ -20,7 +20,7 @@ SDL_LIBS = \
 BUILD_WORKBENCH ?= $(wildcard h264_workbench.c)
 ifneq ($(BUILD_WORKBENCH),)
 h264_workbench: %: %.c $(FFMPEG_LIBS) $(COMPONENTS) Makefile $(WORKBENCH_BASE)/Makefile $(WORKBENCH_BASE)/Makeconf
-	$(CC) $(CPPFLAGS) -MM $< > $@
+	$(CC) $(CPPFLAGS) -MM $< > .$*.d
 	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ "$(realpath $<)" $(FFMPEG_LIBS) $(COMPONENTS) -lz -lm -pthread $(LDFLAGS)
 all:: h264_workbench
 clean::
@@ -41,13 +41,13 @@ endif
 BUILD_FFMPEG ?= $(filter .,$(WORKBENCH_BASE))$(wildcard FFmpeg)
 ifneq ($(BUILD_FFMPEG),)
 ffplay: %: FFmpeg/%.c FFmpeg/cmdutils.c $(FFMPEG_LIBS) $(SDL_LIBS) $(COMPONENTS) Makefile $(WORKBENCH_BASE)/Makefile $(WORKBENCH_BASE)/Makeconf
-	$(CC) $(CPPFLAGS) -MM $< > $@
+	$(CC) $(CPPFLAGS) -MM $< > .$*.d
 	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ "$(realpath $<)" FFmpeg/cmdutils.c $(FFMPEG_LIBS) $(SDL_LIBS) $(COMPONENTS) $(SDL_EXTRA_LIBS) $(LDFLAGS)
 clean::
 	rm -f ffplay
-$(FFMPEG_LIBS): FFmpeg
+FFmpeg/ffplay.c FFmpeg/cmdutils.c $(FFMPEG_LIBS): FFmpeg
 	
-FFmpeg FFmpeg/: FFmpeg/config.mak FFmpeg.patch force
+FFmpeg FFmpeg/: FFmpeg/config.mak force
 	$(MAKE) -j$(CPUS) -C $@
 FFmpeg/config.mak: FFmpeg/configure
 	cd $(@D) && CPPFLAGS= CFLAGS= ./configure \
@@ -56,10 +56,12 @@ FFmpeg/config.mak: FFmpeg/configure
 		--disable-decoders --disable-encoders --disable-parsers --disable-demuxers --disable-muxers \
 		--disable-protocols --disable-filters --disable-bsfs --disable-indevs --disable-outdevs --disable-hwaccels \
 		--enable-decoder=h264 --enable-parser=h264 --enable-demuxer=h264 --enable-protocol=file --enable-rdft
-FFmpeg/configure FFmpeg/ffplay.c FFmpeg/cmdutils.c: FFmpeg/.git/config
-	cd $(@D) && git checkout 39fe8033bbf94cac7935d749849fdf67ba8fc16a
+FFmpeg/configure: FFmpeg/.git/config FFmpeg.patch $(WORKBENCH_BASE)/Makefile
+	cd $(@D) && git diff --name-status --exit-code
+	cd $(@D) && git checkout --force 39fe8033bbf94cac7935d749849fdf67ba8fc16a  # n0.11.1
 	patch -d $(@D) -p1 < FFmpeg.patch
 	cd $(@D) && git add --all
+	touch $@
 FFmpeg/.git/config:
 	test -d FFmpeg && rm -rf FFmpeg
 	git clone -n git://git.videolan.org/ffmpeg.git FFmpeg
@@ -73,8 +75,10 @@ x264 x264/: x264/config.mak force
 	$(MAKE) -j$(CPUS) -C $@
 x264/config.mak: x264/configure
 	cd $(@D) && CC=$(CC) CPPFLAGS= CFLAGS= ./configure --extra-cflags=-march=$(ARCH)
-x264/configure: x264/.git/config
-	cd $(@D) && git checkout 37be55213a39db40cf159ada319bd482a1b00680
+x264/configure: x264/.git/config $(WORKBENCH_BASE)/Makefile
+	cd $(@D) && git diff --name-status --exit-code
+	cd $(@D) && git checkout --force 37be55213a39db40cf159ada319bd482a1b00680
+	touch $@
 x264/.git/config:
 	test -d x264 && rm -rf x264
 	git clone -n git://git.videolan.org/x264.git x264
@@ -89,17 +93,18 @@ SDL SDL/: SDL/config.status force
 	$(MAKE) -j$(CPUS) -C $@
 SDL/config.status: SDL/configure
 	cd $(@D) && CC=$(CC) CPPFLAGS= CFLAGS= ./configure --disable-assembly
-SDL/configure:
+SDL/configure: $(WORKBENCH_BASE)/Makefile
 	test -d SDL && rm -rf SDL
 	curl http://www.libsdl.org/release/SDL-1.2.15.tar.gz | tar xz
 	mv SDL* SDL
+	touch $@
 endif
 
 
 BUILD_LINUX ?= $(filter .,$(WORKBENCH_BASE))$(wildcard Linux)
 ifneq ($(BUILD_LINUX),)
 all:: Linux
-Linux Linux/: Linux/.config Linux.patch force
+Linux Linux/: Linux/.config force
 	$(MAKE) -j$(CPUS) -C $@ KERNELVERSION=3.5.0-10-atlas bzImage
 Linux/.config: Linux/debian
 	cd $(@D) && unset MAKELEVEL && \
@@ -111,13 +116,15 @@ Linux/.config: Linux/debian
 	cp $(@D)/debian/build/build-atlas/.config $(@D)
 	@echo *** Install the kernel packages and come back here afterwards. ***
 	@false
-Linux/debian: Linux/.git/config
-	cd $(@D) && git checkout 5c4e748a6bff1a1d829fea1141e68e467353665b
+Linux/debian: Linux/.git/config Linux.patch $(WORKBENCH_BASE)/Makefile
+	cd $(@D) && git diff --name-status --exit-code
+	cd $(@D) && git checkout --force 5c4e748a6bff1a1d829fea1141e68e467353665b
 	patch -d $(@D) -p1 < Linux.patch
 	cd $(@D) && \
 		git add --all debian.quantal && \
 		git commit --message='build infrastructure' && \
 		git add --all
+	touch $@
 Linux/.git/config:
 	test -d Linux && rm -rf Linux
 	git clone -n git://kernel.ubuntu.com/ubuntu/ubuntu-precise.git Linux
