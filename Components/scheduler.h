@@ -83,34 +83,3 @@ static inline pid_t gettid(void)
 	return 0;
 #endif
 }
-
-#ifdef __APPLE__
-
-#include <libkern/OSAtomic.h>
-
-typedef OSSpinLock pthread_spinlock_t;
-
-static inline int pthread_spin_init(pthread_spinlock_t *lock, int shared)
-{
-	*lock = OS_SPINLOCK_INIT;
-	return 0;
-}
-
-static inline int pthread_spin_lock(pthread_spinlock_t *lock)
-{
-	OSSpinLockLock(lock);
-	return 0;
-}
-
-static inline int pthread_spin_unlock(pthread_spinlock_t *lock)
-{
-	OSSpinLockUnlock(lock);
-	return 0;
-}
-
-static inline int pthread_spin_destroy(pthread_spinlock_t *lock)
-{
-	return 0;
-}
-
-#endif

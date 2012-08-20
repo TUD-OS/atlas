@@ -13,7 +13,6 @@
 #include <pthread.h>
 #include <unistd.h>
 #include <time.h>
-#include <math.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <assert.h>
@@ -26,7 +25,7 @@
  * We never dequeue nodes from the list, so traversing does not need locking. */
 struct estimator_s {
 	struct estimator_s *next;
-	pthread_spinlock_t lock;
+	pthread_mutex_t lock;
 	void *code;
 	pid_t tid;
 	double time;
@@ -41,42 +40,8 @@ struct estimator_s {
 
 static const unsigned initial_metrics_size = 256;
 
-static pthread_spinlock_t estimator_enqueue;
+static pthread_mutex_t estimator_enqueue = PTHREAD_MUTEX_INITIALIZER;
 static struct estimator_s *estimator_list = NULL;
-
-
-static void __attribute__((constructor)) estimator_init(void)
-{
-	pthread_spin_init(&estimator_enqueue, PTHREAD_PROCESS_PRIVATE);
-}
-
-static struct estimator_s *estimator_alloc(void *code)
-{
-	struct estimator_s *estimator;
-	
-	estimator = malloc(sizeof(struct estimator_s) + sizeof(double) * initial_metrics_size);
-	if (!estimator) abort();
-	pthread_spin_init(&estimator->lock, PTHREAD_PROCESS_PRIVATE);
-	
-	estimator->code = code;
-	estimator->tid = 0;
-	estimator->time = 0.0;
-	estimator->previous_deadline = 0.0;
-	estimator->llsp = NULL;
-	estimator->metrics_count = 0;
-	estimator->size = initial_metrics_size;
-	estimator->read_pos = estimator->metrics;
-	estimator->write_pos = estimator->metrics;
-	
-	pthread_spin_lock(&estimator_enqueue);
-	estimator->next = estimator_list;
-	estimator_list = estimator;
-	pthread_spin_unlock(&estimator_enqueue);
-	
-	return estimator;
-}
-
-#pragma mark -
 
 
 #pragma mark Job Queue Management
@@ -86,12 +51,30 @@ void atlas_job_queue_checkin(void *code)
 	struct estimator_s *estimator;
 	for (estimator = estimator_list; estimator; estimator = estimator->next)
 		if (estimator->code == code) break;
-	if (!estimator)
-		estimator = estimator_alloc(code);
+	if (!estimator) {
+		estimator = malloc(sizeof(struct estimator_s) + sizeof(double) * initial_metrics_size);
+		if (!estimator) abort();
+		pthread_mutex_init(&estimator->lock, NULL);
+		
+		estimator->code = code;
+		estimator->tid = 0;
+		estimator->time = 0.0;
+		estimator->previous_deadline = 0.0;
+		estimator->llsp = NULL;
+		estimator->metrics_count = 0;
+		estimator->size = initial_metrics_size;
+		estimator->read_pos = estimator->metrics;
+		estimator->write_pos = estimator->metrics;
+		
+		pthread_mutex_lock(&estimator_enqueue);
+		estimator->next = estimator_list;
+		estimator_list = estimator;
+		pthread_mutex_unlock(&estimator_enqueue);
+	}
 	
-	pthread_spin_lock(&estimator->lock);
+	pthread_mutex_lock(&estimator->lock);
 	estimator->tid = gettid();
-	pthread_spin_unlock(&estimator->lock);
+	pthread_mutex_unlock(&estimator->lock);
 	
 #ifdef __linux__
 	cpu_set_t cpu_set;
@@ -109,7 +92,8 @@ void atlas_job_queue_terminate(void *code)
 	for (estimator = estimator_list, prev = NULL; estimator; prev = estimator, estimator = estimator->next)
 		if (estimator->code == code) break;
 	if (estimator) {
-		llsp_dispose(estimator->llsp);
+		if (estimator->llsp)
+			llsp_dispose(estimator->llsp);
 #if 0
 		/* We do not dequeue nodes to allow lock-free traversal. Some RCU-style
 		 * solution would solve the resuling memory leak. */
@@ -134,7 +118,7 @@ void atlas_job_submit_absolute(void *code, double deadline, unsigned count, cons
 		if (estimator->code == code) break;
 	assert(estimator);
 	
-	pthread_spin_lock(&estimator->lock);
+	pthread_mutex_lock(&estimator->lock);
 	
 	if (!estimator->llsp) {
 		estimator->metrics_count = count;
@@ -179,7 +163,7 @@ void atlas_job_submit_absolute(void *code, double deadline, unsigned count, cons
 	static unsigned job_id = 0;
 	printf("job %u submitted: %lf, %lf\n", job_id++, deadline, prediction);
 	
-	pthread_spin_unlock(&estimator->lock);
+	pthread_mutex_unlock(&estimator->lock);
 }
 
 void atlas_job_submit_relative(void *code, double deadline, unsigned count, const double metrics[])
@@ -210,7 +194,7 @@ void atlas_job_next(void *code)
 		if (estimator->code == code) break;
 	assert(estimator);
 	
-	pthread_spin_lock(&estimator->lock);
+	pthread_mutex_lock(&estimator->lock);
 	
 	if (estimator->read_pos != estimator->write_pos) {
 		double metrics[estimator->metrics_count];
@@ -225,9 +209,11 @@ void atlas_job_next(void *code)
 	
 	sched_next();
 	
-	static unsigned job_id = 0;
-	printf("job %u finished: %lf\n", job_id++, estimator->time > 0.0 ? time - estimator->time : NAN);
+	if (estimator->time > 0.0) {
+		static unsigned job_id = 0;
+		printf("job %u finished: %lf\n", job_id++, time - estimator->time);
+	}
 	estimator->time = time;
 	
-	pthread_spin_unlock(&estimator->lock);
+	pthread_mutex_unlock(&estimator->lock);
 }
