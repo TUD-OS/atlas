@@ -42,7 +42,7 @@
 		4C24B9FE11EDE6D600E67981 /* ssim.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ssim.c; sourceTree = "<group>"; };
 		4C24B9FF11EDE6D600E67981 /* ssim.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ssim.h; sourceTree = "<group>"; };
 		4C3E4E7F126D9BCF004DACE5 /* Makeconf */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = Makeconf; sourceTree = "<group>"; };
-		4C4847D114CED7F0009DDAAF /* ffplay.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = ffplay.c; path = FFmpeg/ffplay.c; sourceTree = "<group>"; };
+		4C4847D114CED7F0009DDAAF /* ffplay.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = ffplay.c; path = FFmpeg/ffplay.c; sourceTree = "<group>"; usesTabs = 0; };
 		4C8CC59714D41C0800595140 /* nalu.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = nalu.h; sourceTree = "<group>"; };
 		4C8CC59914D7F27F00595140 /* FFmpeg.patch */ = {isa = PBXFileReference; lastKnownFileType = text; path = FFmpeg.patch; sourceTree = "<group>"; };
 		4C8CC59A14D81B2400595140 /* jobs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = jobs.c; sourceTree = "<group>"; };
@@ -111,17 +111,17 @@
 /* End PBXGroup section */
 
 /* Begin PBXLegacyTarget section */
-		4C24BA0211EDE76D00E67981 /* Samples */ = {
+		4C24BA0211EDE76D00E67981 /* FFplay */ = {
 			isa = PBXLegacyTarget;
-			buildArgumentsString = "$(ACTION)";
-			buildConfigurationList = 4C24BA0811EDE7A500E67981 /* Build configuration list for PBXLegacyTarget "Samples" */;
+			buildArgumentsString = ffplay;
+			buildConfigurationList = 4C24BA0811EDE7A500E67981 /* Build configuration list for PBXLegacyTarget "FFplay" */;
 			buildPhases = (
 			);
 			buildToolPath = make;
-			buildWorkingDirectory = Samples;
+			buildWorkingDirectory = "";
 			dependencies = (
 			);
-			name = Samples;
+			name = FFplay;
 			passBuildSettingsInEnvironment = 1;
 			productName = Samples;
 		};
@@ -194,7 +194,7 @@
 			projectRoot = "";
 			targets = (
 				D28A88AD04BDD90700651E21 /* Workbench */,
-				4C24BA0211EDE76D00E67981 /* Samples */,
+				4C24BA0211EDE76D00E67981 /* FFplay */,
 				4C24BA0511EDE77700E67981 /* Experiments */,
 				4CAA9EF1135C535300AEA9EB /* Xcode Editor Support */,
 			);
@@ -261,7 +261,7 @@
 				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				CC = clang;
 				DEBUG = true;
-				PATH = "$(HOME)/.bin:$(PATH)";
+				PATH = "$(HOME)/.bin:$(PATH):/opt/fink/bin:/sw/bin:/usr/local/bin";
 			};
 			name = Debug;
 		};
@@ -270,7 +270,7 @@
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				CC = clang;
-				PATH = "$(HOME)/.bin:$(PATH)";
+				PATH = "$(HOME)/.bin:$(PATH):/opt/fink/bin:/sw/bin:/usr/local/bin";
 			};
 			name = Release;
 		};
@@ -353,7 +353,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		4C24BA0811EDE7A500E67981 /* Build configuration list for PBXLegacyTarget "Samples" */ = {
+		4C24BA0811EDE7A500E67981 /* Build configuration list for PBXLegacyTarget "FFplay" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				4C24BA0311EDE76D00E67981 /* Debug */,
