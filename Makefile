@@ -31,7 +31,7 @@ BUILD_COMPONENTS ?= $(wildcard Components)
 ifneq ($(BUILD_COMPONENTS),)
 $(COMPONENTS): Components
 	
-Components Components/: force
+Components $(wildcard Components/): force
 	$(MAKE) -j$(CPUS) -C $@
 clean::
 	$(MAKE) -C Components $@
@@ -47,7 +47,7 @@ clean::
 	rm -f ffplay
 FFmpeg/ffplay.c FFmpeg/cmdutils.c $(FFMPEG_LIBS): FFmpeg
 	
-FFmpeg FFmpeg/: FFmpeg/config.mak force
+FFmpeg $(wildcard FFmpeg/): FFmpeg/config.mak force
 	$(MAKE) -j$(CPUS) -C $@
 FFmpeg/config.mak: FFmpeg/configure
 	cd $(@D) && CPPFLAGS= CFLAGS= ./configure \
@@ -71,7 +71,7 @@ endif
 BUILD_X264 ?= $(filter .,$(WORKBENCH_BASE))$(wildcard x264)
 ifneq ($(BUILD_X264),)
 Samples Samples/:: x264
-x264 x264/: x264/config.mak force
+x264 $(wildcard x264/): x264/config.mak force
 	$(MAKE) -j$(CPUS) -C $@
 x264/config.mak: x264/configure
 	cd $(@D) && CC=$(CC) CPPFLAGS= CFLAGS= ./configure --extra-cflags=-march=$(ARCH)
@@ -89,7 +89,7 @@ BUILD_SDL ?= $(filter .,$(WORKBENCH_BASE))$(wildcard SDL)
 ifneq ($(BUILD_SDL),)
 $(SDL_LIBS): SDL
 	
-SDL SDL/: SDL/config.status force
+SDL $(wildcard SDL/): SDL/config.status force
 	$(MAKE) -j$(CPUS) -C $@
 SDL/config.status: SDL/configure
 	cd $(@D) && CC=$(CC) CPPFLAGS= CFLAGS= ./configure --disable-assembly
@@ -104,7 +104,7 @@ endif
 BUILD_LINUX ?= $(filter .,$(WORKBENCH_BASE))$(wildcard Linux)
 ifneq ($(BUILD_LINUX),)
 all:: Linux
-Linux Linux/: Linux/.config force
+Linux $(wildcard Linux/): Linux/.config force
 	$(MAKE) -j$(CPUS) -C $@ KERNELVERSION=3.5.0-10-atlas bzImage
 Linux/.config: Linux/debian
 	cd $(@D) && unset MAKELEVEL && \
