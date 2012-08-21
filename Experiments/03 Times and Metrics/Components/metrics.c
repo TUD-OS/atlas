@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2010 Michael Roitzsch <mroi@os.inf.tu-dresden.de>
+ * Copyright (C) 2006-2012 Michael Roitzsch <mroi@os.inf.tu-dresden.de>
  * economic rights: Technische Universitaet Dresden (Germany)
  */
 
@@ -8,7 +8,7 @@
 #include "process.h"
 
 #if !FFMPEG_TIME || !FFMPEG_METRICS
-#warning  FFmpeg is not configured correctly, check avcodec.h
+#error  FFmpeg is not configured correctly, check avcodec.h
 #endif
 
 
