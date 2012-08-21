@@ -6,6 +6,10 @@
 #include "config.h"
 #include "libavcodec/avcodec.h"
 
+#if FFMPEG_TIME
+#  include "libavutil/timer.h"
+#endif
+
 #if LLSP_TRAIN_DECODE || LLSP_TRAIN_REPLACE || LLSP_PREDICT || defined(LLSP_SUPPORT)
 #  include "llsp.h"
 #  define LLSP_SUPPORT 1

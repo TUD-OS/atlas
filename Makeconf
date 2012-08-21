@@ -17,6 +17,7 @@ override CFLAGS := -march=$(ARCH) -fblocks -std=c99 $(CFLAGS)
 override CFLAGS := -Wall $(CFLAGS)
 
 ifeq ($(shell uname),Linux)
+override CPPFLAGS := -D_XOPEN_SOURCE=600 $(CPPFLAGS)
 override LDFLAGS := -lBlocksRuntime -lrt $(LDFLAGS)
 SDL_EXTRA_LIBS = -pthread -lm -ldl
 endif

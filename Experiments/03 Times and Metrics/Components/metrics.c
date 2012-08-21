@@ -28,7 +28,7 @@ void hook_slice_any(const AVCodecContext *c)
 		   c->metrics.idct_4x4,                          // 11
 		   c->metrics.idct_8x8,                          // 12
 		   c->metrics.deblock_edges);                    // 13
-	printf("%llu, %llu, %llu, %llu, %llu, %llu, %llu, ",
+	printf("%" PRIu64 ", %" PRIu64 ", %" PRIu64 ", %" PRIu64 ", %" PRIu64 ", %" PRIu64 ", %" PRIu64 ", ",
 		   c->timing.decoder_prep,                       // 14
 		   c->timing.decompress_cabac,                   // 15
 		   c->timing.decompress_cavlc,                   // 16
@@ -36,5 +36,5 @@ void hook_slice_any(const AVCodecContext *c)
 		   c->timing.temporal_pred,                      // 18
 		   c->timing.idct,                               // 19
 		   c->timing.post);                              // 20
-	printf("%llu\n", c->timing.total);                   // 21
+	printf("%" PRIu64 "\n", c->timing.total);            // 21
 }
