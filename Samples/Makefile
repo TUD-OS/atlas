@@ -5,9 +5,10 @@
 X264_CBR = --input-res $(SIZE) --fps $(FPS) --bitrate $(BITRATE) --slices $(SLICES) --sliced-threads --threads $(SLICES)
 X264_CRF = --input-res $(SIZE) --fps $(FPS) --crf $(QUALITY) --slices $(SLICES) --sliced-threads --threads $(SLICES)
 
-X264_HIGH = --ref $(REFERENCES) --mixed-refs --bframes 8 --b-pyramid normal --weightb --weightp 2 --8x8dct --cqm flat --b-adapt 2 --direct auto --me umh  --merange 16 --partitions all --subme 9 --trellis 2 --rc-lookahead 60
-X264_MAIN = --no-cabac --ref $(REFERENCES) --bframes 8 --b-pyramid none --no-weightb --weightp 0 --no-8x8dct --cqm flat --b-adapt 2 --direct auto --me umh --merange 16 --partitions all --subme 9 --trellis 2 --rc-lookahead 60
-X264_BASELINE = --no-cabac --ref $(REFERENCES) --bframes 0 --weightp 0 --no-8x8dct --cqm flat --direct auto --me umh --merange 16 --partitions all --subme 9 --trellis 2 --rc-lookahead 60
+X264_COMMON = --ref $(REFERENCES) --mixed-refs --cqm flat --direct auto --me umh --merange 16 --partitions all --subme 9 --trellis 2 --rc-lookahead 60
+X264_HIGH = --bframes 8 --weightp 2 --8x8dct --b-adapt 2
+X264_MAIN = --bframes 8 --weightp 2 --no-8x8dct --b-adapt 2
+X264_BASELINE = --no-cabac --bframes 0 --weightp 0 --no-8x8dct
 
 ifneq ($(INCLUDE),)
 include $(INCLUDE)
