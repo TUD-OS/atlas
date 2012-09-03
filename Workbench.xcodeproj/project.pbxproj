@@ -178,7 +178,7 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0430;
+				LastUpgradeCheck = 0440;
 				ORGANIZATIONNAME = "TU Dresden";
 			};
 			buildConfigurationList = 1DEB919308733D9F0010E9CD /* Build configuration list for PBXProject "Workbench" */;
@@ -244,6 +244,7 @@
 		1DEB919008733D9F0010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
 				CPPFLAGS = "-DMETRICS_EXTRACT -DMETADATA_WRITE";
 			};
 			name = Debug;
@@ -251,6 +252,7 @@
 		1DEB919108733D9F0010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
 				CPPFLAGS = "-DMETRICS_EXTRACT -DMETADATA_WRITE";
 			};
 			name = Release;
@@ -277,24 +279,28 @@
 		4C24BA0311EDE76D00E67981 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
 			};
 			name = Debug;
 		};
 		4C24BA0411EDE76D00E67981 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
 			};
 			name = Release;
 		};
 		4C24BA0611EDE77700E67981 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
 			};
 			name = Debug;
 		};
 		4C24BA0711EDE77700E67981 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
 			};
 			name = Release;
 		};
