@@ -132,7 +132,7 @@ void atlas_job_submit_absolute(void *code, double deadline, unsigned count, cons
 	estimator->previous_deadline = deadline;
 	
 	assert(estimator->metrics_count == count);
-	for (unsigned i = 0; i < estimator->metrics_count; i++) {
+	for (size_t i = 0; i < estimator->metrics_count; i++) {
 		*estimator->write_pos = metrics[i];
 		if (++estimator->write_pos > estimator->metrics + estimator->size)
 			estimator->write_pos = estimator->metrics;  // ring buffer wrap around
@@ -198,7 +198,7 @@ void atlas_job_next(void *code)
 	
 	if (estimator->read_pos != estimator->write_pos) {
 		double metrics[estimator->metrics_count];
-		for (unsigned i = 0; i < estimator->metrics_count; i++) {
+		for (size_t i = 0; i < estimator->metrics_count; i++) {
 			metrics[i] = *estimator->read_pos;
 			if (++estimator->read_pos > estimator->metrics + estimator->size)
 				estimator->read_pos = estimator->metrics;
@@ -207,8 +207,6 @@ void atlas_job_next(void *code)
 			llsp_add(estimator->llsp, metrics, time - estimator->time);
 	}
 	
-	sched_next();
-	
 	if (estimator->time > 0.0) {
 		static unsigned job_id = 0;
 		printf("job %u finished: %lf\n", job_id++, time - estimator->time);
@@ -216,4 +214,6 @@ void atlas_job_next(void *code)
 	estimator->time = time;
 	
 	pthread_mutex_unlock(&estimator->lock);
+	
+	sched_next();
 }
