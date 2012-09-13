@@ -1,5 +1,5 @@
 diff --git a/ffplay.c b/ffplay.c
-index 779c879..4540d45 100644
+index 779c879..6f099a6 100644
 --- a/ffplay.c
 +++ b/ffplay.c
 @@ -56,6 +56,11 @@
@@ -131,7 +131,7 @@ index 779c879..4540d45 100644
                  packet_queue_put(&is->videoq, pkt);
              }
              if (is->audio_stream >= 0 &&
-@@ -2707,6 +2745,33 @@ static int read_thread(void *arg)
+@@ -2707,6 +2745,35 @@ static int read_thread(void *arg)
          if (pkt->stream_index == is->audio_stream && pkt_in_play_range) {
              packet_queue_put(&is->audioq, pkt);
          } else if (pkt->stream_index == is->video_stream && pkt_in_play_range) {
@@ -147,15 +147,17 @@ index 779c879..4540d45 100644
 +                if (metadata[-4] == 0 && metadata[-3] == 0 && metadata[-2] == 1 && metadata[-1] == NAL_METADATA)
 +                    break;
 +            
-+            nalu_read_start(nalu, metadata);
-+            mb_width = nalu_read_uint16(nalu);
-+            mb_height = nalu_read_uint16(nalu);
-+            metrics[0] = mb_width * mb_height;
-+            slice_count = nalu_read_uint8(nalu);
-+            for (; slice_count; slice_count--) {
-+                slice_type = nalu_read_uint8(nalu);
-+                for (unsigned i = 1; i < METRICS_COUNT; i++)
-+                    metrics[i] += nalu_read_uint24(nalu);
++            if (metadata >= pkt->data + 4) {
++                nalu_read_start(nalu, metadata);
++                mb_width = nalu_read_uint16(nalu);
++                mb_height = nalu_read_uint16(nalu);
++                metrics[0] = mb_width * mb_height;
++                slice_count = nalu_read_uint8(nalu);
++                for (; slice_count; slice_count--) {
++                    slice_type = nalu_read_uint8(nalu);
++                    for (unsigned i = 1; i < METRICS_COUNT; i++)
++                        metrics[i] += nalu_read_uint24(nalu);
++                }
 +            }
 +            
 +            double deadline = is->frame_timer + (is->videoq.nb_packets + is->pictq_size) * av_q2d(is->video_st->codec->time_base);
@@ -165,7 +167,7 @@ index 779c879..4540d45 100644
              packet_queue_put(&is->videoq, pkt);
          } else if (pkt->stream_index == is->subtitle_stream && pkt_in_play_range) {
              packet_queue_put(&is->subtitleq, pkt);
-@@ -2731,6 +2796,7 @@ static int read_thread(void *arg)
+@@ -2731,6 +2798,7 @@ static int read_thread(void *arg)
      if (is->ic) {
          avformat_close_input(&is->ic);
      }
