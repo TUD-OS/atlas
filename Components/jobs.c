@@ -50,7 +50,7 @@ static struct estimator_s *estimator_list = NULL;
 static inline void scratchpad_write(struct scratchpad *scratchpad, double value)
 {
 	*scratchpad->write = value;
-	if (++scratchpad->write > scratchpad->ringbuffer + scratchpad->size)
+	if (++scratchpad->write >= scratchpad->ringbuffer + scratchpad->size)
 		scratchpad->write = scratchpad->ringbuffer;  // ring buffer wrap around
 	assert(scratchpad->write != scratchpad->read);  // FIXME: realloc when full
 }
@@ -58,7 +58,7 @@ static inline void scratchpad_write(struct scratchpad *scratchpad, double value)
 static inline double scratchpad_read(struct scratchpad *scratchpad)
 {
 	double value = *scratchpad->read;
-	if (++scratchpad->read > scratchpad->ringbuffer + scratchpad->size)
+	if (++scratchpad->read >= scratchpad->ringbuffer + scratchpad->size)
 		scratchpad->read = scratchpad->ringbuffer;  // ring buffer wrap around
 	return value;
 }
@@ -162,6 +162,7 @@ void atlas_job_submit_absolute(void *code, double deadline, unsigned count, cons
 	scratchpad_write(&estimator->scratchpad, deadline);
 	scratchpad_write(&estimator->scratchpad, prediction);
 	
+#if JOB_SCHEDULING
 	// FIXME: reasoning about deadline order is impossible when submitting relative deadlines
 	struct timeval tv;
 	gettimeofday(&tv, NULL);
@@ -178,6 +179,7 @@ void atlas_job_submit_absolute(void *code, double deadline, unsigned count, cons
 		.tv_usec = 1000000 * (prediction - (long long)prediction)
 	};
 	sched_submit(estimator->tid, &tv_exectime, &tv_deadline);
+#endif
 	
 	pthread_mutex_unlock(&estimator->lock);
 }
@@ -216,14 +218,23 @@ void atlas_job_next(void *code)
 		double metrics[estimator->metrics_count];
 		for (size_t i = 0; i < estimator->metrics_count; i++)
 			metrics[i] = scratchpad_read(&estimator->scratchpad);
-		(void)scratchpad_read(&estimator->scratchpad);  // deadline
-		(void)scratchpad_read(&estimator->scratchpad);  // prediction
+		double deadline = scratchpad_read(&estimator->scratchpad);  // deadline
+		double prediction = scratchpad_read(&estimator->scratchpad);  // prediction
+		double execution_time = time - estimator->time;
+		
 		if (estimator->time > 0.0)
-			llsp_add(estimator->llsp, metrics, time - estimator->time);
+			llsp_add(estimator->llsp, metrics, execution_time);
+		
+		if (hook_job_complete)
+			hook_job_complete(code, time, deadline, prediction, execution_time);
 	}
 	estimator->time = time;
 	
 	pthread_mutex_unlock(&estimator->lock);
 	
+#if JOB_SCHEDULING
 	sched_next();
+#endif
+	
+	if (hook_job_release) hook_job_release(code);
 }

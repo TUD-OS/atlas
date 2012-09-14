@@ -3,6 +3,14 @@
  * economic rights: Technische Universitaet Dresden (Germany)
  */
 
+/* toggle job communication to scheduler */
+#ifdef JOB_SCHEDULING
+#  define JOB_SCHEDULING 1
+#else
+#  define JOB_SCHEDULING 0
+#endif
+
+
 /* thread registration: call before the first job from the thread that will execute the code */
 void atlas_job_queue_checkin(void *code);
 
@@ -13,3 +21,14 @@ void atlas_job_queue_terminate(void *code);
 void atlas_job_submit_absolute(void *code, double deadline, unsigned count, const double metrics[]);
 void atlas_job_submit_relative(void *code, double deadline, unsigned count, const double metrics[]);
 void atlas_job_next(void *code);
+
+/* hooks for evaluation */
+
+#ifndef IMPLEMENTS_HOOKS
+#  define WEAK_SYMBOL __attribute__((weak))
+#else
+#  define WEAK_SYMBOL
+#endif
+
+extern void hook_job_release(void *code) WEAK_SYMBOL;
+extern void hook_job_complete(void *code, double thread_time, double deadline, double prediction, double execution) WEAK_SYMBOL;
