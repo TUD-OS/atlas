@@ -293,8 +293,8 @@ bool check_slice_start(nalu_write_t *write)
 		/* peek ahead to get the start code */
 		if (fread(write->buf, 1, 4, write->from) != 4) {
 			fprintf(stderr, "could not read NALU start code\n");
-			fprintf(stderr, "source file position %lld\n", ftello(write->from));
-			fprintf(stderr, "target file position %lld\n", ftello(write->to));
+			fprintf(stderr, "source file position %jd\n", (intmax_t)ftello(write->from));
+			fprintf(stderr, "target file position %jd\n", (intmax_t)ftello(write->to));
 			abort();
 		}
 		fseek(write->from, -4, SEEK_CUR);
