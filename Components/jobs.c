@@ -154,8 +154,10 @@ void atlas_job_submit_absolute(void *code, double deadline, unsigned count, cons
 	}
 	assert(estimator->metrics_count == count);
 	double prediction = 0.0;
+#if LLSP_PREDICT
 	if (llsp_solve(estimator->llsp))
 		prediction = llsp_predict(estimator->llsp, metrics);
+#endif
 	
 	for (size_t i = 0; i < estimator->metrics_count; i++)
 		scratchpad_write(&estimator->scratchpad, metrics[i]);
@@ -222,8 +224,10 @@ void atlas_job_next(void *code)
 		double prediction = scratchpad_read(&estimator->scratchpad);  // prediction
 		double execution_time = time - estimator->time;
 		
+#if LLSP_PREDICT
 		if (estimator->time > 0.0)
 			llsp_add(estimator->llsp, metrics, execution_time);
+#endif
 		
 		if (hook_job_complete)
 			hook_job_complete(code, time, deadline, prediction, execution_time);
