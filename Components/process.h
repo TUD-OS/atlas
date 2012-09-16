@@ -10,23 +10,6 @@
 #  include "libavutil/timer.h"
 #endif
 
-#if LLSP_TRAIN_DECODE || LLSP_TRAIN_REPLACE || LLSP_PREDICT || defined(LLSP_SUPPORT)
-#  include "llsp.h"
-#  define LLSP_SUPPORT 1
-#else
-#  define LLSP_SUPPORT 0
-#endif
-
-#if METADATA_READ || METADATA_WRITE
-#  include "nalu.h"
-#endif
-
-#if PREPROCESS || SLICE_SKIP
-#  include "ssim.h"
-#endif
-
-#pragma mark -
-
 
 #pragma mark Workbench Configuration
 
@@ -71,27 +54,6 @@
 #  define SLICE_SKIP           0
 #endif
 
-/* toggle training the decoding time prediction */
-#ifdef LLSP_TRAIN_DECODE
-#  define LLSP_TRAIN_DECODE    1
-#else
-#  define LLSP_TRAIN_DECODE    0
-#endif
-
-/* toggle training the replacement time prediction */
-#ifdef LLSP_TRAIN_REPLACE
-#  define LLSP_TRAIN_REPLACE   1
-#else
-#  define LLSP_TRAIN_REPLACE   0
-#endif
-
-/* toggle execution time predictions */
-#ifdef LLSP_PREDICT
-#  define LLSP_PREDICT         1
-#else
-#  define LLSP_PREDICT         0
-#endif
-
 /* configuration presets */
 #if defined(FINAL_SCHEDULING) || \
 defined(SCHEDULE_EXECUTE)
@@ -101,8 +63,6 @@ defined(SCHEDULE_EXECUTE)
 #undef METADATA_WRITE
 #undef METADATA_READ
 #undef SLICE_SKIP
-#undef LLSP_TRAIN
-#undef LLSP_PREDICT
 #endif
 #ifdef FINAL_SCHEDULING
 #define METRICS_EXTRACT		0
@@ -111,8 +71,6 @@ defined(SCHEDULE_EXECUTE)
 #define METADATA_WRITE		0
 #define METADATA_READ		1
 #define SLICE_SKIP		1
-#define LLSP_TRAIN		0
-#define LLSP_PREDICT		1
 #endif
 #ifdef SCHEDULE_EXECUTE
 #define METRICS_EXTRACT		0
@@ -121,8 +79,6 @@ defined(SCHEDULE_EXECUTE)
 #define METADATA_WRITE		0
 #define METADATA_READ		1
 #define SLICE_SKIP		1
-#define LLSP_TRAIN		0
-#define LLSP_PREDICT		0
 #endif
 
 /* configuration dependencies */
@@ -135,12 +91,6 @@ defined(SCHEDULE_EXECUTE)
 #if SLICE_SKIP && !METADATA_READ
 #  warning  slice skipping only works properly with metadata available
 #endif
-#if LLSP_PREDICT && !METADATA_READ
-#  warning  execution time prediction only works properly with metadata available
-#endif
-#if (LLSP_TRAIN_DECODE || LLSP_TRAIN_REPLACE) && !(METADATA_READ || (METRICS_EXTRACT && PREPROCESS))
-#  warning  training the predictor requires metrics and slice boundaries
-#endif
 #if SLICE_SKIP && (METRICS_EXTRACT || PREPROCESS)
 #  warning  slices will not be skipped for real as this would scramble the extracted metadata
 #endif
@@ -150,17 +100,12 @@ defined(SCHEDULE_EXECUTE)
 /* maximum supported number of references per frame, must be less than 128 */
 #define REF_MAX 32
 
-/* scheduling methods */
-#define COST		1
-#define DIRECT_ERROR	2
-#define NO_SKIP		3
-#define LIFETIME	4
+#if METADATA_READ || METADATA_WRITE
+#  include "nalu.h"
+#endif
 
-#if LLSP_SUPPORT
-/* number of decoding time metrics in use */
-#define METRICS_COUNT 12
-/* the LLSP solver IDs */
-enum { LLSP_DECODE, LLSP_REPLACE };
+#if PREPROCESS || SLICE_SKIP
+#  include "ssim.h"
 #endif
 
 #pragma mark -
@@ -242,12 +187,6 @@ struct frame_node_s {
 		 * from -REF_MAX to REF_MAX, which is the values range of reference numbers */
 		propagation_t *immission;
 #endif
-#if LLSP_PREDICT
-		/* estimated execution times */
-		float decoding_time, replacement_time;
-		/* benefit when this slice is decoded */
-		float benefit;
-#endif
 #if defined(FINAL_SCHEDULING)
 		/* is this slice to be skipped */
 		int skip;
@@ -313,16 +252,6 @@ extern struct proc_s {
 	} propagation;
 #endif
 	
-#if LLSP_TRAIN_DECODE || LLSP_TRAIN_REPLACE || LLSP_PREDICT
-	struct {
-		const char *train_coeffs;
-		const char *predict_coeffs;
-		llsp_t *decode;
-		llsp_t *replace;
-		double decoding_time;
-	} llsp;
-#endif
-	
 #ifdef SCHEDULE_EXECUTE
 	struct {
 		int conceal;
@@ -331,11 +260,9 @@ extern struct proc_s {
 #endif
 	/* current video size */
 	int mb_width, mb_height;
-#if PREPROCESS || LLSP_TRAIN_REPLACE
+#if PREPROCESS
 	/* intermediary frame storage */
 	AVPicture temp_frame;
-#endif
-#if PREPROCESS
 	/* translated reference numbers (slice-local to global) of the current frame */
 	int8_t *ref_num[2];
 #endif
@@ -361,9 +288,6 @@ static const float safety_margin_replace = 1.0;
 /* this is where it all begins */
 void process_init(AVCodecContext *c, const char *file);
 void process_finish(AVCodecContext *c);
-#if LLSP_SUPPORT || defined(FINAL_SCHEDULING)
-double get_time(void);
-#endif
 
 #pragma mark -
 
@@ -379,10 +303,6 @@ void write_metrics(const frame_node_t *frame, int slice);
 #endif
 #if METADATA_READ
 void read_metrics(frame_node_t *frame, int slice);
-#endif
-#if LLSP_SUPPORT
-const double *metrics_decode(const frame_node_t *frame, int slice);
-const double *metrics_replace(const frame_node_t *frame, int slice);
 #endif
 
 #pragma mark -
@@ -412,10 +332,7 @@ void destroy_replacement_tree(replacement_node_t *node);
 void remember_slice_boundaries(const AVCodecContext *c);
 void remember_reference_frames(const AVCodecContext *c);
 #endif
-#if LLSP_TRAIN_REPLACE
-void replacement_time(AVCodecContext *c);
-#endif
-#if PREPROCESS || SLICE_SKIP || LLSP_TRAIN_REPLACE
+#if PREPROCESS || SLICE_SKIP
 float do_replacement(const AVCodecContext *c, const AVPicture *frame, int slice, const change_rect_t *rect);
 #endif
 #if METADATA_WRITE && (PREPROCESS || METADATA_READ)

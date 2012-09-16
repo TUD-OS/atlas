@@ -59,29 +59,3 @@ void read_metrics(frame_node_t *frame, int slice)
 	frame->slice[slice].metrics.deblock_edges = nalu_read_uint24(proc.metadata.read);
 }
 #endif
-
-#if LLSP_SUPPORT
-const double *metrics_decode(const frame_node_t *frame, int slice)
-{
-	static double metrics[METRICS_COUNT];
-	metrics[ 0] = frame->slice[slice].end_index - frame->slice[slice].start_index;
-	metrics[ 1] = frame->slice[slice].metrics.bits;
-	metrics[ 2] = frame->slice[slice].metrics.intra_pcm;
-	metrics[ 3] = frame->slice[slice].metrics.intra_4x4;
-	metrics[ 4] = frame->slice[slice].metrics.intra_8x8;
-	metrics[ 5] = frame->slice[slice].metrics.intra_16x16;
-	metrics[ 6] = frame->slice[slice].metrics.inter_4x4;
-	metrics[ 7] = frame->slice[slice].metrics.inter_8x8;
-	metrics[ 8] = frame->slice[slice].metrics.inter_16x16;
-	metrics[ 9] = frame->slice[slice].metrics.idct_4x4;
-	metrics[10] = frame->slice[slice].metrics.idct_8x8;
-	metrics[11] = frame->slice[slice].metrics.deblock_edges;
-	return metrics;
-}
-const double *metrics_replace(const frame_node_t *frame, int slice)
-{
-	static double metrics[1];
-	metrics[0] = frame->slice[slice].end_index - frame->slice[slice].start_index;
-	return metrics;
-}
-#endif

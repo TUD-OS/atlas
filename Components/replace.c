@@ -10,7 +10,7 @@
 static int fill_coordinates(replacement_node_t *node);
 #endif
 
-#if PREPROCESS || SLICE_SKIP || LLSP_TRAIN_REPLACE
+#if PREPROCESS || SLICE_SKIP
 static inline const replacement_node_t *get_replacement_node(const replacement_node_t *node, const unsigned mb_x, const unsigned mb_y);
 #endif
 
@@ -304,25 +304,7 @@ void remember_reference_frames(const AVCodecContext *c)
 }
 #endif
 
-#if LLSP_TRAIN_REPLACE
-void replacement_time(AVCodecContext *c)
-{
-	int slice;
-	
-	for (slice = 0; slice < proc.frame->slice_count; slice++) {
-		double time;
-		if (proc.frame->replacement) {
-			av_picture_copy(&proc.temp_frame, (const AVPicture *)c->frame.current, PIX_FMT_YUV420P, c->width, c->height);
-			time = -get_time();
-			do_replacement(c, &proc.temp_frame, slice, NULL);
-			time += get_time();
-			llsp_accumulate(proc.llsp.replace, metrics_replace(proc.frame, slice), time);
-		}
-	}
-}
-#endif
-
-#if PREPROCESS || SLICE_SKIP || LLSP_TRAIN_REPLACE
+#if PREPROCESS || SLICE_SKIP
 
 static inline const replacement_node_t *get_replacement_node(const replacement_node_t *node, const unsigned mb_x, const unsigned mb_y)
 {
@@ -343,7 +325,7 @@ float do_replacement(const AVCodecContext *c, const AVPicture *frame, int slice,
 #if !PREPROCESS
 	int mb_add;
 #endif
-#if SLICE_SKIP || LLSP_TRAIN_REPLACE
+#if SLICE_SKIP
 	int ref;
 	typedef struct {
 		uint8_t list;
@@ -356,7 +338,7 @@ float do_replacement(const AVCodecContext *c, const AVPicture *frame, int slice,
 #if !PREPROCESS
 	assert(rect == NULL);
 #endif
-#if SLICE_SKIP || LLSP_TRAIN_REPLACE
+#if SLICE_SKIP
 	/* create a backwards translation table from frame-global reference numbers to
 	 * slice-local reference numbers, again using the coded picture number to match frames */
 	for (ref = -REF_MAX; ref <= REF_MAX; ref++) {
@@ -490,7 +472,7 @@ float do_replacement(const AVCodecContext *c, const AVPicture *frame, int slice,
 		}
 #endif
 		
-#if SLICE_SKIP || LLSP_TRAIN_REPLACE
+#if SLICE_SKIP
 		if (frame == (AVPicture *)c->frame.current) {
 			/* in addition to replacing the actual content of the slice, we also need to
 			 * synthesize some metadata (namely macroblock type, reference index and motion vector)

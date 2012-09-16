@@ -26,13 +26,10 @@ struct proc_s proc = {
 #ifdef SCHEDULE_EXECUTE
 .propagation = { .vis_frame = { .data = { NULL, NULL, NULL, NULL } }, .total_error = 0.0 },
 #endif
-#if LLSP_TRAIN_DECODE || LLSP_TRAIN_REPLACE || LLSP_PREDICT
-.llsp = { .decode = NULL, .replace = NULL },
-#endif
 #ifdef SCHEDULE_EXECUTE
 .schedule = { .first_to_drop = -1 },
 #endif
-#if PREPROCESS || LLSP_TRAIN_REPLACE
+#if PREPROCESS
 .temp_frame = { .data = { NULL, NULL, NULL, NULL } },
 #endif
 .mb_width =  -1, .mb_height =  -1
@@ -85,14 +82,6 @@ void process_init(AVCodecContext *c, const char *file)
 		exit(1);
 	}
 #endif
-#if LLSP_TRAIN_DECODE || LLSP_PREDICT
-	if (!proc.llsp.decode)
-		proc.llsp.decode  = llsp_new(METRICS_COUNT);
-#endif
-#if LLSP_TRAIN_REPLACE || LLSP_PREDICT
-	if (!proc.llsp.replace)
-		proc.llsp.replace = llsp_new(1);
-#endif
 	FFMPEG_TIME_START(c, total);
 }
 
@@ -114,11 +103,6 @@ void process_finish(AVCodecContext *c)
 #endif
 	while (proc.last_idr)
 		destroy_frames_list();
-#if LLSP_PREDICT && !LLSP_TRAIN_DECODE && !LLSP_TRAIN_REPLACE
-	/* we cannot free the handles during training, since we may want to train on multiple files */
-	llsp_dispose(proc.llsp.decode);
-	llsp_dispose(proc.llsp.replace);
-#endif
 #ifdef SCHEDULE_EXECUTE
 	printf("%lf\n", proc.propagation.total_error);
 #endif
@@ -166,17 +150,12 @@ static void process_slice(AVCodecContext *c)
 #if METRICS_EXTRACT
 			remember_metrics(c);
 #endif
-#if LLSP_TRAIN_DECODE
-			proc.llsp.decoding_time += get_time();
-			if (proc.llsp.train_coeffs)
-				llsp_add(proc.llsp.decode, metrics_decode(proc.frame, proc.frame->slice_count), proc.llsp.decoding_time);
-#endif
 #if PREPROCESS
 			remember_slice_boundaries(c);
 			remember_reference_frames(c);
 			remember_dependencies(c);
 #endif
-#if !METADATA_READ || METRICS_EXTRACT || PREPROCESS || LLSP_SUPPORT || defined(LLSP_PREDICTION)
+#if !METADATA_READ || METRICS_EXTRACT || PREPROCESS
 			if (++proc.frame->slice_count == SLICE_MAX) {
 				printf("ERROR: maximum number of slices exceeded\n");
 				exit(1);
@@ -185,9 +164,6 @@ static void process_slice(AVCodecContext *c)
 			if (c->slice.flag_last) {
 #if PREPROCESS
 				search_replacements(c, proc.frame->replacement);
-#endif
-#if LLSP_TRAIN_REPLACE
-				replacement_time(c);
 #endif
 			}
 #if SLICE_SKIP
@@ -208,9 +184,6 @@ static void process_slice(AVCodecContext *c)
 #endif
 	
 	FFMPEG_TIME_START(c, total);
-#if LLSP_TRAIN_DECODE
-	proc.llsp.decoding_time = -get_time();
-#endif
 }
 
 #if METADATA_READ
@@ -244,7 +217,8 @@ static void process_metadata(const uint8_t *nalu)
 	read_immission(proc.frame);
 #endif
 	
-#if LLSP_PREDICT
+#if 0
+	/* FIXME: port various adaptation methods over to FFplay */
 	for (i = 0; i < proc.frame->slice_count; i++) {
 		/* calculate the benefit value for each slice */
 		proc.frame->slice[i].decoding_time    = llsp_predict(proc.llsp.decode, metrics_decode(proc.frame, i));
@@ -330,11 +304,9 @@ static void write_metadata(void)
 static void resize_storage(int mb_width, int mb_height)
 {
 	if (mb_width != proc.mb_width || mb_height != proc.mb_height) {
-#if PREPROCESS || LLSP_TRAIN_REPLACE
+#if PREPROCESS
 		avpicture_free(&proc.temp_frame);
 		avpicture_alloc(&proc.temp_frame, PIX_FMT_YUV420P, mb_width << mb_size_log, mb_height << mb_size_log);
-#endif
-#if PREPROCESS
 		av_free(proc.ref_num[0]);
 		av_free(proc.ref_num[1]);
 		proc.ref_num[0] = (int8_t *)av_malloc((2*mb_width+1) * 2*mb_height * sizeof(int8_t));
@@ -394,7 +366,7 @@ static void setup_frame(const AVCodecContext *c)
 	proc.frame->reference = proc.frame->reference_base + REF_MAX;
 #endif
 	
-#if !METADATA_READ || METRICS_EXTRACT || PREPROCESS || LLSP_SUPPORT || defined(LLSP_PREDICTION)
+#if !METADATA_READ || METRICS_EXTRACT || PREPROCESS
 	proc.frame->slice_count = 0;
 #endif
 #if PREPROCESS
@@ -431,12 +403,3 @@ static void destroy_frames_list(void)
 		)
 		av_free(prev);
 }
-
-#if LLSP_SUPPORT || defined(FINAL_SCHEDULING)
-double get_time(void)
-{
-	struct timeval time;
-	gettimeofday(&time, NULL);
-	return (double)time.tv_sec + (double)time.tv_usec / 1E6;
-}
-#endif
