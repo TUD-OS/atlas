@@ -143,7 +143,7 @@ void atlas_job_submit_absolute(void *code, double deadline, unsigned count, cons
 	pthread_mutex_lock(&estimator->lock);
 	
 	if (deadline < estimator->previous_deadline) {
-		printf("WARNING: deadlines not ordered (%lf < %lf)\n", deadline, estimator->previous_deadline);
+//		fprintf(stderr, "WARNING: deadlines not ordered (%lf < %lf)\n", deadline, estimator->previous_deadline);
 		deadline = estimator->previous_deadline;
 	}
 	estimator->previous_deadline = deadline;
