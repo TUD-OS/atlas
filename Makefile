@@ -114,7 +114,7 @@ Linux/.config: Linux/debian
 		fakeroot debian/rules binary-atlas
 	touch $(@D)/.scmversion  # prevent kernel build from using git for version string
 	cp $(@D)/debian/build/build-atlas/.config $(@D)
-	@echo *** Install the kernel packages and come back here afterwards. ***
+	@echo '*** Install the kernel packages and come back here afterwards. ***'
 	@false
 Linux/debian: Linux/.git/config Linux.patch $(WORKBENCH_BASE)/Makefile
 	cd $(@D) && git diff --name-status --exit-code
