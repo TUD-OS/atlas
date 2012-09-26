@@ -63,7 +63,7 @@ FFmpeg/configure: FFmpeg/.git/config FFmpeg.patch $(WORKBENCH_BASE)/Makefile
 	cd $(@D) && git add --all
 	touch $@
 FFmpeg/.git/config:
-	-test -d FFmpeg && rm -rf FFmpeg
+	test -d FFmpeg && rm -r FFmpeg || true
 	git clone -n git://git.videolan.org/ffmpeg.git FFmpeg
 endif
 
@@ -80,7 +80,7 @@ x264/configure: x264/.git/config $(WORKBENCH_BASE)/Makefile
 	cd $(@D) && git checkout --force 37be55213a39db40cf159ada319bd482a1b00680
 	touch $@
 x264/.git/config:
-	-test -d x264 && rm -rf x264
+	test -d x264 && rm -r x264 || true
 	git clone -n git://git.videolan.org/x264.git x264
 endif
 
@@ -94,7 +94,7 @@ SDL $(wildcard SDL/): SDL/config.status force
 SDL/config.status: SDL/configure
 	cd $(@D) && CC=$(CC) CPPFLAGS= CFLAGS= ./configure --disable-assembly
 SDL/configure: $(WORKBENCH_BASE)/Makefile
-	-test -d SDL && rm -rf SDL
+	test -d SDL && rm -r SDL || true
 	curl http://www.libsdl.org/release/SDL-1.2.15.tar.gz | tar xz
 	mv SDL* SDL
 	touch $@
