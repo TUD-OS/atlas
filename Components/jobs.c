@@ -150,13 +150,21 @@ void atlas_job_submit_absolute(void *code, double deadline, unsigned count, cons
 	
 	if (!estimator->llsp) {
 		estimator->metrics_count = count;
-		estimator->llsp = llsp_new(count);
+		estimator->llsp = llsp_new(estimator->metrics_count + 1);  // add an extra 1-column
 	}
 	assert(estimator->metrics_count == count);
+	
 	double prediction = 0.0;
 #if LLSP_PREDICT
+	double llsp_metrics[estimator->metrics_count + 1];
+	for (size_t i = 0; i < estimator->metrics_count + 1; i++) {
+		if (i < estimator->metrics_count)
+			llsp_metrics[i] = metrics[i];
+		else
+			llsp_metrics[i] = 1.0;  // add an extra 1-column
+	}
 	if (llsp_solve(estimator->llsp))
-		prediction = llsp_predict(estimator->llsp, metrics);
+		prediction = llsp_predict(estimator->llsp, llsp_metrics);
 #endif
 	
 	for (size_t i = 0; i < estimator->metrics_count; i++)
@@ -217,16 +225,20 @@ void atlas_job_next(void *code)
 	pthread_mutex_lock(&estimator->lock);
 	
 	if (estimator->scratchpad.read != estimator->scratchpad.write) {
-		double metrics[estimator->metrics_count];
-		for (size_t i = 0; i < estimator->metrics_count; i++)
-			metrics[i] = scratchpad_read(&estimator->scratchpad);
+		double llsp_metrics[estimator->metrics_count + 1];
+		for (size_t i = 0; i < estimator->metrics_count + 1; i++) {
+			if (i < estimator->metrics_count)
+				llsp_metrics[i] = scratchpad_read(&estimator->scratchpad);
+			else
+				llsp_metrics[i] = 1.0;  // add an extra 1-column
+		}
 		double deadline = scratchpad_read(&estimator->scratchpad);  // deadline
 		double prediction = scratchpad_read(&estimator->scratchpad);  // prediction
 		double execution_time = time - estimator->time;
 		
 		if (estimator->time > 0.0) {
 #if LLSP_PREDICT
-			llsp_add(estimator->llsp, metrics, execution_time);
+			llsp_add(estimator->llsp, llsp_metrics, execution_time);
 #endif
 			if (hook_job_complete)
 				hook_job_complete(code, time, deadline, prediction, execution_time);
