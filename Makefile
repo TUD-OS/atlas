@@ -126,7 +126,7 @@ Linux/debian: Linux/.git/config Linux.patch $(WORKBENCH_BASE)/Makefile
 		git add --all
 	touch $@
 Linux/.git/config:
-	-test -d Linux && rm -rf Linux
+	test -d Linux && rm -r Linux || true
 	git clone -n git://kernel.ubuntu.com/ubuntu/ubuntu-precise.git Linux
 endif
 
