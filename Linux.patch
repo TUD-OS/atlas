@@ -1,3 +1,28 @@
+diff --git a/arch/x86/syscalls/syscall_32.tbl b/arch/x86/syscalls/syscall_32.tbl
+index 7a35a6e..9916ed2 100644
+--- a/arch/x86/syscalls/syscall_32.tbl
++++ b/arch/x86/syscalls/syscall_32.tbl
+@@ -356,3 +356,6 @@
+ 347	i386	process_vm_readv	sys_process_vm_readv		compat_sys_process_vm_readv
+ 348	i386	process_vm_writev	sys_process_vm_writev		compat_sys_process_vm_writev
+ 349	i386	kcmp			sys_kcmp
++350	i386	atlas_next		sys_atlas_next
++351	i386	atlas_submit		sys_atlas_submit
++352	i386	atlas_debug		sys_atlas_debug
+diff --git a/arch/x86/syscalls/syscall_64.tbl b/arch/x86/syscalls/syscall_64.tbl
+index a582bfe..43f9836 100644
+--- a/arch/x86/syscalls/syscall_64.tbl
++++ b/arch/x86/syscalls/syscall_64.tbl
+@@ -319,6 +319,9 @@
+ 310	64	process_vm_readv	sys_process_vm_readv
+ 311	64	process_vm_writev	sys_process_vm_writev
+ 312	common	kcmp			sys_kcmp
++313	common	atlas_next		sys_atlas_next
++314	64	atlas_submit		sys_atlas_submit
++315	common	atlas_debug		sys_atlas_debug
+ 
+ #
+ # x32-specific system call numbers start at 512 to avoid cache impact
 diff --git a/debian.quantal/config/amd64/config.flavour.atlas b/debian.quantal/config/amd64/config.flavour.atlas
 new file mode 100644
 index 0000000..06d8b53
@@ -54,31 +79,6 @@ index 3e82c65..35feef3 100644
  build_image	= bzImage
  kernel_file	= arch/$(build_arch)/boot/bzImage
  install_file	= vmlinuz
-diff --git a/arch/x86/syscalls/syscall_32.tbl b/arch/x86/syscalls/syscall_32.tbl
-index 7a35a6e..9916ed2 100644
---- a/arch/x86/syscalls/syscall_32.tbl
-+++ b/arch/x86/syscalls/syscall_32.tbl
-@@ -356,3 +356,6 @@
- 347	i386	process_vm_readv	sys_process_vm_readv		compat_sys_process_vm_readv
- 348	i386	process_vm_writev	sys_process_vm_writev		compat_sys_process_vm_writev
- 349	i386	kcmp			sys_kcmp
-+350	i386	atlas_next		sys_atlas_next
-+351	i386	atlas_submit		sys_atlas_submit
-+352	i386	atlas_debug		sys_atlas_debug
-diff --git a/arch/x86/syscalls/syscall_64.tbl b/arch/x86/syscalls/syscall_64.tbl
-index 51171ae..651a712 100644
---- a/arch/x86/syscalls/syscall_64.tbl
-+++ b/arch/x86/syscalls/syscall_64.tbl
-@@ -319,6 +319,9 @@
- 310	64	process_vm_readv	sys_process_vm_readv
- 311	64	process_vm_writev	sys_process_vm_writev
- 312	64	kcmp			sys_kcmp
-+313	common	atlas_next		sys_atlas_next
-+314	64	atlas_submit		sys_atlas_submit
-+315	common	atlas_debug		sys_atlas_debug
- 
- #
- # x32-specific system call numbers start at 512 to avoid cache impact
 diff --git a/include/linux/init_task.h b/include/linux/init_task.h
 index 9e65eff..025cff5 100644
 --- a/include/linux/init_task.h
@@ -246,10 +246,10 @@ index 46ce8da..f438a6a 100644
  	exit_shm(tsk);
  	exit_files(tsk);
 diff --git a/kernel/printk.c b/kernel/printk.c
-index 21bea76..b0ffdaf 100644
+index 146827f..b827392 100644
 --- a/kernel/printk.c
 +++ b/kernel/printk.c
-@@ -1873,21 +1873,33 @@ int is_console_locked(void)
+@@ -1875,21 +1875,33 @@ int is_console_locked(void)
  /*
   * Delayed printk version, for scheduler-internal messages:
   */
@@ -287,7 +287,7 @@ index 21bea76..b0ffdaf 100644
  		}
  		if (pending & PRINTK_PENDING_WAKEUP)
  			wake_up_interruptible(&log_wait);
-@@ -2360,16 +2372,19 @@ int printk_sched(const char *fmt, ...)
+@@ -2362,16 +2374,19 @@ int printk_sched(const char *fmt, ...)
  {
  	unsigned long flags;
  	va_list args;
@@ -2088,7 +2088,7 @@ index 0000000..f1415dd
 +	return ret;
 +}
 diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index 468bdd4..7965055 100644
+index 39c44fa..860b667 100644
 --- a/kernel/sched/core.c
 +++ b/kernel/sched/core.c
 @@ -1061,12 +1061,17 @@ void check_preempt_curr(struct rq *rq, struct task_struct *p, int flags)
@@ -2137,7 +2137,7 @@ index 468bdd4..7965055 100644
  
  #ifdef CONFIG_PREEMPT_NOTIFIERS
  	INIT_HLIST_HEAD(&p->preempt_notifiers);
-@@ -3347,16 +3360,20 @@ pick_next_task(struct rq *rq)
+@@ -3353,16 +3366,20 @@ pick_next_task(struct rq *rq)
  	if (likely(rq->nr_running == rq->cfs.h_nr_running)) {
  		p = fair_sched_class.pick_next_task(rq);
  		if (likely(p))
@@ -2161,7 +2161,7 @@ index 468bdd4..7965055 100644
  }
  
  /*
-@@ -3367,7 +3384,8 @@ static void __sched __schedule(void)
+@@ -3373,7 +3390,8 @@ static void __sched __schedule(void)
  	struct task_struct *prev, *next;
  	unsigned long *switch_count;
  	struct rq *rq;
@@ -2171,7 +2171,7 @@ index 468bdd4..7965055 100644
  
  need_resched:
  	preempt_disable();
-@@ -3375,12 +3393,33 @@ need_resched:
+@@ -3381,12 +3399,33 @@ need_resched:
  	rq = cpu_rq(cpu);
  	rcu_note_context_switch(cpu);
  	prev = rq->curr;
@@ -2206,7 +2206,7 @@ index 468bdd4..7965055 100644
  	raw_spin_lock_irq(&rq->lock);
  
  	switch_count = &prev->nivcsw;
-@@ -4217,6 +4256,8 @@ __setscheduler(struct rq *rq, struct task_struct *p, int policy, int prio)
+@@ -4223,6 +4262,8 @@ __setscheduler(struct rq *rq, struct task_struct *p, int policy, int prio)
  	p->prio = rt_mutex_getprio(p);
  	if (rt_prio(p->prio))
  		p->sched_class = &rt_sched_class;
@@ -2215,7 +2215,7 @@ index 468bdd4..7965055 100644
  	else
  		p->sched_class = &fair_sched_class;
  	set_load_weight(p);
-@@ -4260,7 +4301,7 @@ recheck:
+@@ -4266,7 +4307,7 @@ recheck:
  
  		if (policy != SCHED_FIFO && policy != SCHED_RR &&
  				policy != SCHED_NORMAL && policy != SCHED_BATCH &&
@@ -2224,7 +2224,7 @@ index 468bdd4..7965055 100644
  			return -EINVAL;
  	}
  
-@@ -7260,6 +7301,7 @@ void __init sched_init(void)
+@@ -7267,6 +7308,7 @@ void __init sched_init(void)
  		rq->calc_load_update = jiffies + LOAD_FREQ;
  		init_cfs_rq(&rq->cfs);
  		init_rt_rq(&rq->rt, rq);
@@ -2270,7 +2270,7 @@ index 573e1ca..b272fa6 100644
  	.dequeue_task		= dequeue_task_rt,
  	.yield_task		= yield_task_rt,
 diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
-index 55844f2..05558e9 100644
+index 5cf093f..5d4aaa3 100644
 --- a/kernel/sched/sched.h
 +++ b/kernel/sched/sched.h
 @@ -309,6 +309,40 @@ struct rt_rq {
