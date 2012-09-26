@@ -224,13 +224,13 @@ void atlas_job_next(void *code)
 		double prediction = scratchpad_read(&estimator->scratchpad);  // prediction
 		double execution_time = time - estimator->time;
 		
+		if (estimator->time > 0.0) {
 #if LLSP_PREDICT
-		if (estimator->time > 0.0)
 			llsp_add(estimator->llsp, metrics, execution_time);
 #endif
-		
-		if (hook_job_complete)
-			hook_job_complete(code, time, deadline, prediction, execution_time);
+			if (hook_job_complete)
+				hook_job_complete(code, time, deadline, prediction, execution_time);
+		}
 	}
 	estimator->time = time;
 	
