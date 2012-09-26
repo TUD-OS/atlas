@@ -10,31 +10,26 @@ X264_HIGH = --bframes 8 --weightp 2 --8x8dct --b-adapt 2
 X264_MAIN = --bframes 8 --weightp 2 --no-8x8dct --b-adapt 2
 X264_BASELINE = --no-cabac --bframes 0 --weightp 0 --no-8x8dct
 
-ifneq ($(INCLUDE),)
+ifeq ($(INCLUDE),)
+
+all %.h264 %.mov %.y4m: %.opt force
+	$(MAKE) $@ INCLUDE=$*.opt
+
+else
+
 include $(INCLUDE)
-endif
 
 all: $(patsubst %.opt,%.h264,$(if $(wildcard *.opt),$(wildcard *.opt),bbc-r_m720p.opt))
 
 %.h264: %.mov %.opt ../x264/x264 Makefile
-ifeq ($(MODE),)
-	$(MAKE) $@ INCLUDE=$*.opt
-else
 	ffmpeg -i $< -f rawvideo - 2> /dev/null | ../x264/x264 $(X264_$(MODE)) $(X264_$(PROFILE)) -o $@ -
-endif
 
 %.h264: %.y4m %.opt ../x264/x264 Makefile
-ifeq ($(MODE),)
-	$(MAKE) $@ INCLUDE=$*.opt
-else
 	../x264/x264 $(X264_$(MODE)) $(X264_$(PROFILE)) -o $@ $<
-endif
 
-%.mov %.y4m:
-ifeq ($(URL),)
-	$(MAKE) $@ INCLUDE=$*.opt
-else
+$(notdir $(URL)):
 	curl --user-agent QuickTime $(URL) > $@
+
 endif
 
 ../x264/x264: force
