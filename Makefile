@@ -19,7 +19,7 @@ SDL_LIBS = \
 
 BUILD_WORKBENCH ?= $(wildcard h264_workbench.c)
 ifneq ($(BUILD_WORKBENCH),)
-h264_workbench: %: %.c $(FFMPEG_LIBS) $(COMPONENTS) Makefile $(WORKBENCH_BASE)/Makefile $(WORKBENCH_BASE)/Makeconf
+h264_workbench: %: %.c $(FFMPEG_LIBS) $(COMPONENTS) Makefile $(WORKBENCH_BASE)/Makefile $(WORKBENCH_BASE)/Makeconf $(WORKBENCH_BASE)/Makeconf.local
 	$(CC) $(CPPFLAGS) -MM $< > .$*.d
 	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ "$(realpath $<)" $(FFMPEG_LIBS) $(COMPONENTS) -lz -lm -pthread $(LDFLAGS)
 all:: h264_workbench
@@ -40,7 +40,7 @@ endif
 
 BUILD_FFMPEG ?= $(filter .,$(WORKBENCH_BASE))$(wildcard FFmpeg)
 ifneq ($(BUILD_FFMPEG),)
-ffplay: %: FFmpeg/%.c FFmpeg/cmdutils.c $(FFMPEG_LIBS) $(SDL_LIBS) $(COMPONENTS) Makefile $(WORKBENCH_BASE)/Makefile $(WORKBENCH_BASE)/Makeconf
+ffplay: %: FFmpeg/%.c FFmpeg/cmdutils.c $(FFMPEG_LIBS) $(SDL_LIBS) $(COMPONENTS) Makefile $(WORKBENCH_BASE)/Makefile $(WORKBENCH_BASE)/Makeconf $(WORKBENCH_BASE)/Makeconf.local
 	$(CC) $(CPPFLAGS) -MM $< > .$*.d
 	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ "$(realpath $<)" FFmpeg/cmdutils.c $(FFMPEG_LIBS) $(SDL_LIBS) $(COMPONENTS) $(SDL_EXTRA_LIBS) $(LDFLAGS)
 clean::
@@ -118,7 +118,7 @@ Linux/.config: Linux/debian
 	@false
 Linux/debian: Linux/.git/config Linux.patch $(WORKBENCH_BASE)/Makefile
 	cd $(@D) && git diff --name-status --exit-code
-	cd $(@D) && git checkout --force 5c4e748a6bff1a1d829fea1141e68e467353665b
+	cd $(@D) && git checkout --force 9cb78725aba534f86e09bea32257705dc89beab0
 	patch -d $(@D) -p1 < Linux.patch
 	cd $(@D) && \
 		git add --all debian.quantal && \
@@ -138,7 +138,8 @@ Samples Samples/:: force
 	$(MAKE) -C $@
 endif
 
-%.h264 %.mov: force
+%.h264 %.mov: %.opt
+%.h264 %.mov %.opt: force
 	$(MAKE) -C $(@D) $(@F)
 
 
