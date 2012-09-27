@@ -7,6 +7,11 @@
 
 #pragma mark ATLAS scheduler syscalls
 
+enum sched_timebase {
+	sched_deadline_absolute = 0,
+	sched_deadline_relative = 1
+};
+
 #ifdef __linux__
 
 #include <sys/types.h>
@@ -27,9 +32,9 @@
 #error Architecture not supported.
 #endif
 
-static inline int sched_submit(pid_t pid, struct timeval *exectime, struct timeval *deadline)
+static inline int sched_submit(pid_t pid, struct timeval *exectime, struct timeval *deadline, enum sched_timebase timebase)
 {
-	if (syscall(SYS_atlas_submit, pid, exectime, deadline) == 0)
+	if (syscall(SYS_atlas_submit, pid, exectime, deadline, timebase) == 0)
 		return 0;
 	else
 		return errno;
@@ -53,7 +58,7 @@ static inline int sched_debug(void)
 
 #warning Jobs will not be forwarded to the scheduler.
 
-static inline int sched_submit(pid_t pid, struct timeval *exectime, struct timeval *deadline)
+static inline int sched_submit(pid_t pid, struct timeval *exectime, struct timeval *deadline, enum sched_timebase timebase)
 {
 	return ENOTSUP;
 }

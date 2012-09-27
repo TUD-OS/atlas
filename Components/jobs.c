@@ -17,6 +17,8 @@
 #include <sys/time.h>
 #include <assert.h>
 
+#include "libavformat/avformat.h"
+
 #include "scheduler.h"
 #include "llsp.h"
 #include "jobs.h"
@@ -133,7 +135,7 @@ void atlas_job_queue_terminate(void *code)
 
 #pragma mark Job Management
 
-void atlas_job_submit_absolute(void *code, double deadline, unsigned count, const double metrics[])
+static void atlas_job_submit(void *code, double deadline, unsigned count, const double metrics[], enum sched_timebase timebase)
 {
 	struct estimator_s *estimator;
 	for (estimator = estimator_list; estimator; estimator = estimator->next)
@@ -142,11 +144,15 @@ void atlas_job_submit_absolute(void *code, double deadline, unsigned count, cons
 	
 	pthread_mutex_lock(&estimator->lock);
 	
-	if (deadline < estimator->previous_deadline) {
+	double offset = 0.0;
+	if (timebase == sched_deadline_relative)
+		offset = av_gettime() / 1000000.0;
+	
+	if (deadline + offset < estimator->previous_deadline) {
 //		fprintf(stderr, "WARNING: deadlines not ordered (%lf < %lf)\n", deadline, estimator->previous_deadline);
-		deadline = estimator->previous_deadline;
+		deadline = estimator->previous_deadline - offset;
 	}
-	estimator->previous_deadline = deadline;
+	estimator->previous_deadline = deadline + offset;
 	
 	if (!estimator->llsp) {
 		estimator->metrics_count = count;
@@ -169,17 +175,10 @@ void atlas_job_submit_absolute(void *code, double deadline, unsigned count, cons
 	
 	for (size_t i = 0; i < estimator->metrics_count; i++)
 		scratchpad_write(&estimator->scratchpad, metrics[i]);
-	scratchpad_write(&estimator->scratchpad, deadline);
+	scratchpad_write(&estimator->scratchpad, deadline + offset);
 	scratchpad_write(&estimator->scratchpad, prediction);
 	
 #if JOB_SCHEDULING
-	// FIXME: reasoning about deadline order is impossible when submitting relative deadlines
-	struct timeval tv;
-	gettimeofday(&tv, NULL);
-	double time = (double)tv.tv_sec + (double)tv.tv_usec / 1000000.0;
-	deadline -= time;
-	if (deadline < 0.0) deadline = 0.0;
-	
 	struct timeval tv_deadline = {
 		.tv_sec = deadline,
 		.tv_usec = 1000000 * (deadline - (long long)deadline)
@@ -188,19 +187,20 @@ void atlas_job_submit_absolute(void *code, double deadline, unsigned count, cons
 		.tv_sec = prediction,
 		.tv_usec = 1000000 * (prediction - (long long)prediction)
 	};
-	sched_submit(estimator->tid, &tv_exectime, &tv_deadline);
+	sched_submit(estimator->tid, &tv_exectime, &tv_deadline, timebase);
 #endif
 	
 	pthread_mutex_unlock(&estimator->lock);
 }
 
+void atlas_job_submit_absolute(void *code, double deadline, unsigned count, const double metrics[])
+{
+	atlas_job_submit(code, deadline, count, metrics, sched_deadline_absolute);
+}
+
 void atlas_job_submit_relative(void *code, double deadline, unsigned count, const double metrics[])
 {
-	struct timeval tv;
-	gettimeofday(&tv, NULL);
-	double time = (double)tv.tv_sec + (double)tv.tv_usec / 1000000.0;
-	
-	atlas_job_submit_absolute(code, time + deadline, count, metrics);
+	atlas_job_submit(code, deadline, count, metrics, sched_deadline_relative);
 }
 
 void atlas_job_next(void *code)
