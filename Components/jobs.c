@@ -175,7 +175,7 @@ static void atlas_job_submit(void *code, double deadline, unsigned count, const 
 	
 	for (size_t i = 0; i < estimator->metrics_count; i++)
 		scratchpad_write(&estimator->scratchpad, metrics[i]);
-	scratchpad_write(&estimator->scratchpad, deadline + offset);
+	scratchpad_write(&estimator->scratchpad, deadline + offset);  // always keep absolute deadlines
 	scratchpad_write(&estimator->scratchpad, prediction);
 	
 #if JOB_SCHEDULING
@@ -232,8 +232,8 @@ void atlas_job_next(void *code)
 			else
 				llsp_metrics[i] = 1.0;  // add an extra 1-column
 		}
-		double deadline = scratchpad_read(&estimator->scratchpad);  // deadline
-		double prediction = scratchpad_read(&estimator->scratchpad);  // prediction
+		double deadline = scratchpad_read(&estimator->scratchpad);  // absolute deadline
+		double prediction = scratchpad_read(&estimator->scratchpad);
 		double execution_time = time - estimator->time;
 		
 		if (estimator->time > 0.0) {
