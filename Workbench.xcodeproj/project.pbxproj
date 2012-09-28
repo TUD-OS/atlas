@@ -280,6 +280,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
+				CPPFLAGS = "-DLLSP_PREDICT -DJOB_SCHEDULING";
 			};
 			name = Debug;
 		};
@@ -287,6 +288,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
+				CPPFLAGS = "-DLLSP_PREDICT -DJOB_SCHEDULING";
 			};
 			name = Release;
 		};
