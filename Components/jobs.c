@@ -6,6 +6,7 @@
 #ifdef __linux__
 #define _GNU_SOURCE
 #include <sched.h>
+#include <signal.h>
 #endif
 
 #include <stdlib.h>
@@ -106,7 +107,9 @@ void atlas_job_queue_checkin(void *code)
 	CPU_ZERO(&cpu_set);
 	CPU_SET(0, &cpu_set);
 	
-	sched_setaffinity(0, sizeof(cpu_set), &cpu_set);
+	if (sched_setaffinity(0, sizeof(cpu_set), &cpu_set) != 0) abort();
+	
+	if (sigaction(SIGXCPU, SIG_IGN, NULL) != 0) abort();
 #endif
 }
 
@@ -125,6 +128,7 @@ void atlas_job_queue_terminate(void *code)
 			prev->next = estimator->next;
 		else
 			estimator_list = estimator->next;
+		pthread_mutex_destroy(&estimator->lock);
 		free(estimator);
 #endif
 	}
