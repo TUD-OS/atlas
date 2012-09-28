@@ -103,13 +103,12 @@ void atlas_job_queue_checkin(void *code)
 	
 #ifdef __linux__
 	cpu_set_t cpu_set;
-	
 	CPU_ZERO(&cpu_set);
 	CPU_SET(0, &cpu_set);
-	
 	if (sched_setaffinity(0, sizeof(cpu_set), &cpu_set) != 0) abort();
 	
-	if (sigaction(SIGXCPU, SIG_IGN, NULL) != 0) abort();
+	const struct sigaction action = { .sa_handler = SIG_IGN };
+	if (sigaction(SIGXCPU, &action, NULL) != 0) abort();
 #endif
 }
 
