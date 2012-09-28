@@ -58,7 +58,8 @@ FFmpeg/config.mak: FFmpeg/configure
 		--enable-decoder=h264 --enable-parser=h264 --enable-demuxer=h264 --enable-protocol=file --enable-rdft
 FFmpeg/configure: FFmpeg/.git/config FFmpeg.patch $(WORKBENCH_BASE)/Makefile
 	cd $(@D) && git diff --name-status --exit-code
-	cd $(@D) && git checkout --force 39fe8033bbf94cac7935d749849fdf67ba8fc16a  # n0.11.1
+	cd $(@D) && git reset --hard 39fe8033bbf94cac7935d749849fdf67ba8fc16a  # n0.11.1
+	cd $(@D) && git clean -dfx
 	patch -d $(@D) -p1 < FFmpeg.patch
 	cd $(@D) && git add --all
 	touch $@
@@ -77,7 +78,8 @@ x264/config.mak: x264/configure
 	cd $(@D) && CC=$(CC) CPPFLAGS= CFLAGS= ./configure --extra-cflags=-march=$(ARCH)
 x264/configure: x264/.git/config $(WORKBENCH_BASE)/Makefile
 	cd $(@D) && git diff --name-status --exit-code
-	cd $(@D) && git checkout --force 37be55213a39db40cf159ada319bd482a1b00680
+	cd $(@D) && git reset --hard 37be55213a39db40cf159ada319bd482a1b00680
+	cd $(@D) && git clean -dfx
 	touch $@
 x264/.git/config:
 	test -d x264 && rm -r x264 || true
@@ -105,7 +107,7 @@ BUILD_LINUX ?= $(filter .,$(WORKBENCH_BASE))$(wildcard Linux)
 ifneq ($(BUILD_LINUX),)
 all:: Linux
 Linux $(wildcard Linux/): Linux/.config force
-	$(MAKE) -j$(CPUS) -C $@ KERNELVERSION=3.5.0-10-atlas bzImage
+	$(MAKE) -j$(CPUS) -C $@ KERNELVERSION=3.5.0-15-atlas bzImage
 Linux/.config: Linux/debian
 	cd $(@D) && unset MAKELEVEL && \
 		fakeroot debian/rules clean && \
@@ -118,7 +120,8 @@ Linux/.config: Linux/debian
 	@false
 Linux/debian: Linux/.git/config Linux.patch $(WORKBENCH_BASE)/Makefile
 	cd $(@D) && git diff --name-status --exit-code
-	cd $(@D) && git checkout --force 268a35ff0fa9f07a6ae8e6b7644155338e95e359
+	cd $(@D) && git reset --hard 268a35ff0fa9f07a6ae8e6b7644155338e95e359
+	cd $(@D) && git clean -dfx
 	patch -d $(@D) -p1 < Linux.patch
 	cd $(@D) && \
 		git add --all debian.quantal && \
