@@ -1132,3 +1132,24 @@ index 6395607..7ad5dd7 100644
  
      if( bS[0] < 4 || !intra ) {
          int8_t tc[4];
+diff --git a/libavformat/utils.c b/libavformat/utils.c
+index ca97b91..495eb63 100644
+--- a/libavformat/utils.c
++++ b/libavformat/utils.c
+@@ -3853,9 +3853,16 @@ void av_dump_format(AVFormatContext *ic,
+ 
+ int64_t av_gettime(void)
+ {
++#ifdef __linux__
++    /* ATLAS uses CLOCK_MONOTONIC as reference, because seconds are always a wallclock second there */
++    struct timespec ts;
++    clock_gettime(CLOCK_MONOTONIC, &ts);
++    return (int64_t)ts.tv_sec * 1000000 + (ts.tv_nsec + 500) / 1000;
++#else
+     struct timeval tv;
+     gettimeofday(&tv,NULL);
+     return (int64_t)tv.tv_sec * 1000000 + tv.tv_usec;
++#endif
+ }
+ 
+ uint64_t ff_ntp_time(void)
