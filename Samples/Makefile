@@ -10,16 +10,16 @@ X264_HIGH = --bframes 8 --weightp 2 --8x8dct --b-adapt 2
 X264_MAIN = --bframes 8 --weightp 2 --no-8x8dct --b-adapt 2
 X264_BASELINE = --no-cabac --bframes 0 --weightp 0 --no-8x8dct
 
+all: $(patsubst %.opt,%.h264,$(if $(wildcard *.opt),$(wildcard *.opt),bbc-r_m720p.opt))
+
 ifeq ($(INCLUDE),)
 
-all %.h264 %.mov %.y4m: %.opt force
+%.h264 %.mov %.y4m: %.opt force
 	$(MAKE) $@ INCLUDE=$*.opt
 
 else
 
 include $(INCLUDE)
-
-all: $(patsubst %.opt,%.h264,$(if $(wildcard *.opt),$(wildcard *.opt),bbc-r_m720p.opt))
 
 %.h264: %.mov %.opt ../x264/x264 Makefile
 	ffmpeg -i $< -f rawvideo - 2> /dev/null | ../x264/x264 $(X264_$(MODE)) $(X264_$(PROFILE)) -o $@ -
