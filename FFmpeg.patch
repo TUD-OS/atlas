@@ -14,7 +14,7 @@ index 2c84394..6661266 100644
  #include <stdlib.h>
  #include <errno.h>
 diff --git a/ffplay.c b/ffplay.c
-index 779c879..e74164b 100644
+index 779c879..8e5949a 100644
 --- a/ffplay.c
 +++ b/ffplay.c
 @@ -56,6 +56,11 @@
@@ -277,7 +277,7 @@ index 779c879..e74164b 100644
      }
  
      for (;;) {
-+        double deadline = is->frame_timer + (is->videoq.nb_packets + is->pictq_size) * av_q2d(is->video_st->codec->time_base);
++        double deadline = is->frame_timer + is->videoq.nb_packets * av_q2d(is->video_st->codec->time_base);
 +        atlas_job_submit_absolute(read_thread, deadline, 0, NULL);
 +        atlas_job_next(read_thread);
 +
@@ -1133,7 +1133,7 @@ index 6395607..7ad5dd7 100644
      if( bS[0] < 4 || !intra ) {
          int8_t tc[4];
 diff --git a/libavformat/utils.c b/libavformat/utils.c
-index ca97b91..495eb63 100644
+index ca97b91..6db260b 100644
 --- a/libavformat/utils.c
 +++ b/libavformat/utils.c
 @@ -3853,9 +3853,16 @@ void av_dump_format(AVFormatContext *ic,
