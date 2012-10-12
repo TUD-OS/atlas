@@ -164,7 +164,7 @@ clean::
 	rm -rf *.dSYM
 
 cleanall: clean
-	$(MAKE) -C Samples clean
+	$(MAKE) -C Samples cleanall
 	$(MAKE) -C Experiments clean
 	-$(MAKE) -C FFmpeg distclean
 	-$(MAKE) -C x264 clean
