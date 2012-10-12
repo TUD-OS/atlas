@@ -43,7 +43,7 @@ clean:
 	rm -f *.h264 *.p264 *.prop
 
 cleanall: clean
-	rm -f *.mov
+	rm -f *.mov *.mp4
 
 force:
 	
