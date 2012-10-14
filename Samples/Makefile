@@ -1,6 +1,6 @@
 .PHONY: all clean cleanall force
 
-.INTERMEDIATE: $(patsubst %.opt,%.y4m,$(wildcard *.opt))
+.INTERMEDIATE: $(patsubst %.cfg,%.mov,$(wildcard *.cfg)) $(patsubst %.cfg,%.y4m,$(wildcard *.cfg))
 
 X264_CBR = --input-res $(SIZE) --fps $(FPS) --bitrate $(BITRATE) --slices $(SLICES) --sliced-threads --threads $(SLICES)
 X264_CRF = --input-res $(SIZE) --fps $(FPS) --crf $(QUALITY) --slices $(SLICES) --sliced-threads --threads $(SLICES)
@@ -10,21 +10,21 @@ X264_HIGH = --bframes 8 --weightp 2 --8x8dct --b-adapt 2
 X264_MAIN = --bframes 8 --weightp 2 --no-8x8dct --b-adapt 2
 X264_BASELINE = --no-cabac --bframes 0 --weightp 0 --no-8x8dct
 
-all: $(patsubst %.opt,%.h264,$(if $(wildcard *.opt),$(wildcard *.opt),bbc-r_m720p.opt))
+all: $(patsubst %.cfg,%.h264,$(if $(wildcard *.cfg),$(wildcard *.cfg),bbc-r_m720p.cfg))
 
 ifeq ($(INCLUDE),)
 
-%.h264 %.mov %.y4m: %.opt force
-	$(MAKE) $@ INCLUDE=$*.opt
+%.h264 %.mov %.y4m: %.cfg force
+	$(MAKE) $@ INCLUDE=$*.cfg
 
 else
 
 include $(INCLUDE)
 
-%.h264: %.mov %.opt ../x264/x264 Makefile
+%.h264: %.mov %.cfg ../x264/x264 Makefile
 	ffmpeg -i $< -f rawvideo - 2> /dev/null | ../x264/x264 $(X264_$(MODE)) $(X264_$(PROFILE)) -o $@ -
 
-%.h264: %.y4m %.opt ../x264/x264 Makefile
+%.h264: %.y4m %.cfg ../x264/x264 Makefile
 	../x264/x264 $(X264_$(MODE)) $(X264_$(PROFILE)) -o $@ $<
 
 $(notdir $(URL)):
@@ -36,14 +36,14 @@ endif
 	$(MAKE) -C .. x264
 
 # some demo video
-bbc-r_m720p.opt: Makefile
+bbc-r_m720p.cfg: Makefile
 	echo 'MODE = CBR\nPROFILE = MAIN\nSLICES = 4\nBITRATE = 4000\nREFERENCES = 3\nSIZE = 1280x720\nFPS = 24\nURL = http://movies.apple.com/movies/us/hd_gallery/gl1800/bbc-r_m720p.mov' > $@
 
 clean:
 	rm -f *.h264 *.p264 *.prop
 
 cleanall: clean
-	rm -f *.mov *.mp4
+	rm -f *.mov
 
 force:
 	
