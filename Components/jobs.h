@@ -38,3 +38,6 @@ void atlas_job_next(void *code);
 /* hooks for evaluation */
 extern void hook_job_release(void *code) WEAK_SYMBOL;
 extern void hook_job_complete(void *code, double thread_time, double deadline, double prediction, double execution) WEAK_SYMBOL;
+
+/* stage info from ffplay, may be helpful in the hooks */
+struct stages_s { void *code; const char *name; int id; } ffplay_stages[5];
