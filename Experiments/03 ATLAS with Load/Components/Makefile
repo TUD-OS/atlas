@@ -1,0 +1,4 @@
+CPPFLAGS = -DLLSP_PREDICT -DJOB_SCHEDULING
+
+WORKBENCH_BASE ?= ../../..
+include $(WORKBENCH_BASE)/Components/Makefile
