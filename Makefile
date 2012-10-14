@@ -64,7 +64,6 @@ FFmpeg/configure: FFmpeg/.git/config FFmpeg.patch $(WORKBENCH_BASE)/Makefile
 	cd $(@D) && git add --all
 	touch $@
 FFmpeg/.git/config:
-	test -d FFmpeg && rm -r FFmpeg || true
 	git clone -n git://git.videolan.org/ffmpeg.git FFmpeg
 endif
 
@@ -82,7 +81,6 @@ x264/configure: x264/.git/config $(WORKBENCH_BASE)/Makefile
 	cd $(@D) && git clean -dfx
 	touch $@
 x264/.git/config:
-	test -d x264 && rm -r x264 || true
 	git clone -n git://git.videolan.org/x264.git x264
 endif
 
@@ -96,9 +94,11 @@ SDL $(wildcard SDL/): SDL/config.status force
 SDL/config.status: SDL/configure
 	cd $(@D) && CC=$(CC) CPPFLAGS= CFLAGS= ./configure --disable-assembly
 SDL/configure: $(WORKBENCH_BASE)/Makefile
-	test -d SDL && rm -r SDL || true
+	mkdir -p $(if $(wildcard SDL),$(realpath SDL),SDL)
+	rm -rf SDL/*
 	curl http://www.libsdl.org/release/SDL-1.2.15.tar.gz | tar xz
-	mv SDL* SDL
+	mv SDL-*/* SDL/
+	rmdir SDL-*
 	touch $@
 endif
 
@@ -131,21 +131,19 @@ Linux/debian: Linux/.git/config Linux.patch $(WORKBENCH_BASE)/Makefile
 		git add --all
 	touch $@
 Linux/.git/config:
-	test -d Linux && rm -r Linux || true
 	git clone -n git://kernel.ubuntu.com/ubuntu/ubuntu-precise.git Linux
 endif
 
 
 BUILD_SAMPLES ?= $(wildcard Samples)
 ifneq ($(BUILD_SAMPLES),)
-Samples/%.h264: Samples
+.PRECIOUS: Samples/%.cfg Samples/%.h264
+Samples/%.h264: Samples/%.cfg
+Samples/%.h264 Samples/%.cfg: force
+	$(MAKE) -C $(@D) $(@F)
 Samples Samples/:: force
 	$(MAKE) -C $@
 endif
-
-%.h264 %.mov: %.opt
-%.h264 %.mov %.opt: force
-	$(MAKE) -C $(@D) $(@F)
 
 
 BUILD_EXPERIMENTS ?= $(wildcard Experiments)
