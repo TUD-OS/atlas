@@ -4,7 +4,6 @@ WORKBENCH_BASE ?= .
 ARCH ?= core2
 CPUS ?= $(shell case `uname` in (Darwin) ioreg | fgrep -c ' AppleACPICPU ' ;; (Linux) grep -c ^processor /proc/cpuinfo ;; esac)
 
-# a compiler with blocks support is required
 CC = clang
 
 override CPPFLAGS := $(if $(DEBUG),-DDEBUG,) $(CPPFLAGS)
@@ -18,7 +17,7 @@ override CFLAGS := -Wall $(CFLAGS)
 
 ifeq ($(shell uname),Linux)
 override CPPFLAGS := -D_XOPEN_SOURCE=600 $(CPPFLAGS)
-override LDFLAGS := -lBlocksRuntime -lrt $(LDFLAGS)
+override LDFLAGS := -lrt $(LDFLAGS)
 SDL_EXTRA_LIBS = -pthread -lm -ldl
 endif
 
