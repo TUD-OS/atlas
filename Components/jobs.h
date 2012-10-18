@@ -3,6 +3,12 @@
  * economic rights: Technische Universitaet Dresden (Germany)
  */
 
+/* To compensate for accounting rounding errors and scheduler overhead,
+ * jobs are over-allocated when reporting to the system scheduler. */
+#ifndef JOB_OVERALLOCATION
+#define JOB_OVERALLOCATION 1.01
+#endif
+
 /* toggle job communication to scheduler */
 #ifdef JOB_SCHEDULING
 #	define JOB_SCHEDULING 1
