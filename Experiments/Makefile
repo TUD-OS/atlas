@@ -7,3 +7,9 @@ all %:
 	$(MAKE) -C 01\ Preprocess $@
 	$(MAKE) -C 02\ CFS\ with\ Load $@
 	$(MAKE) -C 03\ ATLAS\ with\ Load $@
+	$(MAKE) -C 04\ Prediction\ Full $@
+	$(MAKE) -C 05\ Prediction\ Reduced $@
+	$(MAKE) -C 06\ Prediction\ None $@
+	$(MAKE) -C 07\ Full\ with\ Load $@
+	$(MAKE) -C 08\ Reduced\ with\ Load $@
+	$(MAKE) -C 09\ None\ with\ Load $@
