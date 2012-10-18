@@ -182,6 +182,7 @@ static void atlas_job_submit(void *code, double deadline, unsigned count, const 
 	scratchpad_write(&estimator->scratchpad, prediction);
 	
 #if JOB_SCHEDULING
+	prediction *= JOB_OVERALLOCATION;
 	struct timeval tv_deadline = {
 		.tv_sec = deadline,
 		.tv_usec = 1000000 * (deadline - (long long)deadline)
