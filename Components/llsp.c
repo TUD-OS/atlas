@@ -166,6 +166,7 @@ const double *llsp_solve(llsp_t *llsp)
 	if (llsp->matrix.data) {
 		trisolve(&llsp->matrix);
 		
+#if 0
 		double residue_bound = fabs(llsp->matrix.drop[llsp->matrix.drop_cols - 1][llsp->matrix.drop_cols - 1]) * llsp->drop_threshold;
 		struct matrix_s *solution = stabilize(&llsp->matrix, llsp->scratch, residue_bound, 0);
 		
@@ -175,6 +176,11 @@ const double *llsp_solve(llsp_t *llsp)
 		unsigned result_row = solution->full_cols;
 		for (unsigned column = 0; column < llsp->metrics; column++)
 			llsp->result[column] = solution->full[column][result_row];
+#else
+		unsigned result_row = llsp->matrix.full_cols;
+		for (unsigned column = 0; column < llsp->metrics; column++)
+			llsp->result[column] = llsp->matrix.full[column][result_row];
+#endif
 		
 		result = llsp->result;
 	}
