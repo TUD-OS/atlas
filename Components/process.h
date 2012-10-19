@@ -6,10 +6,6 @@
 #include "config.h"
 #include "libavcodec/avcodec.h"
 
-#if FFMPEG_TIME
-#  include "libavutil/timer.h"
-#endif
-
 
 #pragma mark Workbench Configuration
 
