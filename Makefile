@@ -10,18 +10,15 @@ FFMPEG_LIBS = \
 	FFmpeg/libswresample/libswresample.a \
 	FFmpeg/libswscale/libswscale.a \
 	FFmpeg/libavutil/libavutil.a
-SDL_LIBS = \
-	SDL/build/.libs/libSDL.a \
-	SDL/build/.libs/libSDLmain.a
 
 .PHONY: all debug clean cleanall force
 
 
 BUILD_WORKBENCH ?= $(wildcard h264_workbench.c)
 ifneq ($(BUILD_WORKBENCH),)
-h264_workbench: %: %.c $(FFMPEG_LIBS) $(COMPONENTS) Makefile $(WORKBENCH_BASE)/Makefile $(WORKBENCH_BASE)/Makeconf $(wildcard $(WORKBENCH_BASE)/Makeconf.local)
+h264_workbench: %: %.c $(COMPONENTS) $(FFMPEG_LIBS) Makefile $(WORKBENCH_BASE)/Makefile $(WORKBENCH_BASE)/Makeconf $(wildcard $(WORKBENCH_BASE)/Makeconf.local)
 	$(CC) $(CPPFLAGS) -MM $< > .$*.d
-	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ "$(realpath $<)" $(FFMPEG_LIBS) $(COMPONENTS) -lz -lm -pthread $(LDFLAGS)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ "$(realpath $<)" $(COMPONENTS) $(FFMPEG_LIBS) -lz -lm -pthread $(LDFLAGS)
 all:: h264_workbench
 clean::
 	rm -f h264_workbench
@@ -40,9 +37,9 @@ endif
 
 BUILD_FFMPEG ?= $(filter .,$(WORKBENCH_BASE))$(wildcard FFmpeg)
 ifneq ($(BUILD_FFMPEG),)
-ffplay: %: FFmpeg/%.c FFmpeg/cmdutils.c $(FFMPEG_LIBS) $(SDL_LIBS) $(COMPONENTS) Makefile $(WORKBENCH_BASE)/Makefile $(WORKBENCH_BASE)/Makeconf $(wildcard $(WORKBENCH_BASE)/Makeconf.local)
+ffplay: %: FFmpeg/%.c FFmpeg/cmdutils.c $(COMPONENTS) $(FFMPEG_LIBS) Makefile $(WORKBENCH_BASE)/Makefile $(WORKBENCH_BASE)/Makeconf $(wildcard $(WORKBENCH_BASE)/Makeconf.local)
 	$(CC) $(CPPFLAGS) -MM $< > .$*.d
-	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ "$(realpath $<)" FFmpeg/cmdutils.c $(FFMPEG_LIBS) $(SDL_LIBS) $(COMPONENTS) $(SDL_EXTRA_LIBS) $(LDFLAGS)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ "$(realpath $<)" FFmpeg/cmdutils.c $(COMPONENTS) $(FFMPEG_LIBS) $(shell sdl-config --static-libs) $(LDFLAGS)
 clean::
 	rm -f ffplay
 FFmpeg/ffplay.c FFmpeg/cmdutils.c $(FFMPEG_LIBS): FFmpeg
@@ -82,24 +79,6 @@ x264/configure: x264/.git/config $(WORKBENCH_BASE)/Makefile
 	touch $@
 x264/.git/config:
 	git clone -n git://git.videolan.org/x264.git x264
-endif
-
-
-BUILD_SDL ?= $(filter .,$(WORKBENCH_BASE))$(wildcard SDL)
-ifneq ($(BUILD_SDL),)
-$(SDL_LIBS): SDL
-	
-SDL $(wildcard SDL/): SDL/config.status force
-	$(MAKE) -j$(CPUS) -C $@
-SDL/config.status: SDL/configure
-	cd $(@D) && CC=$(CC) CPPFLAGS= CFLAGS= ./configure --disable-assembly
-SDL/configure: $(WORKBENCH_BASE)/Makefile
-	mkdir -p $(if $(wildcard SDL),$(realpath SDL),SDL)
-	rm -rf SDL/*
-	curl http://www.libsdl.org/release/SDL-1.2.15.tar.gz | tar xz
-	mv SDL-*/* SDL/
-	rmdir SDL-*
-	touch $@
 endif
 
 
@@ -166,7 +145,6 @@ cleanall: clean
 	$(MAKE) -C Experiments clean
 	-$(MAKE) -C FFmpeg distclean
 	-$(MAKE) -C x264 clean
-	-$(MAKE) -C SDL distclean
 	-$(MAKE) -C Linux distclean
 
 force:
