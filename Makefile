@@ -27,7 +27,7 @@ endif
 BUILD_COMPONENTS ?= $(wildcard Components)
 ifneq ($(BUILD_COMPONENTS),)
 $(COMPONENTS): Components
-	
+	touch $@
 Components $(wildcard Components/): force
 	$(MAKE) -j$(CPUS) -C $@
 clean::
@@ -37,13 +37,13 @@ endif
 
 BUILD_FFMPEG ?= $(filter .,$(WORKBENCH_BASE))$(wildcard FFmpeg)
 ifneq ($(BUILD_FFMPEG),)
-ffplay: %: FFmpeg/%.c FFmpeg/cmdutils.c $(COMPONENTS) $(FFMPEG_LIBS) Makefile $(WORKBENCH_BASE)/Makefile $(WORKBENCH_BASE)/Makeconf $(wildcard $(WORKBENCH_BASE)/Makeconf.local)
+ffplay: %: FFmpeg/%.c FFmpeg/cmdutils.o $(COMPONENTS) $(FFMPEG_LIBS) Makefile $(WORKBENCH_BASE)/Makefile $(WORKBENCH_BASE)/Makeconf $(wildcard $(WORKBENCH_BASE)/Makeconf.local)
 	$(CC) $(CPPFLAGS) -MM $< > .$*.d
-	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ "$(realpath $<)" FFmpeg/cmdutils.c $(COMPONENTS) $(FFMPEG_LIBS) $(shell sdl-config --static-libs) $(LDFLAGS)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ "$(realpath $<)" FFmpeg/cmdutils.o $(COMPONENTS) $(FFMPEG_LIBS) $(shell sdl-config --static-libs) $(LDFLAGS)
 clean::
 	rm -f ffplay
-FFmpeg/ffplay.c FFmpeg/cmdutils.c $(FFMPEG_LIBS): FFmpeg
-	
+FFmpeg/ffplay.c FFmpeg/cmdutils.o $(FFMPEG_LIBS): FFmpeg
+	touch $@
 FFmpeg $(wildcard FFmpeg/): FFmpeg/config.mak force
 	$(MAKE) -j$(CPUS) -C $@
 FFmpeg/config.mak: FFmpeg/configure

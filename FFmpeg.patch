@@ -1,18 +1,3 @@
-diff --git a/cmdutils.c b/cmdutils.c
-index 2c84394..6661266 100644
---- a/cmdutils.c
-+++ b/cmdutils.c
-@@ -19,6 +19,10 @@
-  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
-  */
- 
-+/* disable warnings so they do not get in the way when compiling ffplay */
-+#pragma GCC diagnostic ignored "-Wall"
-+#pragma GCC diagnostic ignored "-Wpointer-sign"
-+
- #include <string.h>
- #include <stdlib.h>
- #include <errno.h>
 diff --git a/ffplay.c b/ffplay.c
 index 779c879..38e4fbd 100644
 --- a/ffplay.c
