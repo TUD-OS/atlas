@@ -11,7 +11,7 @@ FFMPEG_LIBS = \
 	FFmpeg/libswscale/libswscale.a \
 	FFmpeg/libavutil/libavutil.a
 
-.PHONY: all debug clean cleanall force
+.PHONY: all debug clean cleanall force .Components .FFmpeg
 
 
 BUILD_WORKBENCH ?= $(wildcard h264_workbench.c)
@@ -26,10 +26,10 @@ endif
 
 BUILD_COMPONENTS ?= $(wildcard Components)
 ifneq ($(BUILD_COMPONENTS),)
-$(COMPONENTS): Components
-	touch $@
-Components $(wildcard Components/): force
-	$(MAKE) -j$(CPUS) -C $@
+$(COMPONENTS): .Components
+	
+Components $(wildcard Components/) .Components: force
+	$(MAKE) -j$(CPUS) -C Components
 clean::
 	$(MAKE) -C Components $@
 endif
@@ -42,10 +42,10 @@ ffplay: %: FFmpeg/%.c FFmpeg/cmdutils.o $(COMPONENTS) $(FFMPEG_LIBS) Makefile $(
 	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ "$(realpath $<)" FFmpeg/cmdutils.o $(COMPONENTS) $(FFMPEG_LIBS) $(shell sdl-config --static-libs) $(LDFLAGS)
 clean::
 	rm -f ffplay
-FFmpeg/ffplay.c FFmpeg/cmdutils.o $(FFMPEG_LIBS): FFmpeg
-	touch $@
-FFmpeg $(wildcard FFmpeg/): FFmpeg/config.mak force
-	$(MAKE) -j$(CPUS) -C $@
+FFmpeg/ffplay.c FFmpeg/cmdutils.o $(FFMPEG_LIBS): .FFmpeg
+	
+FFmpeg $(wildcard FFmpeg/) .FFmpeg: FFmpeg/config.mak force
+	$(MAKE) -j$(CPUS) -C FFmpeg
 FFmpeg/config.mak: FFmpeg/configure
 	cd $(@D) && CPPFLAGS= CFLAGS= ./configure \
 		--cc=$(CC) --cpu=$(ARCH) --enable-pthreads \
