@@ -30,6 +30,10 @@
 #endif
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* thread registration: call before the first job from the thread that will execute the code */
 void atlas_job_queue_checkin(void *code);
 
@@ -41,9 +45,16 @@ void atlas_job_submit_absolute(void *code, double deadline, unsigned count, cons
 void atlas_job_submit_relative(void *code, double deadline, unsigned count, const double metrics[]);
 void atlas_job_next(void *code);
 
+/* the current time in ATLAS' timebase */
+double atlas_now(void);
+
 /* hooks for evaluation */
 extern void hook_job_release(void *code) WEAK_SYMBOL;
 extern void hook_job_complete(void *code, double thread_time, double deadline, double prediction, double execution) WEAK_SYMBOL;
 
 /* stage info from ffplay, may be helpful in the hooks */
 struct stages_s { void *code; const char *name; int id; } ffplay_stages[5];
+
+#ifdef __cplusplus
+}
+#endif

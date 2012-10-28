@@ -18,8 +18,6 @@
 #include <sys/time.h>
 #include <assert.h>
 
-#include "libavformat/avformat.h"
-
 #include "scheduler.h"
 #include "llsp.h"
 #include "jobs.h"
@@ -45,7 +43,7 @@ struct estimator_s {
 	} scratchpad;
 };
 
-static const unsigned initial_metrics_size = 256;
+static const unsigned initial_metrics_size = 4096;
 
 static pthread_mutex_t estimator_enqueue = PTHREAD_MUTEX_INITIALIZER;
 static struct estimator_s *estimator_list = NULL;
@@ -149,7 +147,7 @@ static void atlas_job_submit(void *code, double deadline, unsigned count, const 
 	
 	double offset = 0.0;
 	if (timebase == sched_deadline_relative)
-		offset = av_gettime() / 1000000.0;
+		offset = atlas_now();
 	
 	if (deadline + offset < estimator->previous_deadline) {
 //		fprintf(stderr, "WARNING: deadlines not ordered (%lf < %lf)\n", deadline, estimator->previous_deadline);
@@ -258,3 +256,23 @@ void atlas_job_next(void *code)
 	
 	if (hook_job_release) hook_job_release(code);
 }
+
+#pragma mark -
+
+
+#pragma mark ATLAS Timebase
+
+double atlas_now(void)
+{
+#ifdef __linux__
+	/* ATLAS uses CLOCK_MONOTONIC as reference, because seconds are always a wallclock second there */
+	struct timespec ts;
+	clock_gettime(CLOCK_MONOTONIC, &ts);
+	return (double)ts.tv_sec + (double)ts.tv_nsec / 1000000000.0;
+#else
+	struct timeval tv;
+	gettimeofday(&tv,NULL);
+	return (double)tv.tv_sec + tv.tv_usec / 1000000.0;
+#endif
+}
+
