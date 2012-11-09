@@ -50,7 +50,6 @@
 		4C93FEB315D6A49F0073DA23 /* Linux.patch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Linux.patch; sourceTree = "<group>"; };
 		4CAA9F08135C59C400AEA9EB /* h264_workbench */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = h264_workbench; sourceTree = BUILT_PRODUCTS_DIR; };
 		4CC4C87C15DD44BC004D06C2 /* scheduler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = scheduler.h; sourceTree = "<group>"; };
-		4CEC1A7A150F8C05009814F5 /* SDL */ = {isa = PBXFileReference; lastKnownFileType = folder; path = SDL; sourceTree = "<group>"; };
 		4CF0A7011202CA0800817B42 /* weak.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = weak.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -70,7 +69,6 @@
 				4C93FEB315D6A49F0073DA23 /* Linux.patch */,
 				4C24B8FB11EDE6B900E67981 /* FFmpeg */,
 				4C24B8FD11EDE6B900E67981 /* x264 */,
-				4CEC1A7A150F8C05009814F5 /* SDL */,
 			);
 			name = Workbench;
 			sourceTree = "<group>";
