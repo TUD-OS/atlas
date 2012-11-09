@@ -1,5 +1,5 @@
 diff --git a/ffplay.c b/ffplay.c
-index 779c879..9e65071 100644
+index 779c879..7d519d1 100644
 --- a/ffplay.c
 +++ b/ffplay.c
 @@ -56,6 +56,22 @@
@@ -46,7 +46,7 @@ index 779c879..9e65071 100644
      /* XXX: use a special url_shutdown call to abort parse cleanly */
      is->abort_request = 1;
      SDL_WaitThread(is->read_tid, NULL);
-+    atlas_job_submit_relative(refresh_thread, 0.0, 0, NULL);  // one more iteration to notice abort
++    atlas_job_submit(refresh_thread, sched_deadline_relative, 0.0, 0, NULL);  // one more iteration to notice abort
 +    is->abort_refresh = 1;  // different abort variable so we cannot submit jobs to a terminated queue
      SDL_WaitThread(is->refresh_tid, NULL);
      packet_queue_destroy(&is->videoq);
@@ -144,8 +144,8 @@ index 779c879..9e65071 100644
          SDL_UnlockMutex(is->pictq_mutex);
 +        
 +        double deadline = is->frame_timer + is->pictq_size * av_q2d(is->video_st->codec->time_base);
-+        atlas_job_submit_absolute(refresh_thread, deadline, 0, NULL);
-+        atlas_job_submit_absolute(video_refresh, deadline, 0, NULL);
++        atlas_job_submit(refresh_thread, sched_deadline_absolute, deadline, 0, NULL);
++        atlas_job_submit(video_refresh, sched_deadline_absolute, deadline, 0, NULL);
      }
      return 0;
  }
@@ -263,7 +263,7 @@ index 779c879..9e65071 100644
 -    case AVMEDIA_TYPE_VIDEO:
 +    case AVMEDIA_TYPE_VIDEO:;
 +        double metrics[METRICS_COUNT] = { 0.0 };
-+        atlas_job_submit_relative(video_thread, 0.0, METRICS_COUNT, metrics);
++        atlas_job_submit(video_thread, sched_deadline_relative, 0.0, METRICS_COUNT, metrics);
 +
          packet_queue_abort(&is->videoq);
  
@@ -287,7 +287,7 @@ index 779c879..9e65071 100644
  
      for (;;) {
 +        double deadline = is->frame_timer + is->videoq.nb_packets / 2 * av_q2d(is->video_st->codec->time_base);
-+        atlas_job_submit_absolute(read_thread, deadline, 0, NULL);
++        atlas_job_submit(read_thread, sched_deadline_absolute, deadline, 0, NULL);
 +        atlas_job_next(read_thread);
 +
          if (is->abort_request)
@@ -299,7 +299,7 @@ index 779c879..9e65071 100644
                  pkt->stream_index = is->video_stream;
 +                
 +                double metrics[METRICS_COUNT] = { 0.0 };
-+                atlas_job_submit_relative(video_thread, 0.0, METRICS_COUNT, metrics);
++                atlas_job_submit(video_thread, sched_deadline_relative, 0.0, METRICS_COUNT, metrics);
 +                
                  packet_queue_put(&is->videoq, pkt);
              }
@@ -365,7 +365,7 @@ index 779c879..9e65071 100644
              packet_queue_put(&is->videoq, pkt);
 +            
 +            double deadline = is->frame_timer + (is->videoq.nb_packets + is->pictq_size / 2) * av_q2d(is->video_st->codec->time_base);
-+            atlas_job_submit_absolute(video_thread, deadline, METRICS_COUNT, metrics);
++            atlas_job_submit(video_thread, sched_deadline_absolute, deadline, METRICS_COUNT, metrics);
          } else if (pkt->stream_index == is->subtitle_stream && pkt_in_play_range) {
              packet_queue_put(&is->subtitleq, pkt);
          } else {

@@ -3,6 +3,9 @@
  * economic rights: Technische Universitaet Dresden (Germany)
  */
 
+#include <stddef.h>
+#include "scheduler.h"
+
 /* To compensate for accounting rounding errors and scheduler overhead,
  * jobs are over-allocated when reporting to the system scheduler. */
 #ifndef JOB_OVERALLOCATION
@@ -41,8 +44,7 @@ void atlas_job_queue_checkin(void *code);
 void atlas_job_queue_terminate(void *code);
 
 /* job management */
-void atlas_job_submit_absolute(void *code, double deadline, unsigned count, const double metrics[]);
-void atlas_job_submit_relative(void *code, double deadline, unsigned count, const double metrics[]);
+void atlas_job_submit(void *code, enum sched_timeref reference, double deadline, size_t count, const double metrics[]);
 void atlas_job_next(void *code);
 
 /* the current time in ATLAS' timebase */

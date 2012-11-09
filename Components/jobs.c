@@ -18,9 +18,8 @@
 #include <sys/time.h>
 #include <assert.h>
 
-#include "scheduler.h"
-#include "llsp.h"
 #include "jobs.h"
+#include "llsp.h"
 
 /* A singly linked list of execution time estimators.
  * We never dequeue nodes from the list, so traversing does not need locking. */
@@ -32,18 +31,18 @@ struct estimator_s {
 	
 	double time;
 	double previous_deadline;
-	unsigned metrics_count;
+	size_t metrics_count;
 	llsp_t *llsp;
 	
 	struct scratchpad {
-		unsigned size;
+		size_t size;
 		double *read;
 		double *write;
 		double ringbuffer[];
 	} scratchpad;
 };
 
-static const unsigned initial_metrics_size = 4096;
+static const size_t initial_metrics_size = 4096;
 
 static pthread_mutex_t estimator_enqueue = PTHREAD_MUTEX_INITIALIZER;
 static struct estimator_s *estimator_list = NULL;
@@ -136,7 +135,7 @@ void atlas_job_queue_terminate(void *code)
 
 #pragma mark Job Management
 
-static void atlas_job_submit(void *code, double deadline, unsigned count, const double metrics[], enum sched_timebase timebase)
+void atlas_job_submit(void *code, enum sched_timeref reference, double deadline, size_t count, const double metrics[])
 {
 	struct estimator_s *estimator;
 	for (estimator = estimator_list; estimator; estimator = estimator->next)
@@ -146,7 +145,7 @@ static void atlas_job_submit(void *code, double deadline, unsigned count, const 
 	pthread_mutex_lock(&estimator->lock);
 	
 	double offset = 0.0;
-	if (timebase == sched_deadline_relative)
+	if (reference == sched_deadline_relative)
 		offset = atlas_now();
 	
 	if (deadline + offset < estimator->previous_deadline) {
@@ -189,20 +188,10 @@ static void atlas_job_submit(void *code, double deadline, unsigned count, const 
 		.tv_sec = prediction,
 		.tv_usec = 1000000 * (prediction - (long long)prediction)
 	};
-	sched_submit(estimator->tid, &tv_exectime, &tv_deadline, timebase);
+	sched_submit(estimator->tid, &tv_exectime, &tv_deadline, reference);
 #endif
 	
 	pthread_mutex_unlock(&estimator->lock);
-}
-
-void atlas_job_submit_absolute(void *code, double deadline, unsigned count, const double metrics[])
-{
-	atlas_job_submit(code, deadline, count, metrics, sched_deadline_absolute);
-}
-
-void atlas_job_submit_relative(void *code, double deadline, unsigned count, const double metrics[])
-{
-	atlas_job_submit(code, deadline, count, metrics, sched_deadline_relative);
 }
 
 void atlas_job_next(void *code)
