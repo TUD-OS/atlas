@@ -40,7 +40,7 @@ bbc-r_m720p.cfg: Makefile
 	echo 'MODE = CBR\nPROFILE = MAIN\nSLICES = 4\nBITRATE = 4000\nREFERENCES = 3\nSIZE = 1280x720\nFPS = 24\nURL = http://movies.apple.com/movies/us/hd_gallery/gl1800/bbc-r_m720p.mov' > $@
 
 clean:
-	rm -f *.h264 *.p264 *.prop
+	rm -f *.h264 *.h264_*
 
 cleanall: clean
 	rm -f *.mov

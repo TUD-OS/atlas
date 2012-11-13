@@ -1,4 +1,4 @@
-all:: $(addsuffix .log,$(basename $(notdir $(wildcard Samples/*.h264))))
+all:: $(addsuffix .log,$(basename $(notdir $(wildcard Samples/*.*))))
 
 WORKBENCH_BASE ?= ../..
 include $(WORKBENCH_BASE)/Makefile
