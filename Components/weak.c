@@ -3,12 +3,12 @@
  * economic rights: Technische Universitaet Dresden (Germany)
  */
 
+/* The Darwin linker wants to have a default implementation for all weak symbols. This is not needed on Linux. */
 #ifdef __APPLE__
 
 #pragma clang diagnostic ignored "-Wgcc-compat"
 #include "libavcodec/avcodec.h"
 
-/* The Darwin linker wants to have a default implementation for all weak symbols. This is not needed on Linux. */
 void hook_job_release(void *code) __attribute__((weak)) {}
 void hook_job_complete(void *code, double thread_time, double deadline, double prediction, double execution) __attribute__((weak)) {}
 void hook_slice_any(const AVCodecContext *c) __attribute__((weak)) {}
