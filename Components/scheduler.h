@@ -5,6 +5,8 @@
  * Copyright (C) 2012 Stefan Wächtler
  */
 
+#pragma once
+
 #pragma mark ATLAS scheduler syscalls
 
 enum sched_timeref {

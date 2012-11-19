@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		4C4847D314CED80A009DDAAF /* ffplay.c in Sources */ = {isa = PBXBuildFile; fileRef = 4C4847D114CED7F0009DDAAF /* ffplay.c */; };
-		4C8CC59B14D81B2400595140 /* jobs.c in Sources */ = {isa = PBXBuildFile; fileRef = 4C8CC59A14D81B2400595140 /* jobs.c */; };
+		4C8CC59B14D81B2400595140 /* estimator.c in Sources */ = {isa = PBXBuildFile; fileRef = 4C8CC59A14D81B2400595140 /* estimator.c */; };
 		4CAA9EFC135C57AE00AEA9EB /* h264_workbench.c in Sources */ = {isa = PBXBuildFile; fileRef = 4C24B9E911EDE6D600E67981 /* h264_workbench.c */; };
 		4CAA9EFF135C58F500AEA9EB /* llsp.c in Sources */ = {isa = PBXBuildFile; fileRef = 4C24B9ED11EDE6D600E67981 /* llsp.c */; };
 		4CAA9F00135C58F500AEA9EB /* metrics.c in Sources */ = {isa = PBXBuildFile; fileRef = 4C24B9F111EDE6D600E67981 /* metrics.c */; };
@@ -19,6 +19,7 @@
 		4CAA9F05135C58F500AEA9EB /* adapt.c in Sources */ = {isa = PBXBuildFile; fileRef = 4C24B9FC11EDE6D600E67981 /* adapt.c */; };
 		4CAA9F06135C58F500AEA9EB /* ssim.c in Sources */ = {isa = PBXBuildFile; fileRef = 4C24B9FE11EDE6D600E67981 /* ssim.c */; };
 		4CAA9F07135C58F500AEA9EB /* weak.c in Sources */ = {isa = PBXBuildFile; fileRef = 4CF0A7011202CA0800817B42 /* weak.c */; };
+		4CD2856B165523C000E4775B /* dispatch.c in Sources */ = {isa = PBXBuildFile; fileRef = 4CD2856A165523C000E4775B /* dispatch.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -45,11 +46,13 @@
 		4C4847D114CED7F0009DDAAF /* ffplay.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = ffplay.c; path = FFmpeg/ffplay.c; sourceTree = "<group>"; usesTabs = 0; };
 		4C8CC59714D41C0800595140 /* nalu.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = nalu.h; sourceTree = "<group>"; };
 		4C8CC59914D7F27F00595140 /* FFmpeg.patch */ = {isa = PBXFileReference; lastKnownFileType = text; path = FFmpeg.patch; sourceTree = "<group>"; };
-		4C8CC59A14D81B2400595140 /* jobs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = jobs.c; sourceTree = "<group>"; };
-		4C8CC59C14D81B4000595140 /* jobs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = jobs.h; sourceTree = "<group>"; };
+		4C8CC59A14D81B2400595140 /* estimator.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = estimator.c; sourceTree = "<group>"; };
+		4C8CC59C14D81B4000595140 /* estimator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = estimator.h; sourceTree = "<group>"; };
 		4C93FEB315D6A49F0073DA23 /* Linux.patch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Linux.patch; sourceTree = "<group>"; };
 		4CAA9F08135C59C400AEA9EB /* h264_workbench */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = h264_workbench; sourceTree = BUILT_PRODUCTS_DIR; };
 		4CC4C87C15DD44BC004D06C2 /* scheduler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = scheduler.h; sourceTree = "<group>"; };
+		4CD285681655232200E4775B /* dispatch.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = dispatch.h; sourceTree = "<group>"; };
+		4CD2856A165523C000E4775B /* dispatch.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = dispatch.c; sourceTree = "<group>"; };
 		4CF0A7011202CA0800817B42 /* weak.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = weak.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -79,8 +82,10 @@
 				4C24B9F011EDE6D600E67981 /* Makefile */,
 				4C24B9FC11EDE6D600E67981 /* adapt.c */,
 				4C24B9EC11EDE6D600E67981 /* digits.h */,
-				4C8CC59C14D81B4000595140 /* jobs.h */,
-				4C8CC59A14D81B2400595140 /* jobs.c */,
+				4CD285681655232200E4775B /* dispatch.h */,
+				4CD2856A165523C000E4775B /* dispatch.c */,
+				4C8CC59C14D81B4000595140 /* estimator.h */,
+				4C8CC59A14D81B2400595140 /* estimator.c */,
 				4C24B9EE11EDE6D600E67981 /* llsp.h */,
 				4C24B9ED11EDE6D600E67981 /* llsp.c */,
 				4C24B9F111EDE6D600E67981 /* metrics.c */,
@@ -222,17 +227,18 @@
 			buildActionMask = 2147483647;
 			files = (
 				4CAA9EFC135C57AE00AEA9EB /* h264_workbench.c in Sources */,
+				4C4847D314CED80A009DDAAF /* ffplay.c in Sources */,
+				4CAA9F05135C58F500AEA9EB /* adapt.c in Sources */,
+				4CD2856B165523C000E4775B /* dispatch.c in Sources */,
+				4C8CC59B14D81B2400595140 /* estimator.c in Sources */,
 				4CAA9EFF135C58F500AEA9EB /* llsp.c in Sources */,
 				4CAA9F00135C58F500AEA9EB /* metrics.c in Sources */,
 				4CAA9F01135C58F500AEA9EB /* nalu.c in Sources */,
 				4CAA9F02135C58F500AEA9EB /* process.c in Sources */,
 				4CAA9F03135C58F500AEA9EB /* propagate.c in Sources */,
 				4CAA9F04135C58F500AEA9EB /* replace.c in Sources */,
-				4CAA9F05135C58F500AEA9EB /* adapt.c in Sources */,
 				4CAA9F06135C58F500AEA9EB /* ssim.c in Sources */,
 				4CAA9F07135C58F500AEA9EB /* weak.c in Sources */,
-				4C8CC59B14D81B2400595140 /* jobs.c in Sources */,
-				4C4847D314CED80A009DDAAF /* ffplay.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -278,7 +284,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
-				CPPFLAGS = "-DLLSP_PREDICT -DJOB_SCHEDULING";
+				CPPFLAGS = "-DDISPATCH_ATLAS -DJOB_SCHEDULING -DLLSP_PREDICT";
 			};
 			name = Debug;
 		};
@@ -286,7 +292,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
-				CPPFLAGS = "-DLLSP_PREDICT -DJOB_SCHEDULING";
+				CPPFLAGS = "-DDISPATCH_ATLAS -DJOB_SCHEDULING -DLLSP_PREDICT";
 			};
 			name = Release;
 		};
@@ -308,12 +314,13 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GCC_PREPROCESSOR_DEFINITIONS = (
-					METRICS_EXTRACT,
-					PREPROCESS,
-					METADATA_WRITE,
-					METADATA_READ,
+					DISPATCH_ATLAS,
 					JOB_SCHEDULING,
 					LLSP_PREDICT,
+					METADATA_READ,
+					METADATA_WRITE,
+					METRICS_EXTRACT,
+					PREPROCESS,
 				);
 				HEADER_SEARCH_PATHS = FFmpeg;
 				PRODUCT_NAME = h264_workbench;
@@ -324,12 +331,13 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GCC_PREPROCESSOR_DEFINITIONS = (
-					METRICS_EXTRACT,
-					PREPROCESS,
-					METADATA_WRITE,
-					METADATA_READ,
+					DISPATCH_ATLAS,
 					JOB_SCHEDULING,
 					LLSP_PREDICT,
+					METADATA_READ,
+					METADATA_WRITE,
+					METRICS_EXTRACT,
+					PREPROCESS,
 				);
 				HEADER_SEARCH_PATHS = FFmpeg;
 				PRODUCT_NAME = h264_workbench;
