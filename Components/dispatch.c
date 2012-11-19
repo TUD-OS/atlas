@@ -123,7 +123,7 @@ void dispatch_sync(dispatch_queue_t queue, dispatch_block_t block)
 
 void dispatch_retain(dispatch_object_t object)
 {
-	// FIXME: assumes dispatch_object_t internals
+	/* FIXME: assumes dispatch_object_t internals */
 	dispatch_queue_t queue = object._dq;
 	ORIGINAL_GCD(retain, object)
 	
@@ -134,7 +134,7 @@ void dispatch_retain(dispatch_object_t object)
 
 void dispatch_release(dispatch_object_t object)
 {
-	// FIXME: assumes dispatch_object_t internals
+	/* FIXME: assumes dispatch_object_t internals */
 	dispatch_queue_t queue = object._dq;
 	ORIGINAL_GCD(release, object)
 	
@@ -165,8 +165,8 @@ void dispatch_release(dispatch_object_t object)
 
 #pragma mark ATLAS GCD Additions
 
-// FIXME: assumes block internals
-// copied from libclosure's/libBlocksRuntime's Block_private.h
+/* FIXME: assumes block internals
+ * copied from libclosure's/libBlocksRuntime's Block_private.h */
 struct Block_layout {
 	void *isa;
 	int flags;
