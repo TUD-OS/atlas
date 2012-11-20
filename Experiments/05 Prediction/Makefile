@@ -6,7 +6,7 @@ WORKBENCH_BASE ?= ../..
 include $(WORKBENCH_BASE)/Makefile
 
 %.log: Samples/%.h264_metrics ffplay Makefile
-	./ffplay -threads 1 -nostats -noframedrop -nodisp -autoexit $< > $@
+	./ffplay -f h264 -threads 1 -nostats -noframedrop -autoexit $< > $@
 
 %.h264_metrics: force
 	$(MAKE) -C ../03\ Preprocess\ Metrics $@
