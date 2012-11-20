@@ -144,11 +144,10 @@ nalu_write_t *nalu_write_alloc(const char *source)
 	nalu_write_t *write = malloc(sizeof(nalu_write_t));
 	if (!write) return NULL;
 	
-	char *target = strdup(source);
-	target[strlen(target) - sizeof("h264") + 1] = 'p';
+	char target[strlen(source) + sizeof("_" FILE_SUFFIX)];
+	sprintf(target, "%s_" FILE_SUFFIX, source);
 	write->from = fopen(source, "r");
 	write->to = fopen(target, "w");
-	free(target);
 	
 	return write;
 }
