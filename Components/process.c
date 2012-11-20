@@ -8,6 +8,7 @@
 #include <string.h>
 #include <sys/time.h>
 
+#include "libavutil/timer.h"
 #include "process.h"
 
 static void process_slice(AVCodecContext *c);
