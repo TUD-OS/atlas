@@ -3,6 +3,8 @@
  * economic rights: Technische Universitaet Dresden (Germany)
  */
 
+#if DISPATCH_ATLAS
+
 #ifdef __linux__
 #define _GNU_SOURCE
 #include <sched.h>
@@ -27,8 +29,6 @@ typedef struct {
 #define BUFFER_TYPE dispatch_queue_element_t
 #include "dispatch.h"
 #include "estimator.h"
-
-#if DISPATCH_ATLAS
 
 struct dispatch_queue_s {
 	uint32_t magic;
@@ -55,6 +55,9 @@ static inline void dispatch_queue_enqueue(dispatch_queue_t queue, dispatch_queue
 
 static void *dispatch_queue_worker(void *);
 
+static pthread_key_t current_queue;
+static dispatch_once_t current_queue_predicate;
+
 #pragma mark -
 
 
@@ -62,6 +65,10 @@ static void *dispatch_queue_worker(void *);
 
 dispatch_queue_t dispatch_queue_create(const char *label, dispatch_queue_attr_t attr)
 {
+	dispatch_once(&current_queue_predicate, ^{
+		pthread_key_create(&current_queue, NULL);
+	});
+	
 	assert(attr == DISPATCH_QUEUE_SERIAL);
 	dispatch_queue_t queue = malloc(sizeof(struct dispatch_queue_s));
 	if (!queue) return NULL;
@@ -80,6 +87,16 @@ dispatch_queue_t dispatch_queue_create(const char *label, dispatch_queue_attr_t 
 	buffer_init(&queue->blocks);
 	
 	return queue;
+}
+
+dispatch_queue_t dispatch_get_current_queue(void)
+{
+	return pthread_getspecific(current_queue);
+}
+
+const char *dispatch_queue_get_label(dispatch_queue_t queue)
+{
+	return queue ? queue->label : NULL;
 }
 
 void dispatch_async(dispatch_queue_t queue, dispatch_block_t block)
@@ -203,6 +220,7 @@ static void *dispatch_queue_worker(void *context)
 #endif
 	
 	queue->tid = gettid();
+	pthread_setspecific(current_queue, queue);
 	dispatch_semaphore_signal(queue->init);
 	
 	while (1) {
@@ -225,13 +243,6 @@ static void *dispatch_queue_worker(void *context)
 		
 		dispatch_release(queue);
 	}
-}
-
-#else
-
-void dispatch_async_atlas(dispatch_queue_t queue, atlas_job_t job, dispatch_block_t block)
-{
-	dispatch_async(queue, block);
 }
 
 #endif

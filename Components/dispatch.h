@@ -17,9 +17,16 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+	
+#if DISPATCH_ATLAS
 void dispatch_async_atlas(dispatch_queue_t queue, atlas_job_t job, dispatch_block_t block);
-
+#else
+static inline void dispatch_async_atlas(dispatch_queue_t queue, atlas_job_t job, dispatch_block_t block)
+{
+	dispatch_async(queue, block);
+}
+#endif
+	
 #ifdef __cplusplus
 }
 #endif
