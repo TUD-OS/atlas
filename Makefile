@@ -28,7 +28,7 @@ BUILD_COMPONENTS ?= $(wildcard Components)
 ifneq ($(BUILD_COMPONENTS),)
 $(COMPONENTS): .Components
 	
-Components $(wildcard Components/) .Components: force
+Components $(wildcard Components/) .Components: $(if $(BUILD_FFMPEG),.FFmpeg,) force
 	$(MAKE) -j$(CPUS) -C Components
 clean::
 	$(MAKE) -C Components $@
