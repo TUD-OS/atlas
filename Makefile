@@ -24,22 +24,11 @@ clean::
 	rm -f h264_workbench
 endif
 
-BUILD_COMPONENTS ?= $(wildcard Components)
-ifneq ($(BUILD_COMPONENTS),)
-$(COMPONENTS): .Components
-	
-Components $(wildcard Components/) .Components: $(if $(BUILD_FFMPEG),.FFmpeg,) force
-	$(MAKE) -j$(CPUS) -C Components
-clean::
-	$(MAKE) -C Components $@
-endif
-
-
 BUILD_FFMPEG ?= $(filter .,$(WORKBENCH_BASE))$(wildcard FFmpeg)
 ifneq ($(BUILD_FFMPEG),)
 ffplay: %: FFmpeg/%.c FFmpeg/cmdutils.o $(COMPONENTS) $(FFMPEG_LIBS) Makefile $(WORKBENCH_BASE)/Makefile $(WORKBENCH_BASE)/Makeconf $(wildcard $(WORKBENCH_BASE)/Makeconf.local)
 	$(CC) $(CPPFLAGS) -MM $< > .$*.d
-	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ "$(realpath $<)" FFmpeg/cmdutils.o $(COMPONENTS) $(FFMPEG_LIBS) $(shell sdl-config --static-libs || sdl-config --libs) $(LDFLAGS)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ "$(realpath $<)" FFmpeg/cmdutils.o $(COMPONENTS) $(FFMPEG_LIBS) $(shell sdl-config --libs) $(LDFLAGS)
 clean::
 	rm -f ffplay
 FFmpeg/ffplay.c FFmpeg/cmdutils.o $(FFMPEG_LIBS): .FFmpeg
@@ -62,6 +51,17 @@ FFmpeg/configure: FFmpeg/.git/config FFmpeg.patch $(WORKBENCH_BASE)/Makefile
 	touch $@
 FFmpeg/.git/config:
 	git clone -n git://git.videolan.org/ffmpeg.git FFmpeg
+endif
+
+
+BUILD_COMPONENTS ?= $(wildcard Components)
+ifneq ($(BUILD_COMPONENTS),)
+$(COMPONENTS): .Components
+	
+Components $(wildcard Components/) .Components: $(if $(BUILD_FFMPEG),.FFmpeg,) force
+	$(MAKE) -j$(CPUS) -C Components
+clean::
+	$(MAKE) -C Components $@
 endif
 
 
