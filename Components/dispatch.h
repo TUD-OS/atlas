@@ -6,6 +6,10 @@
 #include <dispatch/dispatch.h>
 #include "estimator.h"
 
+#ifndef DISPATCH_QUEUE_SERIAL
+#define DISPATCH_QUEUE_SERIAL 0
+#endif
+
 /* use my ATLAS-modified minimal libdispatch or the original */
 #ifdef DISPATCH_ATLAS
 #	define DISPATCH_ATLAS 1

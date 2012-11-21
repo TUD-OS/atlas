@@ -6,7 +6,6 @@
 #if DISPATCH_ATLAS
 
 #ifdef __linux__
-#define _GNU_SOURCE
 #include <sched.h>
 #include <signal.h>
 #endif
@@ -56,7 +55,6 @@ static inline void dispatch_queue_enqueue(dispatch_queue_t queue, dispatch_queue
 static void *dispatch_queue_worker(void *);
 
 static pthread_key_t current_queue;
-static dispatch_once_t current_queue_predicate;
 
 #pragma mark -
 
@@ -65,7 +63,8 @@ static dispatch_once_t current_queue_predicate;
 
 dispatch_queue_t dispatch_queue_create(const char *label, dispatch_queue_attr_t attr)
 {
-	dispatch_once(&current_queue_predicate, ^{
+	static dispatch_once_t predicate;
+	dispatch_once(&predicate, ^{
 		pthread_key_create(&current_queue, NULL);
 	});
 	
