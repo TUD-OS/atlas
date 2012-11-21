@@ -10,7 +10,6 @@
 #include <assert.h>
 
 #include "libavcodec/avcodec.h"
-
 #include "nalu.h"
 
 struct nalu_read_s {
