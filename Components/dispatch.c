@@ -12,12 +12,15 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <math.h>
 #include <Block.h>
 #include <string.h>
 #include <unistd.h>
 #include <pthread.h>
 #include <dlfcn.h>
 #include <assert.h>
+
+#include "scheduler.h"
 
 typedef struct {
 	void (^block)(void);
@@ -40,17 +43,9 @@ struct dispatch_queue_s {
 	dispatch_semaphore_t init;
 	
 	dispatch_semaphore_t work;
+	double previous_deadline;
 	struct buffer blocks;
 };
-
-static inline void dispatch_queue_enqueue(dispatch_queue_t queue, dispatch_queue_element_t element)
-{
-	pthread_mutex_lock(&queue->lock);
-	buffer_put(&queue->blocks, element);
-	queue->refcount++;  // shortcut for calling dispatch_retain
-	pthread_mutex_unlock(&queue->lock);
-	dispatch_semaphore_signal(queue->work);
-}
 
 static void *dispatch_queue_worker(void *);
 
@@ -77,6 +72,7 @@ dispatch_queue_t dispatch_queue_create(const char *label, dispatch_queue_attr_t 
 	queue->label = strdup(label);
 	queue->init = dispatch_semaphore_create(0);
 	queue->work = dispatch_semaphore_create(0);
+	queue->previous_deadline = -INFINITY;
 	
 	pthread_mutex_init(&queue->lock, NULL);
 	pthread_create(&queue->worker, NULL, dispatch_queue_worker, queue);
@@ -105,7 +101,11 @@ void dispatch_async(dispatch_queue_t queue, dispatch_block_t block)
 		.is_copied = true,
 		.is_realtime = false
 	};
-	dispatch_queue_enqueue(queue, element);
+	pthread_mutex_lock(&queue->lock);
+	buffer_put(&queue->blocks, element);
+	queue->refcount++;  // shortcut for calling dispatch_retain
+	pthread_mutex_unlock(&queue->lock);
+	dispatch_semaphore_signal(queue->work);
 }
 
 void dispatch_sync(dispatch_queue_t queue, dispatch_block_t block)
@@ -120,7 +120,11 @@ void dispatch_sync(dispatch_queue_t queue, dispatch_block_t block)
 		.is_copied = false,
 		.is_realtime = false
 	};
-	dispatch_queue_enqueue(queue, element);
+	pthread_mutex_lock(&queue->lock);
+	buffer_put(&queue->blocks, element);
+	queue->refcount++;  // shortcut for calling dispatch_retain
+	pthread_mutex_unlock(&queue->lock);
+	dispatch_semaphore_signal(queue->work);
 	
 	dispatch_semaphore_wait(complete, DISPATCH_TIME_FOREVER);
 	dispatch_release(complete);
@@ -193,14 +197,24 @@ struct Block_layout {
 void dispatch_async_atlas(dispatch_queue_t queue, atlas_job_t job, dispatch_block_t block)
 {
 	void *code = ((struct Block_layout *)block)->invoke;
-	atlas_job_submit(code, queue->tid, job);
-	
 	dispatch_queue_element_t element = {
 		.block = Block_copy(block),
 		.is_copied = true,
 		.is_realtime = true
 	};
-	dispatch_queue_enqueue(queue, element);
+	
+	pthread_mutex_lock(&queue->lock);
+	
+	if (job.deadline < queue->previous_deadline)
+		job.deadline = queue->previous_deadline;
+	queue->previous_deadline = job.deadline;
+	
+	atlas_job_submit(code, queue->tid, job);
+	buffer_put(&queue->blocks, element);
+	queue->refcount++;  // shortcut for calling dispatch_retain
+	
+	pthread_mutex_unlock(&queue->lock);
+	dispatch_semaphore_signal(queue->work);
 }
 
 static void *dispatch_queue_worker(void *context)

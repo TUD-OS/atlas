@@ -1,13 +1,14 @@
 diff --git a/ffplay.c b/ffplay.c
-index 779c879..379e785 100644
+index 779c879..5935e93 100644
 --- a/ffplay.c
 +++ b/ffplay.c
-@@ -56,6 +56,22 @@
+@@ -56,6 +56,23 @@
  
  #include "cmdutils.h"
  
 +#include "dispatch.h"
 +#include "estimator.h"
++#include "scheduler.h"
 +#include "nalu.h"
 +
 +#if defined(METRICS_NONE)
@@ -25,7 +26,7 @@ index 779c879..379e785 100644
  #include <unistd.h>
  #include <assert.h>
  
-@@ -126,9 +142,10 @@ enum {
+@@ -126,9 +143,10 @@ enum {
  };
  
  typedef struct VideoState {
@@ -39,7 +40,7 @@ index 779c879..379e785 100644
      AVInputFormat *iformat;
      int no_background;
      int abort_request;
-@@ -889,17 +906,21 @@ static void video_audio_display(VideoState *s)
+@@ -889,17 +907,21 @@ static void video_audio_display(VideoState *s)
      }
  }
  
@@ -63,7 +64,7 @@ index 779c879..379e785 100644
  
      /* free all pictures */
      for (i = 0; i < VIDEO_PICTURE_QUEUE_SIZE; i++) {
-@@ -1000,17 +1021,39 @@ static void video_display(VideoState *is)
+@@ -1000,17 +1022,39 @@ static void video_display(VideoState *is)
          video_image_display(is);
  }
  
@@ -105,7 +106,7 @@ index 779c879..379e785 100644
          //FIXME ideally we should wait the correct time but SDLs event passing is so slow it would be silly
          usleep(is->audio_st && is->show_mode != SHOW_MODE_VIDEO ? rdftspeed*1000 : 5000);
      }
-@@ -1151,7 +1194,7 @@ static void video_refresh(void *opaque)
+@@ -1151,7 +1195,7 @@ static void video_refresh(void *opaque)
      SubPicture *sp, *sp2;
  
      if (is->video_st) {
@@ -114,7 +115,7 @@ index 779c879..379e785 100644
          if (is->pictq_size == 0) {
              SDL_LockMutex(is->pictq_mutex);
              if (is->frame_last_dropped_pts != AV_NOPTS_VALUE && is->frame_last_dropped_pts > is->frame_last_pts) {
-@@ -1167,7 +1210,7 @@ retry:
+@@ -1167,7 +1211,7 @@ retry:
  
              if (vp->skip) {
                  pictq_next_picture(is);
@@ -123,7 +124,7 @@ index 779c879..379e785 100644
              }
  
              if (is->paused)
-@@ -1182,6 +1225,7 @@ retry:
+@@ -1182,6 +1226,7 @@ retry:
              delay = compute_target_delay(is->frame_last_duration, is);
  
              time= av_gettime()/1000000.0;
@@ -131,7 +132,7 @@ index 779c879..379e785 100644
              if (time < is->frame_timer + delay)
                  return;
  
-@@ -1203,7 +1247,7 @@ retry:
+@@ -1203,7 +1248,7 @@ retry:
                  if(is->pictq_size > 1){
                      is->frame_drops_late++;
                      pictq_next_picture(is);
@@ -140,13 +141,12 @@ index 779c879..379e785 100644
                  }
              }
  
-@@ -1477,6 +1521,15 @@ static int queue_picture(VideoState *is, AVFrame *src_frame, double pts1, int64_
+@@ -1477,6 +1522,14 @@ static int queue_picture(VideoState *is, AVFrame *src_frame, double pts1, int64_
          SDL_LockMutex(is->pictq_mutex);
          is->pictq_size++;
          SDL_UnlockMutex(is->pictq_mutex);
 +
 +        atlas_job_t job = {
-+            .reference = sched_deadline_absolute,
 +            .deadline = is->frame_timer + is->pictq_size * av_q2d(is->video_st->codec->time_base),
 +            .metrics_count = 0,
 +            .metrics = NULL
@@ -200,8 +200,6 @@ index 779c879..379e785 100644
 -    AVFilterContext *filt_out = NULL;
 -    int last_w = is->video_st->codec->width;
 -    int last_h = is->video_st->codec->height;
--
--    if ((ret = configure_video_filters(graph, is, vfilters)) < 0) {
 +    static AVFilterGraph *graph;
 +    static AVFilterContext *filt_out;
 +    static int last_w;
@@ -216,7 +214,8 @@ index 779c879..379e785 100644
 +        filt_out = NULL;
 +        last_w = is->video_st->codec->width;
 +        last_h = is->video_st->codec->height;
-+
+ 
+-    if ((ret = configure_video_filters(graph, is, vfilters)) < 0) {
 +    if (configure_video_filters(graph, is, vfilters) < 0) {
          SDL_Event event;
          event.type = FF_QUIT_EVENT;
@@ -290,7 +289,7 @@ index 779c879..379e785 100644
  
          packet_queue_start(&is->videoq);
 -        is->video_tid = SDL_CreateThread(video_thread, is);
-+        is->video_queue = dispatch_queue_create("video queue", DISPATCH_QUEUE_SERIAL);
++        is->video_queue = dispatch_queue_create("video", DISPATCH_QUEUE_SERIAL);
          break;
      case AVMEDIA_TYPE_SUBTITLE:
          is->subtitle_stream = stream_index;
@@ -374,11 +373,11 @@ index 779c879..379e785 100644
 +        stream_component_open(is, st_index[AVMEDIA_TYPE_VIDEO]);
      }
 -    is->refresh_tid = SDL_CreateThread(refresh_thread, is);
-+    is->refresh_queue = dispatch_queue_create("refresh queue", DISPATCH_QUEUE_SERIAL);
++    is->refresh_queue = dispatch_queue_create("refresh", DISPATCH_QUEUE_SERIAL);
      if (is->show_mode == SHOW_MODE_NONE)
          is->show_mode = ret >= 0 ? SHOW_MODE_VIDEO : SHOW_MODE_RDFT;
  
-@@ -2601,10 +2690,23 @@ static int read_thread(void *arg)
+@@ -2601,10 +2690,22 @@ static int read_thread(void *arg)
      if (is->video_stream < 0 && is->audio_stream < 0) {
          fprintf(stderr, "%s: could not open codecs\n", is->filename);
          ret = -1;
@@ -393,7 +392,6 @@ index 779c879..379e785 100644
  
      for (;;) {
 +        atlas_job_t job = {
-+            .reference = sched_deadline_absolute,
 +            .deadline = is->frame_timer + is->videoq.nb_packets / 2 * av_q2d(is->video_st->codec->time_base),
 +            .metrics_count = 0,
 +            .metrics = NULL
@@ -403,7 +401,7 @@ index 779c879..379e785 100644
          if (is->abort_request)
              break;
          if (is->paused != is->last_paused) {
-@@ -2621,7 +2723,7 @@ static int read_thread(void *arg)
+@@ -2621,7 +2722,7 @@ static int read_thread(void *arg)
              /* wait 10 ms to avoid trying to get another packet */
              /* XXX: horrible */
              SDL_Delay(10);
@@ -412,7 +410,7 @@ index 779c879..379e785 100644
          }
  #endif
          if (is->seek_req) {
-@@ -2659,7 +2761,7 @@ static int read_thread(void *arg)
+@@ -2659,7 +2760,7 @@ static int read_thread(void *arg)
                  && (is->subtitleq.nb_packets > MIN_FRAMES || is->subtitle_stream < 0 || is->subtitleq.abort_request))) {
              /* wait 10 ms */
              SDL_Delay(10);
@@ -421,15 +419,14 @@ index 779c879..379e785 100644
          }
          if (eof) {
              if (is->video_stream >= 0) {
-@@ -2668,6 +2770,15 @@ static int read_thread(void *arg)
+@@ -2668,6 +2769,14 @@ static int read_thread(void *arg)
                  pkt->size = 0;
                  pkt->stream_index = is->video_stream;
                  packet_queue_put(&is->videoq, pkt);
 +
 +                double metrics[METRICS_COUNT] = { 0.0 };
 +                atlas_job_t job = {
-+                    .reference = sched_deadline_relative,
-+                    .deadline = 0.0,
++                    .deadline = is->frame_timer + (is->videoq.nb_packets + is->pictq_size / 2) * av_q2d(is->video_st->codec->time_base),
 +                    .metrics_count = METRICS_COUNT,
 +                    .metrics = metrics
 +                };
@@ -437,7 +434,7 @@ index 779c879..379e785 100644
              }
              if (is->audio_stream >= 0 &&
                  is->audio_st->codec->codec->capabilities & CODEC_CAP_DELAY) {
-@@ -2682,12 +2793,15 @@ static int read_thread(void *arg)
+@@ -2682,12 +2791,15 @@ static int read_thread(void *arg)
                  if (loop != 1 && (!loop || --loop)) {
                      stream_seek(is, start_time != AV_NOPTS_VALUE ? start_time : 0, 0, 0);
                  } else if (autoexit) {
@@ -454,7 +451,7 @@ index 779c879..379e785 100644
          }
          ret = av_read_frame(ic, pkt);
          if (ret < 0) {
-@@ -2696,7 +2810,7 @@ static int read_thread(void *arg)
+@@ -2696,7 +2808,7 @@ static int read_thread(void *arg)
              if (ic->pb && ic->pb->error)
                  break;
              SDL_Delay(100); /* wait for user event */
@@ -463,7 +460,7 @@ index 779c879..379e785 100644
          }
          /* check if packet is in play range specified by user, then queue, otherwise discard */
          pkt_in_play_range = duration == AV_NOPTS_VALUE ||
-@@ -2707,12 +2821,67 @@ static int read_thread(void *arg)
+@@ -2707,12 +2819,66 @@ static int read_thread(void *arg)
          if (pkt->stream_index == is->audio_stream && pkt_in_play_range) {
              packet_queue_put(&is->audioq, pkt);
          } else if (pkt->stream_index == is->video_stream && pkt_in_play_range) {
@@ -514,7 +511,6 @@ index 779c879..379e785 100644
              packet_queue_put(&is->videoq, pkt);
 +
 +            atlas_job_t job = {
-+                .reference = sched_deadline_absolute,
 +                .deadline = is->frame_timer + (is->videoq.nb_packets + is->pictq_size / 2) * av_q2d(is->video_st->codec->time_base),
 +                .metrics_count = METRICS_COUNT,
 +                .metrics = metrics
@@ -531,7 +527,7 @@ index 779c879..379e785 100644
      }
      /* wait until the end */
      while (!is->abort_request) {
-@@ -2731,6 +2900,8 @@ static int read_thread(void *arg)
+@@ -2731,6 +2897,8 @@ static int read_thread(void *arg)
      if (is->ic) {
          avformat_close_input(&is->ic);
      }
@@ -540,14 +536,14 @@ index 779c879..379e785 100644
  
      if (ret != 0) {
          SDL_Event event;
-@@ -2766,11 +2937,13 @@ static VideoState *stream_open(const char *filename, AVInputFormat *iformat)
+@@ -2766,11 +2934,13 @@ static VideoState *stream_open(const char *filename, AVInputFormat *iformat)
      packet_queue_init(&is->subtitleq);
  
      is->av_sync_type = av_sync_type;
 -    is->read_tid     = SDL_CreateThread(read_thread, is);
 -    if (!is->read_tid) {
 +    is->main_thread = gettid();
-+    is->read_queue = dispatch_queue_create("read queue", DISPATCH_QUEUE_SERIAL);
++    is->read_queue = dispatch_queue_create("read", DISPATCH_QUEUE_SERIAL);
 +    if (!is->read_queue) {
          av_free(is);
          return NULL;
@@ -556,7 +552,7 @@ index 779c879..379e785 100644
      return is;
  }
  
-@@ -3007,7 +3180,11 @@ static void event_loop(VideoState *cur_stream)
+@@ -3007,7 +3177,11 @@ static void event_loop(VideoState *cur_stream)
              alloc_picture(event.user.data1);
              break;
          case FF_REFRESH_EVENT:
@@ -568,7 +564,7 @@ index 779c879..379e785 100644
              cur_stream->refresh = 0;
              break;
          default:
-@@ -3282,7 +3459,7 @@ int main(int argc, char **argv)
+@@ -3282,7 +3456,7 @@ int main(int argc, char **argv)
      }
  
      av_init_packet(&flush_pkt);
@@ -676,7 +672,7 @@ index 96ca401..bff3857 100644
  
  /**
 diff --git a/libavcodec/h264.c b/libavcodec/h264.c
-index 22f5527..7a517f6 100644
+index 22f5527..d3b4fb7 100644
 --- a/libavcodec/h264.c
 +++ b/libavcodec/h264.c
 @@ -70,6 +70,17 @@ static const enum PixelFormat hwaccel_pixfmt_list_h264_jpeg_420[] = {
@@ -1049,11 +1045,10 @@ index 22f5527..7a517f6 100644
      h->slice_type   = old_slice_type;
      s->mb_x         = end_x;
      s->mb_y         = end_mb_y - FRAME_MBAFF;
-@@ -3984,7 +4063,49 @@ static int decode_slice(struct AVCodecContext *avctx, void *arg)
+@@ -3984,6 +4063,48 @@ static int decode_slice(struct AVCodecContext *avctx, void *arg)
      const int part_mask     = s->partitioned_frame ? (ER_AC_END | ER_AC_ERROR)
                                                     : 0x7F;
      int lf_x_start = s->mb_x;
--
 +    FFMPEG_METRICS_EXTRACT(unsigned bits_gone_by = 0);
 +
 +     /* new slice coming up, process previous one */
@@ -1096,10 +1091,9 @@ index 22f5527..7a517f6 100644
 +        s->mb_y = (s->avctx->slice.start_index + s->avctx->slice.skip) / s->mb_width;
 +        return 0;
 +    }
-+
+ 
      s->mb_skip_run = -1;
  
-     h->is_complex = FRAME_MBAFF || s->picture_structure != PICT_FRAME ||
 @@ -3996,16 +4117,20 @@ static int decode_slice(struct AVCodecContext *avctx, void *arg)
          align_get_bits(&s->gb);
  

@@ -4,7 +4,6 @@
  */
 
 #include <stdlib.h>
-#include <stdio.h>
 #include <pthread.h>
 #include <time.h>
 #include <sys/types.h>
@@ -13,6 +12,7 @@
 
 #define BUFFER_TYPE double
 #include "estimator.h"
+#include "scheduler.h"
 #include "llsp.h"
 
 struct estimator_s {
@@ -21,7 +21,6 @@ struct estimator_s {
 	void *code;
 	
 	double time;
-	double previous_deadline;
 	size_t metrics_count;
 	llsp_t *llsp;
 	
@@ -62,7 +61,6 @@ void atlas_job_submit(void *code, pid_t tid, atlas_job_t job)
 			
 			estimator->code = code;
 			estimator->time = 0.0;
-			estimator->previous_deadline = 0.0;
 			estimator->metrics_count = 0;
 			estimator->llsp = NULL;
 			
@@ -75,18 +73,6 @@ void atlas_job_submit(void *code, pid_t tid, atlas_job_t job)
 	}
 	
 	pthread_mutex_lock(&estimator->lock);
-	
-	double offset = 0.0;
-	if (job.reference == sched_deadline_relative)
-		offset = atlas_now();
-	else
-		assert(job.reference == sched_deadline_absolute);
-	
-	if (job.deadline + offset < estimator->previous_deadline) {
-//		fprintf(stderr, "WARNING: deadlines not ordered (%lf < %lf)\n", deadline, estimator->previous_deadline);
-		job.deadline = estimator->previous_deadline - offset;
-	}
-	estimator->previous_deadline = job.deadline + offset;
 	
 	if (!estimator->llsp) {
 		estimator->metrics_count = job.metrics_count;
@@ -109,7 +95,7 @@ void atlas_job_submit(void *code, pid_t tid, atlas_job_t job)
 	
 	for (size_t i = 0; i < estimator->metrics_count; i++)
 		buffer_put(&estimator->metrics, job.metrics[i]);
-	buffer_put(&estimator->metrics, job.deadline + offset);  // always keep absolute deadlines
+	buffer_put(&estimator->metrics, job.deadline);
 	buffer_put(&estimator->metrics, prediction);
 	
 #if JOB_SCHEDULING
@@ -122,7 +108,7 @@ void atlas_job_submit(void *code, pid_t tid, atlas_job_t job)
 		.tv_sec = prediction,
 		.tv_usec = 1000000 * (prediction - (long long)prediction)
 	};
-	sched_submit(tid, &tv_exectime, &tv_deadline, job.reference);
+	sched_submit(tid, &tv_exectime, &tv_deadline, sched_deadline_absolute);
 #endif
 	
 	pthread_mutex_unlock(&estimator->lock);

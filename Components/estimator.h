@@ -11,7 +11,6 @@
 #include <string.h>
 #include <unistd.h>
 #include <assert.h>
-#include "scheduler.h"
 
 
 #pragma mark Job Management Configuration
@@ -50,9 +49,8 @@ extern "C" {
 #endif
 
 #pragma mark Estimator Primitives
-	
+
 typedef struct {
-	enum sched_timeref reference;
 	double deadline;
 	size_t metrics_count;
 	const double *metrics;
