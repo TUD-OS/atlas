@@ -258,4 +258,13 @@ static void *dispatch_queue_worker(void *context)
 	}
 }
 
+#else
+
+#include "dispatch.h"
+
+void dispatch_async_atlas(dispatch_queue_t queue, atlas_job_t job, dispatch_block_t block)
+{
+	dispatch_async(queue, block);
+}
+
 #endif
