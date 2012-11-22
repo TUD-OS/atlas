@@ -45,6 +45,7 @@ FFmpeg/config.mak: FFmpeg/configure
 FFmpeg/configure: FFmpeg/.git/config FFmpeg.patch $(WORKBENCH_BASE)/Makefile
 	cd $(@D) && git diff --name-status --exit-code
 	cd $(@D) && git reset --hard 39fe8033bbf94cac7935d749849fdf67ba8fc16a  # n0.11.1
+#	cd $(@D) && git reset --hard a74f292d4ab3e800853c3ab7536418e6eb584b27  # n1.0
 	cd $(@D) && git clean -dfx
 	patch -d $(@D) -p1 < FFmpeg.patch
 	cd $(@D) && git add --all
@@ -86,7 +87,7 @@ BUILD_LINUX ?= $(filter .,$(WORKBENCH_BASE))$(wildcard Linux)
 ifneq ($(BUILD_LINUX),)
 all:: Linux
 Linux $(wildcard Linux/): Linux/.config force
-	$(MAKE) -j$(CPUS) -C $@ KERNELVERSION=3.5.0-15-atlas bzImage
+	$(MAKE) -j$(CPUS) -C $@ KERNELVERSION=3.5.0-19-atlas bzImage
 Linux/.config: Linux/debian
 	cd $(@D) && unset MAKELEVEL && \
 		fakeroot debian/rules clean && \
@@ -101,7 +102,7 @@ Linux/.config: Linux/debian
 	@false
 Linux/debian: Linux/.git/config Linux.patch $(WORKBENCH_BASE)/Makefile
 	cd $(@D) && git diff --name-status --exit-code
-	cd $(@D) && git reset --hard 268a35ff0fa9f07a6ae8e6b7644155338e95e359
+	cd $(@D) && git reset --hard 7340a183c5702144b5c62cc78b78791f2783695c  # Ubuntu-lts-3.5.0-19.30
 	cd $(@D) && git clean -dfx
 	patch -d $(@D) -p1 < Linux.patch
 	cd $(@D) && \
