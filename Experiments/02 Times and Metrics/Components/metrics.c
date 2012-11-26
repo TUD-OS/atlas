@@ -5,6 +5,7 @@
 
 #define IMPLEMENTS_HOOKS
 
+#include <inttypes.h>
 #include "process.h"
 
 #if !FFMPEG_TIME || !FFMPEG_METRICS
