@@ -146,7 +146,7 @@ void atlas_job_train(void *code)
 			else
 				llsp_metrics[i] = 1.0;  // add an extra 1-column
 		}
-		double deadline = buffer_get(&estimator->metrics);  // absolute deadline
+		double deadline = buffer_get(&estimator->metrics);
 		double prediction = buffer_get(&estimator->metrics);
 		double execution_time = time - estimator->time;
 		
