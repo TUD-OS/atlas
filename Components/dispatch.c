@@ -5,11 +5,6 @@
 
 #if DISPATCH_ATLAS
 
-#ifdef __linux__
-#include <sched.h>
-#include <signal.h>
-#endif
-
 #include <stdint.h>
 #include <stdbool.h>
 #include <math.h>
@@ -221,18 +216,8 @@ static void *dispatch_queue_worker(void *context)
 {
 	dispatch_queue_t queue = (dispatch_queue_t)context;
 	
-#ifdef __linux__
-	/* pin to CPU 0 */
-	cpu_set_t cpu_set;
-	CPU_ZERO(&cpu_set);
-	CPU_SET(0, &cpu_set);
-	if (sched_setaffinity(0, sizeof(cpu_set), &cpu_set) != 0) abort();
-	
-	const struct sigaction action = { .sa_handler = SIG_IGN };
-	if (sigaction(SIGXCPU, &action, NULL) != 0) abort();
-#endif
-	
 	queue->tid = gettid();
+	atlas_pin_cpu(0);
 	pthread_setspecific(current_queue, queue);
 	dispatch_semaphore_signal(queue->init);
 	

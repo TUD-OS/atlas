@@ -10,6 +10,11 @@
 #include <sys/time.h>
 #include <assert.h>
 
+#ifdef __linux__
+#include <sched.h>
+#include <signal.h>
+#endif
+
 #define BUFFER_TYPE double
 #include "estimator.h"
 #include "scheduler.h"
@@ -158,6 +163,21 @@ void atlas_job_train(void *code)
 	}
 	
 	pthread_mutex_unlock(&estimator->lock);
+}
+
+void atlas_pin_cpu(int cpu)
+{
+#ifdef __linux__
+	cpu_set_t cpu_set;
+	CPU_ZERO(&cpu_set);
+	CPU_SET(cpu, &cpu_set);
+	if (sched_setaffinity(0, sizeof(cpu_set), &cpu_set) != 0) abort();
+        
+	const struct sigaction action = { .sa_handler = SIG_IGN };
+	if (sigaction(SIGXCPU, &action, NULL) != 0) abort();
+#else
+#warning CPU affinity not supported
+#endif
 }
 
 #pragma mark -

@@ -36,9 +36,9 @@
 #endif
 
 #ifndef IMPLEMENTS_HOOKS
-#  define WEAK_SYMBOL __attribute__((weak))
+#	define WEAK_SYMBOL __attribute__((weak))
 #else
-#  define WEAK_SYMBOL
+#	define WEAK_SYMBOL
 #endif
 
 #pragma mark -
@@ -60,6 +60,14 @@ typedef struct {
 void atlas_job_submit(void *code, pid_t tid, atlas_job_t job);
 void atlas_job_next(void *code);
 void atlas_job_train(void *code);
+
+#pragma mark -
+
+
+#pragma mark Threads and Time
+
+/* pin thread to CPU */
+void atlas_pin_cpu();
 
 /* the current time in ATLAS' timebase */
 double atlas_now(void);

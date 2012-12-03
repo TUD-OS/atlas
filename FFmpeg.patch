@@ -1,5 +1,5 @@
 diff --git a/ffplay.c b/ffplay.c
-index 779c879..387badd 100644
+index 779c879..b9c1359 100644
 --- a/ffplay.c
 +++ b/ffplay.c
 @@ -56,6 +56,23 @@
@@ -536,7 +536,7 @@ index 779c879..387badd 100644
  
      if (ret != 0) {
          SDL_Event event;
-@@ -2766,11 +2934,14 @@ static VideoState *stream_open(const char *filename, AVInputFormat *iformat)
+@@ -2766,11 +2934,15 @@ static VideoState *stream_open(const char *filename, AVInputFormat *iformat)
      packet_queue_init(&is->subtitleq);
  
      is->av_sync_type = av_sync_type;
@@ -549,11 +549,12 @@ index 779c879..387badd 100644
          av_free(is);
          return NULL;
      }
++    atlas_pin_cpu(0);
 +    dispatch_async(is->read_queue, ^{ read_stage(is); });
      return is;
  }
  
-@@ -3007,7 +3178,11 @@ static void event_loop(VideoState *cur_stream)
+@@ -3007,7 +3179,11 @@ static void event_loop(VideoState *cur_stream)
              alloc_picture(event.user.data1);
              break;
          case FF_REFRESH_EVENT:
@@ -565,7 +566,7 @@ index 779c879..387badd 100644
              cur_stream->refresh = 0;
              break;
          default:
-@@ -3282,7 +3457,7 @@ int main(int argc, char **argv)
+@@ -3282,7 +3458,7 @@ int main(int argc, char **argv)
      }
  
      av_init_packet(&flush_pkt);
