@@ -1,6 +1,6 @@
 all:: $(addsuffix .log,$(basename $(notdir $(wildcard Samples/*.*))))
 
-CPPFLAGS = -DMETRICS_FULL
+override CPPFLAGS = -DMETRICS_FULL
 
 WORKBENCH_BASE ?= ../..
 include $(WORKBENCH_BASE)/Makefile
