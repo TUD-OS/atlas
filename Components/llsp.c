@@ -31,7 +31,7 @@ struct llsp_s {
 	size_t        metrics;   // metrics count
 	double       *data;      // pointer to the malloc'ed data block, matrix is transposed
 	struct matrix full;      // pointers to the individual columns for easy column dropping
-	struct matrix sort;      // matrix columns sorted by correlation
+	struct matrix sort;      // matrix columns with dropped metrics moved to the right
 	struct matrix good;      // reduced matrix with low-contribution columns dropped
 	struct stats *stats;     // statistics for sorting
 	size_t        age;       // how much training tuples the solver received
@@ -40,7 +40,7 @@ struct llsp_s {
 };
 
 static void givens_fixup(struct matrix m, size_t row, size_t column);
-static void stabilize(struct matrix in, struct matrix *out);
+static void stabilize(struct matrix *sort, struct matrix *good);
 static void trisolve(struct matrix m);
 
 #pragma mark -
@@ -61,6 +61,7 @@ llsp_t *llsp_new(size_t count)
 	
 	llsp->metrics = count;
 	llsp->full.columns = count + 1;
+	llsp->sort.columns = count + 1;
 	
 	return llsp;
 }
@@ -69,26 +70,32 @@ void llsp_add(llsp_t *llsp, const double *metrics, double time)
 {
 	const size_t column_count = llsp->full.columns;
 	const size_t row_count = llsp->full.columns + 1;  // one extra row for shifting down
+	const size_t column_size = row_count * sizeof(double);
 	const size_t data_size = column_count * row_count * sizeof(double);
 	const size_t matrix_size = column_count * sizeof(double *);
 	const size_t stats_size = column_count * sizeof(struct stats);
+	const size_t matrix_last = column_count - 1;
 	
 	if (!llsp->data) {
-		llsp->data        = malloc(2 * data_size);
-		llsp->full.matrix = malloc(3 * matrix_size);
+		llsp->data        = malloc(data_size);
+		llsp->full.matrix = malloc(matrix_size);
+		llsp->sort.matrix = malloc(matrix_size);
+		llsp->good.matrix = malloc(matrix_size);
 		llsp->stats       = malloc(stats_size);
-		if (!llsp->data || !llsp->full.matrix || !llsp->stats)
+		if (!llsp->data ||
+			!llsp->full.matrix || !llsp->sort.matrix || !llsp->good.matrix ||
+			!llsp->stats)
 			abort();
 		
-		llsp->sort.matrix = llsp->full.matrix + column_count;
-		llsp->good.matrix = llsp->sort.matrix + column_count;
-		for (size_t column = 0; column < llsp->full.columns; column++) {
-			llsp->full.matrix[column] = llsp->data + column * row_count;
-		}
-		llsp->good.matrix[0] = llsp->data + column_count * row_count;
+		for (size_t column = 0; column < llsp->full.columns; column++)
+			llsp->full.matrix[column] =
+			llsp->sort.matrix[column] = llsp->data + column * row_count;
+		
+		/* we need one extra row for the column dropping scan */
+		llsp->good.matrix[matrix_last] = malloc(column_size);
+		if (!llsp->good.matrix[matrix_last]) abort();
 		
 		memset(llsp->data, 0, data_size);
-		memset(llsp->sort.matrix, 0, matrix_size);
 		memset(llsp->stats, 0, stats_size);
 	}
 	
@@ -102,26 +109,7 @@ void llsp_add(llsp_t *llsp, const double *metrics, double time)
 		llsp->full.matrix[column][0] = metrics[column];
 	llsp->full.matrix[llsp->metrics][0] = time;
 	
-	/* collect all non-zero metrics in sort matrix */
-	size_t last_sort_column = llsp->sort.columns ? llsp->sort.columns - 1 : 0;
-	for (size_t column = 0; column < llsp->metrics; column++) {
-		if (fabs(llsp->full.matrix[column][0]) >= EPSILON) {
-			size_t compare;
-			for (compare = 0; compare < llsp->sort.columns; compare++)
-				if (llsp->full.matrix[column] == llsp->sort.matrix[compare])
-					break;
-			if (compare == llsp->sort.columns)
-				// this metric appears for the first time, add column at the end
-				llsp->sort.matrix[last_sort_column++] = llsp->full.matrix[column];
-		} else
-			llsp->full.matrix[column][0] = 0.0;
-	}
-	// last column with the times always gets in last
-	llsp->sort.matrix[last_sort_column++] = llsp->full.matrix[llsp->metrics];
-	// clear empty columns to the right
-	memset(llsp->sort.matrix + last_sort_column, 0, matrix_size - last_sort_column * sizeof(double *));
-	llsp->sort.columns = last_sort_column;
-	
+#if 0
 	/* update statistics for sorting */
 	for (size_t column = 0; column < llsp->sort.columns; column++) {
 		const double new_value = llsp->sort.matrix[column][0];
@@ -136,12 +124,14 @@ void llsp_add(llsp_t *llsp, const double *metrics, double time)
 	}
 	if (llsp->age / (llsp->age + 1.0) < AGING_FACTOR)
 		llsp->age++;  // stops incrementing after a while, sliding window from there
+#endif
 	
 	/* givens fixup of the subdiagonal */
 	for (size_t i = 0; i < llsp->sort.columns; i++)
 		givens_fixup(llsp->sort, i + 1, i);
 	
-	/* a single bubble sort step to push badly correlating metrics to the right */
+#if 0
+	/* a single bubble sort step to move best-correlating metrics to the front */
 	double previous_pearson = INFINITY;
 	for (size_t column = 0; column < llsp->sort.columns - 1; column++) {
 		const struct stats *x = &llsp->stats[column];
@@ -161,10 +151,12 @@ void llsp_add(llsp_t *llsp, const double *metrics, double time)
 			llsp->stats[column - 1] = llsp->stats[column];
 			llsp->stats[column] = stats_tmp;
 			givens_fixup(llsp->sort, column, column - 1);
+			break;  // only one swap per estimator call for speed and stability
 		}
 
 		previous_pearson = pearson_correlation;
 	}
+#endif
 }
 
 const double *llsp_solve(llsp_t *llsp)
@@ -172,11 +164,11 @@ const double *llsp_solve(llsp_t *llsp)
 	double *result = NULL;
 	
 	if (llsp->data) {
-//		stabilize(llsp->sort, &llsp->good);
-//		trisolve(llsp->good);
-		trisolve(llsp->sort);
+		stabilize(&llsp->sort, &llsp->good);
+		trisolve(llsp->good);
 		
-		size_t result_row = llsp->sort.columns;
+		/* collect coefficients */
+		size_t result_row = llsp->good.columns;
 		for (size_t column = 0; column < llsp->metrics; column++)
 			llsp->result[column] = llsp->full.matrix[column][result_row];
 		result = llsp->result;
@@ -187,6 +179,7 @@ const double *llsp_solve(llsp_t *llsp)
 
 double llsp_predict(llsp_t *llsp, const double *metrics)
 {
+	/* calculate prediction by dot product */
 	double result = 0.0;
 	for (size_t i = 0; i < llsp->metrics; i++)
 		result += llsp->result[i] * metrics[i];
@@ -201,9 +194,14 @@ double llsp_predict(llsp_t *llsp, const double *metrics)
 
 void llsp_dispose(llsp_t *llsp)
 {
-	free(llsp->data);
+	const size_t matrix_last = llsp->good.columns - 1;
+	
+	free(llsp->good.matrix[matrix_last]);
 	free(llsp->full.matrix);
+	free(llsp->sort.matrix);
+	free(llsp->good.matrix);
 	free(llsp->stats);
+	free(llsp->data);
 	free(llsp);
 }
 
@@ -214,8 +212,7 @@ void llsp_dispose(llsp_t *llsp)
 
 static void givens_fixup(struct matrix m, size_t row, size_t column)
 {
-	if (fabs(m.matrix[column][row]) < EPSILON) {
-		// alread zero
+	if (fabs(m.matrix[column][row]) < EPSILON) {  // alread zero
 		m.matrix[column][row] = 0.0;
 		return;
 	}
@@ -247,51 +244,63 @@ static void givens_fixup(struct matrix m, size_t row, size_t column)
 	}
 }
 
-static void stabilize(struct matrix in, struct matrix *out)
+static void stabilize(struct matrix *sort, struct matrix *good)
 {
-	const size_t column_count = in.columns;
-	const size_t row_count = in.columns + 1;  // one extra row for trisolve results
+	const size_t column_count = sort->columns;
+	const size_t row_count = sort->columns + 1;  // one extra row for trisolve results
 	const size_t column_size = row_count * sizeof(double);
-	const size_t matrix_end = column_count - 1;
-	
-	/* copy complete matrix to target */
-	out->columns = in.columns;
-	for (size_t column = 0; column < column_count; column++) {
-		out->matrix[column] = out->matrix[0] + column * row_count;
-		memcpy(out->matrix[column], in.matrix[column], column_size);
-	}
-	
-	/* try dropping all columns and watch the residual error */
-	bool drop[matrix_end];
-	drop[0] = false;  // first column is never dropped, with sorted input this is the best correlating column
-	double previous_residual = fabs(out->matrix[matrix_end][matrix_end]);
-	for (size_t column = matrix_end - 1; column > 0; column--) {
-		// drop column
-		out->columns--;
-		out->matrix[column] = out->matrix[column + 1];
+	const size_t matrix_last = column_count - 1;
 		
-		givens_fixup(*out, column + 1, column);
+	good->columns = sort->columns;
+	memcpy(good->matrix[matrix_last], sort->matrix[matrix_last], column_size);
+	
+	bool drop[column_count];
+	double previous_residual = 1.0;
+	
+	/* Drop columns from right to left and watch the residual error.
+	 * We would actually copy the whole matrix, but when dropping from the right,
+	 * Givens fixup always affects only the last column, so we hand just the
+	 * last column through all possible positions. */
+	for (ssize_t column = matrix_last; column >= 0; column--) {
+		good->matrix[column] = good->matrix[matrix_last];
+		givens_fixup(*good, column + 1, column);
 		
-		double residual = fabs(out->matrix[column][column]);
+		double residual = fabs(good->matrix[column][column]);
 		drop[column] = (residual / previous_residual < COLUMN_CONTRIBUTION);
+		
 		previous_residual = residual;
+		good->columns--;
 	}
 	
-	/* back to complete matrix again */
-	out->columns = in.columns;
-	for (size_t column = 0; column < column_count; column++) {
-		out->matrix[column] = out->matrix[0] + column * row_count;
-		memcpy(out->matrix[column], in.matrix[column], column_size);
-	}
-	
-	/* iteratively drop columns marked before */
-	for (size_t column = matrix_end - 1; column > 0; column--) {
-		if (drop[column]) {
-			out->columns--;
-			memmove(&out->matrix[column], &out->matrix[column + 1], (out->columns - column) * sizeof(double *));
-			for (size_t fix_column = column; column < out->columns; column++)
-				givens_fixup(*out, fix_column + 1, fix_column);
+	/* move all dropped columns to the right */
+	size_t insert_column = matrix_last - 1;
+	for (ssize_t drop_column = matrix_last - 1; drop_column >= 0; drop_column--) {
+		if (!drop[drop_column]) continue;
+		
+		if (drop_column < insert_column) {
+			printf("moving column\n");
+			double *temp = sort->matrix[drop_column];
+			memmove(&sort->matrix[drop_column], &sort->matrix[drop_column + 1],
+					(insert_column - drop_column) * sizeof(double *));
+			sort->matrix[insert_column] = temp;
+			
+			for (size_t column = drop_column; column < insert_column; column++)
+				givens_fixup(*sort, column + 1, column);
 		}
+		insert_column--;
+	}
+	
+	/* setup good-column matrix */
+	good->columns = sort->columns;
+	memcpy(good->matrix, sort->matrix, (insert_column + 1) * sizeof(double *));
+	memcpy(good->matrix[matrix_last], sort->matrix[matrix_last], column_size);
+	
+	/* Overwrite dropped columns with the rightmost column.
+	 * Zeroing the diagonal makes sure they do not influence the trisolve. */
+	good->matrix[matrix_last][matrix_last] = 0.0;
+	for (ssize_t column = matrix_last - 1; column > insert_column; column--) {
+		good->matrix[column] = good->matrix[matrix_last];
+		good->matrix[column][column] = 0.0;
 	}
 }
 
