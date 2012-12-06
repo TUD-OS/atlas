@@ -8,9 +8,9 @@
 /* The running solution can be made to age out previously acquired knowledge
  * over time. When this aging factor is set to 1.0, no aging is performed. This
  * means the solution will be equivalent to a LLS-solution over all previous
- * metrics and decoding times. With an aging factor a little lower than one,
- * the solution will slightly lean towards newly added metrics/times, exhibting
- * properties of a sliding average. */
+ * metrics and target values. With an aging factor a little lower than one,
+ * the solution will slightly lean towards newly added metrics/targets,
+ * exhibting properties of a sliding average. */
 #define AGING_FACTOR 0.999L
 
 /* During the column dropping check, each column's contribution to the accuracy
@@ -25,17 +25,17 @@ typedef struct llsp_s llsp_t;
 /* Allocated a new LLSP handle with the given number of metrics. */
 llsp_t *llsp_new(size_t count);
 
-/* This function adds another tuple of (metrics, measured decoder time) to the
+/* This function adds another tuple of (metrics, measured target value) to the
  * LLSP solution. The metrics array must have as many values as stated in count
  * on llsp_new(). */
-void llsp_add(llsp_t *llsp, const double *metrics, double time);
+void llsp_add(llsp_t *llsp, const double *metrics, double target);
 
 /* Solves the LLSP and returns a pointer to the resulting coefficients or NULL
  * if the training phase could not be successfully finalized. The pointer
  * remains valid until the LLSP context is freed. */
 const double *llsp_solve(llsp_t *llsp);
 
-/* Predicts the decoding time from the given metrics. The context has to be
+/* Predicts the target value from the given metrics. The context has to be
  * populated with a set of prediction coefficients by running llsp_solve(). */
 double llsp_predict(llsp_t *llsp, const double *metrics);
 
