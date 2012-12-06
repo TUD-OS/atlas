@@ -15,7 +15,7 @@ override CFLAGS := $(if $(DEBUG),-g -O0,-O3) $(CFLAGS)
 override CFLAGS := -march=$(ARCH) -fblocks -std=c99 $(CFLAGS)
 override CFLAGS := -Wall $(CFLAGS)
 
-override LDFLAGS := -pthread -lm $(LDFLAGS)
+override LDFLAGS := -pthread -lm -ldl $(LDFLAGS)
 
 ifeq ($(shell uname),Linux)
 override CPPFLAGS := -D_GNU_SOURCE $(CPPFLAGS)
