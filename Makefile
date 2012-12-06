@@ -117,7 +117,7 @@ endif
 
 BUILD_SAMPLES ?= $(wildcard Samples)
 ifneq ($(BUILD_SAMPLES),)
-.PRECIOUS: Samples/%.cfg Samples/%.h264
+.PRECIOUS: Samples/%.cfg Samples/%.h264 Samples/%.h264_metrics
 Samples/%.h264: Samples/%.cfg
 Samples/%.h264 Samples/%.cfg: force
 	$(MAKE) -C $(@D) $(@F)
