@@ -10,4 +10,5 @@
 void atlas_job_submit(void *code, pid_t tid, atlas_job_t job) {}
 void atlas_job_next(void *code) {}
 void atlas_job_train(void *code) {}
+void atlas_pin_cpu(int cpu) {}
 double atlas_now(void) { return av_gettime() / 1000000.0; }
