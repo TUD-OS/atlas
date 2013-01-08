@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2012 Michael Roitzsch <mroi@os.inf.tu-dresden.de>
+ * Copyright (C) 2006-2013 Michael Roitzsch <mroi@os.inf.tu-dresden.de>
  * economic rights: Technische Universitaet Dresden (Germany)
  */
 
@@ -8,6 +8,7 @@
 #include <string.h>
 #include <sys/time.h>
 
+#include "libavutil/timer.h"
 #include "process.h"
 
 static void process_slice(AVCodecContext *c);

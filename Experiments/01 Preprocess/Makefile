@@ -1,7 +1,7 @@
-all:: $(addsuffix .p264,$(basename $(wildcard Samples/*.*)))
+all:: $(addsuffix .h264_metrics,$(basename $(wildcard Samples/*.*)))
 
 WORKBENCH_BASE ?= ../..
 include $(WORKBENCH_BASE)/Makefile
 
-%.p264: %.h264 h264_workbench
+%.h264_metrics: %.h264 h264_workbench
 	./h264_workbench $<

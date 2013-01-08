@@ -1,12 +1,12 @@
 /*
- * Copyright (C) 2006-2012 Michael Roitzsch <mroi@os.inf.tu-dresden.de>
+ * Copyright (C) 2006-2013 Michael Roitzsch <mroi@os.inf.tu-dresden.de>
  * economic rights: Technische Universitaet Dresden (Germany)
  */
 
-/* To compensate for accounting rounding errors and scheduler overhead,
+/* To compensate for misprediction, accounting drift and scheduler overhead,
  * jobs are over-allocated when reporting to the system scheduler. */
 #ifndef JOB_OVERALLOCATION
-#define JOB_OVERALLOCATION 1.01
+#define JOB_OVERALLOCATION(x)  x = x * 1.01
 #endif
 
 /* toggle job communication to scheduler */
@@ -24,9 +24,9 @@
 #endif
 
 #ifndef IMPLEMENTS_HOOKS
-#  define WEAK_SYMBOL __attribute__((weak))
+#	define WEAK_SYMBOL __attribute__((weak))
 #else
-#  define WEAK_SYMBOL
+#	define WEAK_SYMBOL
 #endif
 
 

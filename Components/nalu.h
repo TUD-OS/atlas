@@ -1,9 +1,13 @@
 /*
- * Copyright (C) 2006-2012 Michael Roitzsch <mroi@os.inf.tu-dresden.de>
+ * Copyright (C) 2006-2013 Michael Roitzsch <mroi@os.inf.tu-dresden.de>
  * economic rights: Technische Universitaet Dresden (Germany)
  */
 
 #include <stdbool.h>
+
+#ifndef FILE_SUFFIX
+#define FILE_SUFFIX "metrics"
+#endif
 
 /* opaque handles for NALU access */
 typedef struct nalu_read_s nalu_read_t;

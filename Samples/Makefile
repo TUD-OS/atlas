@@ -39,7 +39,7 @@ endif
 	$(MAKE) -C .. x264
 
 clean:
-	rm -f *.h264 *.p264 *.prop
+	rm -f *.h264 *.h264_*
 
 cleanall: clean
 	rm -f *.mov

@@ -1,18 +1,3 @@
-diff --git a/cmdutils.c b/cmdutils.c
-index 2c84394..6661266 100644
---- a/cmdutils.c
-+++ b/cmdutils.c
-@@ -19,6 +19,10 @@
-  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
-  */
- 
-+/* disable warnings so they do not get in the way when compiling ffplay */
-+#pragma GCC diagnostic ignored "-Wall"
-+#pragma GCC diagnostic ignored "-Wpointer-sign"
-+
- #include <string.h>
- #include <stdlib.h>
- #include <errno.h>
 diff --git a/ffplay.c b/ffplay.c
 index 779c879..38e4fbd 100644
 --- a/ffplay.c
@@ -544,7 +529,7 @@ index 96ca401..bff3857 100644
  
  /**
 diff --git a/libavcodec/h264.c b/libavcodec/h264.c
-index 22f5527..7a517f6 100644
+index 22f5527..d3b4fb7 100644
 --- a/libavcodec/h264.c
 +++ b/libavcodec/h264.c
 @@ -70,6 +70,17 @@ static const enum PixelFormat hwaccel_pixfmt_list_h264_jpeg_420[] = {
@@ -917,11 +902,10 @@ index 22f5527..7a517f6 100644
      h->slice_type   = old_slice_type;
      s->mb_x         = end_x;
      s->mb_y         = end_mb_y - FRAME_MBAFF;
-@@ -3984,7 +4063,49 @@ static int decode_slice(struct AVCodecContext *avctx, void *arg)
+@@ -3984,6 +4063,48 @@ static int decode_slice(struct AVCodecContext *avctx, void *arg)
      const int part_mask     = s->partitioned_frame ? (ER_AC_END | ER_AC_ERROR)
                                                     : 0x7F;
      int lf_x_start = s->mb_x;
--
 +    FFMPEG_METRICS_EXTRACT(unsigned bits_gone_by = 0);
 +
 +     /* new slice coming up, process previous one */
@@ -964,10 +948,9 @@ index 22f5527..7a517f6 100644
 +        s->mb_y = (s->avctx->slice.start_index + s->avctx->slice.skip) / s->mb_width;
 +        return 0;
 +    }
-+    
+ 
      s->mb_skip_run = -1;
  
-     h->is_complex = FRAME_MBAFF || s->picture_structure != PICT_FRAME ||
 @@ -3996,16 +4117,20 @@ static int decode_slice(struct AVCodecContext *avctx, void *arg)
          align_get_bits(&s->gb);
  

@@ -10,45 +10,31 @@ FFMPEG_LIBS = \
 	FFmpeg/libswresample/libswresample.a \
 	FFmpeg/libswscale/libswscale.a \
 	FFmpeg/libavutil/libavutil.a
-SDL_LIBS = \
-	SDL/build/.libs/libSDL.a \
-	SDL/build/.libs/libSDLmain.a
 
-.PHONY: all debug clean cleanall force
+.PHONY: all debug clean cleanall force .Components .FFmpeg
 
 
 BUILD_WORKBENCH ?= $(wildcard h264_workbench.c)
 ifneq ($(BUILD_WORKBENCH),)
-h264_workbench: %: %.c $(FFMPEG_LIBS) $(COMPONENTS) Makefile $(WORKBENCH_BASE)/Makefile $(WORKBENCH_BASE)/Makeconf $(wildcard $(WORKBENCH_BASE)/Makeconf.local)
-	$(CC) $(CPPFLAGS) -MM $< > .$*.d
-	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ "$(realpath $<)" $(FFMPEG_LIBS) $(COMPONENTS) -lz -lm -pthread $(LDFLAGS)
+h264_workbench: %: %.c $(COMPONENTS) $(FFMPEG_LIBS) Makefile $(WORKBENCH_BASE)/Makefile $(WORKBENCH_BASE)/Makeconf $(wildcard $(WORKBENCH_BASE)/Makeconf.local)
+	$(CC) $(CPPFLAGS) -MM $< > .$*.d 2> /dev/null
+	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ "$(realpath $<)" $(COMPONENTS) $(FFMPEG_LIBS) -lz -lm -pthread $(LDFLAGS)
 all:: h264_workbench
 clean::
 	rm -f h264_workbench
 endif
 
-BUILD_COMPONENTS ?= $(wildcard Components)
-ifneq ($(BUILD_COMPONENTS),)
-$(COMPONENTS): Components
-	
-Components $(wildcard Components/): force
-	$(MAKE) -j$(CPUS) -C $@
-clean::
-	$(MAKE) -C Components $@
-endif
-
-
 BUILD_FFMPEG ?= $(filter .,$(WORKBENCH_BASE))$(wildcard FFmpeg)
 ifneq ($(BUILD_FFMPEG),)
-ffplay: %: FFmpeg/%.c FFmpeg/cmdutils.c $(FFMPEG_LIBS) $(SDL_LIBS) $(COMPONENTS) Makefile $(WORKBENCH_BASE)/Makefile $(WORKBENCH_BASE)/Makeconf $(wildcard $(WORKBENCH_BASE)/Makeconf.local)
-	$(CC) $(CPPFLAGS) -MM $< > .$*.d
-	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ "$(realpath $<)" FFmpeg/cmdutils.c $(FFMPEG_LIBS) $(SDL_LIBS) $(COMPONENTS) $(SDL_EXTRA_LIBS) $(LDFLAGS)
+ffplay: %: FFmpeg/%.c FFmpeg/cmdutils.o $(COMPONENTS) $(FFMPEG_LIBS) Makefile $(WORKBENCH_BASE)/Makefile $(WORKBENCH_BASE)/Makeconf $(wildcard $(WORKBENCH_BASE)/Makeconf.local)
+	$(CC) $(CPPFLAGS) -MM $< > .$*.d 2> /dev/null
+	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ "$(realpath $<)" FFmpeg/cmdutils.o $(COMPONENTS) $(FFMPEG_LIBS) $(shell sdl-config --libs) $(LDFLAGS)
 clean::
 	rm -f ffplay
-FFmpeg/ffplay.c FFmpeg/cmdutils.c $(FFMPEG_LIBS): FFmpeg
+FFmpeg/ffplay.c FFmpeg/cmdutils.o $(FFMPEG_LIBS): .FFmpeg
 	
-FFmpeg $(wildcard FFmpeg/): FFmpeg/config.mak force
-	$(MAKE) -j$(CPUS) -C $@
+FFmpeg $(wildcard FFmpeg/) .FFmpeg: FFmpeg/config.mak force
+	$(MAKE) -j$(CPUS) -C FFmpeg
 FFmpeg/config.mak: FFmpeg/configure
 	cd $(@D) && CPPFLAGS= CFLAGS= ./configure \
 		--cc=$(CC) --cpu=$(ARCH) --enable-pthreads \
@@ -65,6 +51,17 @@ FFmpeg/configure: FFmpeg/.git/config FFmpeg.patch $(WORKBENCH_BASE)/Makefile
 	touch $@
 FFmpeg/.git/config:
 	git clone -n git://git.videolan.org/ffmpeg.git FFmpeg
+endif
+
+
+BUILD_COMPONENTS ?= $(wildcard Components)
+ifneq ($(BUILD_COMPONENTS),)
+$(COMPONENTS): .Components
+	
+Components $(wildcard Components/) .Components: $(if $(BUILD_FFMPEG),.FFmpeg,) force
+	$(MAKE) -j$(CPUS) -C Components
+clean::
+	$(MAKE) -C Components $@
 endif
 
 
@@ -85,29 +82,11 @@ x264/.git/config:
 endif
 
 
-BUILD_SDL ?= $(filter .,$(WORKBENCH_BASE))$(wildcard SDL)
-ifneq ($(BUILD_SDL),)
-$(SDL_LIBS): SDL
-	
-SDL $(wildcard SDL/): SDL/config.status force
-	$(MAKE) -j$(CPUS) -C $@
-SDL/config.status: SDL/configure
-	cd $(@D) && CC=$(CC) CPPFLAGS= CFLAGS= ./configure --disable-assembly
-SDL/configure: $(WORKBENCH_BASE)/Makefile
-	mkdir -p $(if $(wildcard SDL),$(realpath SDL),SDL)
-	rm -rf SDL/*
-	curl http://www.libsdl.org/release/SDL-1.2.15.tar.gz | tar xz
-	mv SDL-*/* SDL/
-	rmdir SDL-*
-	touch $@
-endif
-
-
 BUILD_LINUX ?= $(filter .,$(WORKBENCH_BASE))$(wildcard Linux)
 ifneq ($(BUILD_LINUX),)
 all:: Linux
 Linux $(wildcard Linux/): Linux/.config force
-	$(MAKE) -j$(CPUS) -C $@ KERNELVERSION=3.5.0-15-atlas bzImage
+	$(MAKE) -j$(CPUS) -C $@ KERNELVERSION=3.5.0-19-atlas bzImage
 Linux/.config: Linux/debian
 	cd $(@D) && unset MAKELEVEL && \
 		fakeroot debian/rules clean && \
@@ -122,7 +101,7 @@ Linux/.config: Linux/debian
 	@false
 Linux/debian: Linux/.git/config Linux.patch $(WORKBENCH_BASE)/Makefile
 	cd $(@D) && git diff --name-status --exit-code
-	cd $(@D) && git reset --hard 268a35ff0fa9f07a6ae8e6b7644155338e95e359
+	cd $(@D) && git reset --hard 7340a183c5702144b5c62cc78b78791f2783695c  # Ubuntu-lts-3.5.0-19.30
 	cd $(@D) && git clean -dfx
 	patch -d $(@D) -p1 < Linux.patch
 	cd $(@D) && \
@@ -137,7 +116,7 @@ endif
 
 BUILD_SAMPLES ?= $(wildcard Samples)
 ifneq ($(BUILD_SAMPLES),)
-.PRECIOUS: Samples/%.cfg Samples/%.h264
+.PRECIOUS: Samples/%.cfg Samples/%.h264 Samples/%.h264_metrics
 Samples/%.h264: Samples/%.cfg
 Samples/%.h264 Samples/%.cfg: force
 	$(MAKE) -C $(@D) $(@F)
@@ -166,7 +145,6 @@ cleanall: clean
 	$(MAKE) -C Experiments clean
 	-$(MAKE) -C FFmpeg distclean
 	-$(MAKE) -C x264 clean
-	-$(MAKE) -C SDL distclean
 	-$(MAKE) -C Linux distclean
 
 force:

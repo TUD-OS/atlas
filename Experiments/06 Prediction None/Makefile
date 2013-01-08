@@ -1,14 +1,14 @@
 all:: $(addsuffix .log,$(basename $(notdir $(wildcard Samples/*.*))))
 
-CPPFLAGS = -DMETRICS_NONE
+override CPPFLAGS = -DMETRICS_NONE
 
 WORKBENCH_BASE ?= ../..
 include $(WORKBENCH_BASE)/Makefile
 
-%.log: Samples/%.p264 ffplay Makefile
-	./ffplay -threads 1 -nostats -noframedrop -nodisp -autoexit $< > $@
+%.log: Samples/%.h264_metrics ffplay Makefile
+	./ffplay -f h264 -threads 1 -nostats -noframedrop -nodisp -autoexit $< > $@
 
-%.p264: force
+%.h264_metrics: force
 	$(MAKE) -C ../01\ Preprocess $@
 
 clean::

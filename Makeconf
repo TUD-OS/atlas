@@ -6,21 +6,17 @@ CPUS ?= $(shell case `uname` in (Darwin) ioreg | fgrep -c ' AppleACPICPU ' ;; (L
 
 CC = clang
 
-override CPPFLAGS := $(if $(DEBUG),-DDEBUG,) $(CPPFLAGS)
-override CPPFLAGS := -DTHREADS=$(CPUS) $(CPPFLAGS)
-override CPPFLAGS := -I$(WORKBENCH_BASE)/SDL/include $(CPPFLAGS)
-override CPPFLAGS := -I$(WORKBENCH_BASE)/FFmpeg -IComponents $(CPPFLAGS)
+override CPPFLAGS := $(if $(DEBUG),-DDEBUG,) -DTHREADS=$(CPUS) $(CPPFLAGS)
+override CPPFLAGS := -I$(shell sdl-config --prefix)/include/SDL $(CPPFLAGS)
+override CPPFLAGS := -IFFmpeg -I../FFmpeg -IComponents $(CPPFLAGS)
 
 override CFLAGS := $(if $(DEBUG),-g -O0,-O3) $(CFLAGS)
 override CFLAGS := -march=$(ARCH) -fblocks -std=c99 $(CFLAGS)
 override CFLAGS := -Wall $(CFLAGS)
 
-ifeq ($(shell uname),Linux)
-override CPPFLAGS := -D_XOPEN_SOURCE=600 $(CPPFLAGS)
-override LDFLAGS := -lrt $(LDFLAGS)
-SDL_EXTRA_LIBS = -pthread -lm -ldl
-endif
+override LDFLAGS := -pthread -lm -ldl $(LDFLAGS)
 
-ifeq ($(shell uname),Darwin)
-SDL_EXTRA_LIBS = -framework Cocoa -framework Carbon -framework OpenGL -framework AudioUnit -framework IOKit
+ifeq ($(shell uname),Linux)
+override CPPFLAGS := -D_GNU_SOURCE $(CPPFLAGS)
+override LDFLAGS := -lrt $(LDFLAGS)
 endif

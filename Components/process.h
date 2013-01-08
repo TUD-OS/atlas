@@ -1,14 +1,10 @@
 /*
- * Copyright (C) 2006-2012 Michael Roitzsch <mroi@os.inf.tu-dresden.de>
+ * Copyright (C) 2006-2013 Michael Roitzsch <mroi@os.inf.tu-dresden.de>
  * economic rights: Technische Universitaet Dresden (Germany)
  */
 
 #include "config.h"
 #include "libavcodec/avcodec.h"
-
-#if FFMPEG_TIME
-#  include "libavutil/timer.h"
-#endif
 
 
 #pragma mark Workbench Configuration
