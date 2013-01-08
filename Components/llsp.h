@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2012 Michael Roitzsch <mroi@os.inf.tu-dresden.de>
+ * Copyright (C) 2006-2013 Michael Roitzsch <mroi@os.inf.tu-dresden.de>
  * economic rights: Technische Universitaet Dresden (Germany)
  */
 
@@ -41,4 +41,3 @@ double llsp_predict(llsp_t *llsp, const double *metrics);
 
 /* Frees the LLSP context. */
 void llsp_dispose(llsp_t *llsp);
-

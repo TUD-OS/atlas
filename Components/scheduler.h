@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2012 Michael Roitzsch <mroi@os.inf.tu-dresden.de>
+ * Copyright (C) 2006-2013 Michael Roitzsch <mroi@os.inf.tu-dresden.de>
  * economic rights: Technische Universitaet Dresden (Germany)
  *
  * Copyright (C) 2012 Stefan Wächtler
