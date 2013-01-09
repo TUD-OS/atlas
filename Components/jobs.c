@@ -4,7 +4,6 @@
  */
 
 #ifdef __linux__
-#define _GNU_SOURCE
 #include <sched.h>
 #include <signal.h>
 #endif
@@ -138,7 +137,7 @@ void atlas_job_queue_terminate(void *code)
 
 #pragma mark Job Management
 
-static void atlas_job_submit(void *code, double deadline, unsigned count, const double metrics[], enum sched_timebase timebase)
+static void atlas_job_submit(void *code, double deadline, unsigned count, const double metrics[], enum sched_timeref timeref)
 {
 	struct estimator_s *estimator;
 	for (estimator = estimator_list; estimator; estimator = estimator->next)
@@ -148,7 +147,7 @@ static void atlas_job_submit(void *code, double deadline, unsigned count, const 
 	pthread_mutex_lock(&estimator->lock);
 	
 	double offset = 0.0;
-	if (timebase == sched_deadline_relative)
+	if (timeref == sched_deadline_relative)
 		offset = av_gettime() / 1000000.0;
 	
 	if (deadline + offset < estimator->previous_deadline) {
@@ -182,7 +181,7 @@ static void atlas_job_submit(void *code, double deadline, unsigned count, const 
 	scratchpad_write(&estimator->scratchpad, prediction);
 	
 #if JOB_SCHEDULING
-	prediction *= JOB_OVERALLOCATION;
+	JOB_OVERALLOCATION(prediction);
 	struct timeval tv_deadline = {
 		.tv_sec = deadline,
 		.tv_usec = 1000000 * (deadline - (long long)deadline)
@@ -191,7 +190,7 @@ static void atlas_job_submit(void *code, double deadline, unsigned count, const 
 		.tv_sec = prediction,
 		.tv_usec = 1000000 * (prediction - (long long)prediction)
 	};
-	sched_submit(estimator->tid, &tv_exectime, &tv_deadline, timebase);
+	sched_submit(estimator->tid, &tv_exectime, &tv_deadline, timeref);
 #endif
 	
 	pthread_mutex_unlock(&estimator->lock);
