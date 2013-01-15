@@ -17,6 +17,7 @@ all clean:
 
 environment:
 	@uname -sr | grep 'Linux.*atlas' || { echo '*** Boot the ATLAS kernel. ***' ; false ; }
+	@fgrep 1 /proc/sys/kernel/sched_atlas_advance_in_cfs || { echo '*** Enable ATLAS option to advance in CFS. (/proc/sys/kernel/sched_atlas_advance_in_cfs) ***' ; false ; }
 	@fgrep performance /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor || { echo '*** Use the "performance" CPU frequency governor. ***' ; false ; }
 	@! grep -v 'lo$$' /proc/net/if_inet6 || { echo '*** Disable networking. ***' ; false ; }
 	@! hciconfig | fgrep UP || { echo '*** Disable Bluetooth. ***' ; false ; }
