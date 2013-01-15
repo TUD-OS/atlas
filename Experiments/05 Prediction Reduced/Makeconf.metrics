@@ -1,0 +1,1 @@
+override CPPFLAGS = -DMETRICS_REDUCED
