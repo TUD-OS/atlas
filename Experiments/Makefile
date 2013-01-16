@@ -16,9 +16,8 @@ all clean:
 	$(MAKE) -C '$(wildcard $@*)'
 
 environment:
-	@uname -sr | grep 'Linux.*atlas' || { echo '*** Boot the ATLAS kernel. ***' ; false ; }
-	@fgrep 1 /proc/sys/kernel/sched_atlas_advance_in_cfs || { echo '*** Enable ATLAS option to advance in CFS. (/proc/sys/kernel/sched_atlas_advance_in_cfs) ***' ; false ; }
-	@fgrep performance /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor || { echo '*** Use the "performance" CPU frequency governor. ***' ; false ; }
+	@uname -sr | grep -q 'Linux.*atlas' || { echo '*** Boot the ATLAS kernel. ***' ; false ; }
+	@fgrep -q performance /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor || { echo '*** Use the "performance" CPU frequency governor. ***' ; false ; }
 	@! grep -v 'lo$$' /proc/net/if_inet6 || { echo '*** Disable networking. ***' ; false ; }
 	@! hciconfig | fgrep UP || { echo '*** Disable Bluetooth. ***' ; false ; }
 	@! ps -eo pid,rtprio,cmd | fgrep -v fgrep | fgrep ' - /usr/bin/X ' || { echo '*** Boost X to real-time priority (chrt -p 5 <PID>). ***' ; false ; }
