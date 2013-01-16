@@ -14,10 +14,6 @@
 		4CAA9F00135C58F500AEA9EB /* metrics.c in Sources */ = {isa = PBXBuildFile; fileRef = 4C24B9F111EDE6D600E67981 /* metrics.c */; };
 		4CAA9F01135C58F500AEA9EB /* nalu.c in Sources */ = {isa = PBXBuildFile; fileRef = 4C24B9F311EDE6D600E67981 /* nalu.c */; };
 		4CAA9F02135C58F500AEA9EB /* process.c in Sources */ = {isa = PBXBuildFile; fileRef = 4C24B9F511EDE6D600E67981 /* process.c */; };
-		4CAA9F03135C58F500AEA9EB /* propagate.c in Sources */ = {isa = PBXBuildFile; fileRef = 4C24B9F811EDE6D600E67981 /* propagate.c */; };
-		4CAA9F04135C58F500AEA9EB /* replace.c in Sources */ = {isa = PBXBuildFile; fileRef = 4C24B9FA11EDE6D600E67981 /* replace.c */; };
-		4CAA9F05135C58F500AEA9EB /* adapt.c in Sources */ = {isa = PBXBuildFile; fileRef = 4C24B9FC11EDE6D600E67981 /* adapt.c */; };
-		4CAA9F06135C58F500AEA9EB /* ssim.c in Sources */ = {isa = PBXBuildFile; fileRef = 4C24B9FE11EDE6D600E67981 /* ssim.c */; };
 		4CAA9F07135C58F500AEA9EB /* weak.c in Sources */ = {isa = PBXBuildFile; fileRef = 4CF0A7011202CA0800817B42 /* weak.c */; };
 /* End PBXBuildFile section */
 
@@ -28,7 +24,6 @@
 		4C24B8FD11EDE6B900E67981 /* x264 */ = {isa = PBXFileReference; lastKnownFileType = folder; path = x264; sourceTree = "<group>"; };
 		4C24B9E911EDE6D600E67981 /* h264_workbench.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = h264_workbench.c; sourceTree = "<group>"; };
 		4C24B9EA11EDE6D600E67981 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
-		4C24B9EC11EDE6D600E67981 /* digits.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = digits.h; sourceTree = "<group>"; };
 		4C24B9ED11EDE6D600E67981 /* llsp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = llsp.c; sourceTree = "<group>"; };
 		4C24B9EE11EDE6D600E67981 /* llsp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = llsp.h; sourceTree = "<group>"; };
 		4C24B9F011EDE6D600E67981 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
@@ -36,11 +31,6 @@
 		4C24B9F311EDE6D600E67981 /* nalu.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = nalu.c; sourceTree = "<group>"; };
 		4C24B9F511EDE6D600E67981 /* process.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = process.c; sourceTree = "<group>"; };
 		4C24B9F611EDE6D600E67981 /* process.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = process.h; sourceTree = "<group>"; };
-		4C24B9F811EDE6D600E67981 /* propagate.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = propagate.c; sourceTree = "<group>"; };
-		4C24B9FA11EDE6D600E67981 /* replace.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = replace.c; sourceTree = "<group>"; };
-		4C24B9FC11EDE6D600E67981 /* adapt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = adapt.c; sourceTree = "<group>"; };
-		4C24B9FE11EDE6D600E67981 /* ssim.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ssim.c; sourceTree = "<group>"; };
-		4C24B9FF11EDE6D600E67981 /* ssim.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ssim.h; sourceTree = "<group>"; };
 		4C3E4E7F126D9BCF004DACE5 /* Makeconf */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = Makeconf; sourceTree = "<group>"; };
 		4C4847D114CED7F0009DDAAF /* ffplay.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = ffplay.c; path = FFmpeg/ffplay.c; sourceTree = "<group>"; usesTabs = 0; };
 		4C8CC59714D41C0800595140 /* nalu.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = nalu.h; sourceTree = "<group>"; };
@@ -77,8 +67,6 @@
 			isa = PBXGroup;
 			children = (
 				4C24B9F011EDE6D600E67981 /* Makefile */,
-				4C24B9FC11EDE6D600E67981 /* adapt.c */,
-				4C24B9EC11EDE6D600E67981 /* digits.h */,
 				4C8CC59C14D81B4000595140 /* jobs.h */,
 				4C8CC59A14D81B2400595140 /* jobs.c */,
 				4C24B9EE11EDE6D600E67981 /* llsp.h */,
@@ -88,11 +76,7 @@
 				4C24B9F311EDE6D600E67981 /* nalu.c */,
 				4C24B9F511EDE6D600E67981 /* process.c */,
 				4C24B9F611EDE6D600E67981 /* process.h */,
-				4C24B9F811EDE6D600E67981 /* propagate.c */,
-				4C24B9FA11EDE6D600E67981 /* replace.c */,
 				4CC4C87C15DD44BC004D06C2 /* scheduler.h */,
-				4C24B9FF11EDE6D600E67981 /* ssim.h */,
-				4C24B9FE11EDE6D600E67981 /* ssim.c */,
 				4CF0A7011202CA0800817B42 /* weak.c */,
 			);
 			path = Components;
@@ -226,10 +210,6 @@
 				4CAA9F00135C58F500AEA9EB /* metrics.c in Sources */,
 				4CAA9F01135C58F500AEA9EB /* nalu.c in Sources */,
 				4CAA9F02135C58F500AEA9EB /* process.c in Sources */,
-				4CAA9F03135C58F500AEA9EB /* propagate.c in Sources */,
-				4CAA9F04135C58F500AEA9EB /* replace.c in Sources */,
-				4CAA9F05135C58F500AEA9EB /* adapt.c in Sources */,
-				4CAA9F06135C58F500AEA9EB /* ssim.c in Sources */,
 				4CAA9F07135C58F500AEA9EB /* weak.c in Sources */,
 				4C8CC59B14D81B2400595140 /* jobs.c in Sources */,
 				4C4847D314CED80A009DDAAF /* ffplay.c in Sources */,
