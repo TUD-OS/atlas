@@ -6,7 +6,8 @@
 /* To compensate for misprediction, accounting drift and scheduler overhead,
  * jobs are over-allocated when reporting to the system scheduler. */
 #ifndef JOB_OVERALLOCATION
-#define JOB_OVERALLOCATION(x)  x = x * 1.01
+/* IO-bound threads get 100us extra, because ATLAS does not properly handle IO delay yet. */
+#define JOB_OVERALLOCATION(x) x = (code == ffplay_stages[1].code) ? (x * 1.01) : (x * 1.01 + 0.0001);
 #endif
 
 /* toggle job communication to scheduler */
