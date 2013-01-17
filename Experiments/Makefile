@@ -11,6 +11,7 @@ all clean:
 	$(MAKE) -C 07\ Full\ with\ Load $@
 	$(MAKE) -C 08\ Reduced\ with\ Load $@
 	$(MAKE) -C 09\ None\ with\ Load $@
+	$(MAKE) -C 10\ CFS\ with\ Load $@
 
 %:
 	$(MAKE) -C '$(wildcard $@*)'
