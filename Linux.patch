@@ -424,10 +424,10 @@ index 173ea52..445a719 100644
  obj-$(CONFIG_SCHEDSTATS) += stats.o
 diff --git a/kernel/sched/atlas.c b/kernel/sched/atlas.c
 new file mode 100644
-index 0000000..c049625
+index 0000000..454f791
 --- /dev/null
 +++ b/kernel/sched/atlas.c
-@@ -0,0 +1,2053 @@
+@@ -0,0 +1,2058 @@
 +#include <linux/syscalls.h>
 +#include <linux/rbtree.h>
 +#include <linux/slab.h>
@@ -804,7 +804,7 @@ index 0000000..c049625
 +	
 +	assert_raw_spin_locked(&rq_of(atlas_rq)->lock);
 +
-+	BUG_ON(atlas_rq->advance_in_cfs && atlas_rq->timer_target != ATLAS_SLACK);
++	BUG_ON(atlas_rq->advance_in_cfs && atlas_rq->timer_target != ATLAS_SLACK && !(atlas_rq->pending_work & PENDING_STOP_CFS_ADVANCED));
 +
 +	switch (atlas_rq->timer_target) {
 +		case ATLAS_NONE:
@@ -898,7 +898,7 @@ index 0000000..c049625
 + */
 +
 +void atlas_switch_scheduler(struct rq *rq,
-+	struct task_struct *p, const struct sched_class *new)
++	struct task_struct *p, const struct sched_class *new_sched_class)
 +{
 +	const struct sched_class *prev_sched_class;
 +	int on_rq, running;
@@ -910,7 +910,7 @@ index 0000000..c049625
 +	
 +	prev_sched_class = p->sched_class;
 +
-+	if (new == prev_sched_class) {
++	if (new_sched_class == prev_sched_class) {
 +		//raw_spin_unlock(&p->pi_lock);
 +		return;
 +	}
@@ -918,23 +918,23 @@ index 0000000..c049625
 +	running = rq->curr == p;
 +	
 +	DEBUG(DEBUG_SWITCH_SCHED, "pid=%d from %s to %s, on_rq=%d, running=%d",
-+		p->pid, sched_name(p->sched_class), sched_name(new), on_rq, running);
++		p->pid, sched_name(prev_sched_class), sched_name(new_sched_class), on_rq, running);
 +	
 +	if (on_rq)
-+		p->sched_class->dequeue_task(rq, p, 0);
++		prev_sched_class->dequeue_task(rq, p, 0);
 +	if (running)
-+		p->sched_class->put_prev_task(rq, p);
++		prev_sched_class->put_prev_task(rq, p);
 +
-+	p->sched_class = new;
++	p->sched_class = new_sched_class;
 +	
 +	if (running)
-+		p->sched_class->set_curr_task(rq);
++		new_sched_class->set_curr_task(rq);
 +	if (on_rq)
-+		p->sched_class->enqueue_task(rq, p, 0);
++		new_sched_class->enqueue_task(rq, p, 0);
 +
 +	if (prev_sched_class->switched_from)
 +		prev_sched_class->switched_from(rq, p);
-+	p->sched_class->switched_to(rq, p);
++	new_sched_class->switched_to(rq, p);
 +	
 +	//FIXME: pi-stuff?
 +	//raw_spin_unlock(&p->pi_lock);
@@ -2312,17 +2312,22 @@ index 0000000..c049625
 +	}
 +	
 +
-+	if (se->job == se->real_job)
-+		atlas_switch_scheduler(rq, current, &atlas_sched_class);
-+	else
-+		atlas_switch_scheduler(rq, current, &fair_sched_class);
++	if (se->job == se->real_job) {
++		if (atlas_rq->advance_in_cfs == current) {
++			BUG_ON(!(current->atlas.flags & ATLAS_CFS_ADVANCED));
++			BUG_ON(atlas_rq->timer_target != ATLAS_SLACK && !(atlas_rq->pending_work & PENDING_STOP_CFS_ADVANCED));
++			reset_timer(atlas_rq);
++		} else
++			atlas_switch_scheduler(rq, current, &atlas_sched_class);
++	} /* else
++		atlas_switch_scheduler(rq, current, &fair_sched_class); */
 +	
 +	raw_spin_unlock_irqrestore(&rq->lock, flags);
 +
 +	if (se->real_job)
 +		goto out_timer;
 +		
-+	preempt_enable_no_resched();
++	preempt_enable();
 +	se->state = ATLAS_BLOCKED;
 +	
 +
