@@ -210,14 +210,14 @@ index 779c879..cd84969 100644
 +    static int last_h;
 +#endif
 +
-+    static dispatch_once_t predicate;
-+    dispatch_once(&predicate, ^{
-+        frame = avcodec_alloc_frame();
++static dispatch_once_t predicate;
++dispatch_once(&predicate, ^{
++    frame = avcodec_alloc_frame();
 +#if CONFIG_AVFILTER
-+        graph = avfilter_graph_alloc();
-+        filt_out = NULL;
-+        last_w = is->video_st->codec->width;
-+        last_h = is->video_st->codec->height;
++    graph = avfilter_graph_alloc();
++    filt_out = NULL;
++    last_w = is->video_st->codec->width;
++    last_h = is->video_st->codec->height;
  
 -    if ((ret = configure_video_filters(graph, is, vfilters)) < 0) {
 +    if (configure_video_filters(graph, is, vfilters) < 0) {
@@ -229,7 +229,7 @@ index 779c879..cd84969 100644
      }
      filt_out = is->out_video_filter;
  #endif
-+    });
++});
 +    if (!filt_out)
 +        goto the_end;
 +    if (!graph)
