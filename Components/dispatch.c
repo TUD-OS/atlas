@@ -15,12 +15,14 @@
 #include <dlfcn.h>
 #include <assert.h>
 
-#include "scheduler.h"
+#include <dispatch/dispatch.h>  // to get dispatch_semaphore_t early
+#include "scheduler.h"  // for gettid()
 
 typedef struct {
 	void (^block)(void);
 	bool is_copied;
 	bool is_realtime;
+	dispatch_semaphore_t *signal_completion;
 } dispatch_queue_element_t;
 
 #define BUFFER_TYPE dispatch_queue_element_t
@@ -94,9 +96,11 @@ void dispatch_async(dispatch_queue_t queue, dispatch_block_t block)
 	dispatch_queue_element_t element = {
 		.block = Block_copy(block),
 		.is_copied = true,
-		.is_realtime = false
+		.is_realtime = false,
+		.signal_completion = NULL
 	};
 	pthread_mutex_lock(&queue->lock);
+	assert(queue->refcount);
 	buffer_put(&queue->blocks, element);
 	queue->refcount++;  // shortcut for calling dispatch_retain
 	pthread_mutex_unlock(&queue->lock);
@@ -108,14 +112,13 @@ void dispatch_sync(dispatch_queue_t queue, dispatch_block_t block)
 	dispatch_semaphore_t complete = dispatch_semaphore_create(0);
 	
 	dispatch_queue_element_t element = {
-		.block = ^{
-			block();
-			dispatch_semaphore_signal(complete);
-		},
+		.block = block,
 		.is_copied = false,
-		.is_realtime = false
+		.is_realtime = false,
+		.signal_completion = &complete
 	};
 	pthread_mutex_lock(&queue->lock);
+	assert(queue->refcount);
 	buffer_put(&queue->blocks, element);
 	queue->refcount++;  // shortcut for calling dispatch_retain
 	pthread_mutex_unlock(&queue->lock);
@@ -143,6 +146,7 @@ void dispatch_retain(dispatch_object_t object)
 	ORIGINAL_GCD(retain, object)
 	
 	pthread_mutex_lock(&queue->lock);
+	assert(queue->refcount);
 	queue->refcount++;
 	pthread_mutex_unlock(&queue->lock);
 }
@@ -154,12 +158,12 @@ void dispatch_release(dispatch_object_t object)
 	ORIGINAL_GCD(release, object)
 	
 	pthread_mutex_lock(&queue->lock);
+	assert(queue->refcount);
 	if (--queue->refcount == 0) {
 		dispatch_queue_element_t element = {
 			.block = ^{
 				pthread_exit(NULL);
-			},
-			.is_copied = false
+			}
 		};
 		buffer_put(&queue->blocks, element);
 		pthread_mutex_unlock(&queue->lock);
@@ -195,10 +199,12 @@ void dispatch_async_atlas(dispatch_queue_t queue, atlas_job_t job, dispatch_bloc
 	dispatch_queue_element_t element = {
 		.block = Block_copy(block),
 		.is_copied = true,
-		.is_realtime = true
+		.is_realtime = true,
+		.signal_completion = NULL
 	};
 	
 	pthread_mutex_lock(&queue->lock);
+	assert(queue->refcount);
 	
 	if (job.deadline < queue->previous_deadline)
 		job.deadline = queue->previous_deadline;
@@ -240,6 +246,9 @@ static void *dispatch_queue_worker(void *context)
 			atlas_job_train(code);
 		
 		dispatch_release(queue);
+		
+		if (element.signal_completion)
+			dispatch_semaphore_signal(*element.signal_completion);
 	}
 }
 
