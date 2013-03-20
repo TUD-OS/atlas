@@ -10,10 +10,11 @@ include $(WORKBENCH_BASE)/Makefile
 FFmpeg.patch: $(WORKBENCH_BASE)/FFmpeg.patch
 	sed 's/#define FFMPEG_TIME 0/#define FFMPEG_TIME 1/' < $< > $@
 
-FFmpeg/.git/config: $(WORKBENCH_BASE)/FFmpeg/.git
+FFmpeg/.git/config: $(WORKBENCH_BASE)/FFmpeg/.git/config
+	rm -rf FFmpeg
 	git clone --local $<
 
-$(WORKBENCH_BASE)/FFmpeg/.git:
+$(WORKBENCH_BASE)/FFmpeg/.git/config:
 	$(MAKE) -C $(WORKBENCH_BASE) FFmpeg/.git/config
 
 clean::
