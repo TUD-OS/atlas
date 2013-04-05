@@ -1,0 +1,37 @@
+diff --git a/ffplay.c b/ffplay.c
+index 56cbf3d..662535f 100644
+--- a/ffplay.c
++++ b/ffplay.c
+@@ -1040,9 +1040,14 @@ static int refresh_thread(void *opaque)
+             if (is->paused)
+                 goto refresh;
+             
++            double frame_duration = is->frame_last_duration;
++            if (frame_duration == 0.0 && is->frame_last_pts != AV_NOPTS_VALUE)
++                /* peek ahead in the picture queue */
++                frame_duration = is->pictq[is->pictq_rindex].pts - is->frame_last_pts;
++
+             int sleep_result = 0;
+             do {
+-                double wait = (is->frame_timer + is->frame_last_duration) - av_gettime() / 1000000.0;
++                double wait = (is->frame_timer + frame_duration) - av_gettime() / 1000000.0;
+                 if (wait > 0)
+                     sleep_result = usleep(wait * 1000000);
+             } while (sleep_result < 0);
+@@ -1561,7 +1566,6 @@
+         is->video_current_pos = -1;
+         is->frame_last_pts = AV_NOPTS_VALUE;
+         is->frame_last_duration = 0;
+-        is->frame_timer = (double)av_gettime() / 1000000.0;
+         is->frame_last_dropped_pts = AV_NOPTS_VALUE;
+         SDL_UnlockMutex(is->pictq_mutex);
+ 
+@@ -2930,6 +2934,7 @@
+     packet_queue_init(&is->subtitleq);
+ 
+     is->av_sync_type = av_sync_type;
++    is->frame_timer = (double)atoll(getenv("DEMO_START")) / 1000000.0;
+     is->read_tid     = SDL_CreateThread(read_thread, is);
+     if (!is->read_tid) {
+         av_free(is);
+

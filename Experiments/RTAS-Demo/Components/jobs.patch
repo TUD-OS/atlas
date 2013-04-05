@@ -1,0 +1,41 @@
+--- jobs.c	2013-01-16 10:57:09.000000000 +0100
++++ jobs.c	2013-04-04 17:33:11.000000000 +0200
+@@ -65,6 +65,14 @@
+ 	return value;
+ }
+ 
++static int scheduling_enabled = 0;
++
++static void query_scheduling(void) __attribute__((constructor));
++static void query_scheduling(void)
++{
++	if (getenv("DEMO_ATLAS")) scheduling_enabled = 1;
++}
++
+ #pragma mark -
+ 
+ 
+@@ -181,6 +189,7 @@
+ 	scratchpad_write(&estimator->scratchpad, prediction);
+ 	
+ #if JOB_SCHEDULING
++if (scheduling_enabled) {
+ 	JOB_OVERALLOCATION(prediction);
+ 	struct timeval tv_deadline = {
+ 		.tv_sec = deadline,
+@@ -191,6 +200,7 @@
+ 		.tv_usec = 1000000 * (prediction - (long long)prediction)
+ 	};
+ 	sched_submit(estimator->tid, &tv_exectime, &tv_deadline, timeref);
++}
+ #endif
+ 	
+ 	pthread_mutex_unlock(&estimator->lock);
+@@ -252,6 +262,7 @@
+ 	pthread_mutex_unlock(&estimator->lock);
+ 	
+ #if JOB_SCHEDULING
++if (scheduling_enabled)
+ 	sched_next();
+ #endif
+ 	
