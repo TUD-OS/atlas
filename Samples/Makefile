@@ -22,7 +22,7 @@ else
 include $(INCLUDE)
 
 %.h264: %.mov %.cfg ../x264/x264 Makefile
-	ffmpeg -i $< -f rawvideo - 2> /dev/null | ../x264/x264 $(X264_$(MODE)) $(X264_$(PROFILE)) -o $@ -
+	ffmpeg -i $< -s $(SIZE) -f rawvideo - 2> /dev/null | ../x264/x264 $(X264_$(MODE)) $(X264_$(PROFILE)) -o $@ -
 
 %.h264: %.y4m %.cfg ../x264/x264 Makefile
 	../x264/x264 $(X264_$(MODE)) $(X264_$(PROFILE)) -o $@ $<
