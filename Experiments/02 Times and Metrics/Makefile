@@ -12,7 +12,7 @@ FFmpeg.patch: $(WORKBENCH_BASE)/FFmpeg.patch
 
 FFmpeg/.git/config: $(WORKBENCH_BASE)/FFmpeg/.git/config
 	rm -rf FFmpeg
-	git clone --local $<
+	git clone --local $(<D)
 
 $(WORKBENCH_BASE)/FFmpeg/.git/config:
 	$(MAKE) -C $(WORKBENCH_BASE) FFmpeg/.git/config
