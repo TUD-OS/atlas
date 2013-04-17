@@ -19,7 +19,6 @@ ifneq ($(BUILD_WORKBENCH),)
 h264_workbench: %: %.c $(COMPONENTS) $(FFMPEG_LIBS) Makefile $(WORKBENCH_BASE)/Makefile $(WORKBENCH_BASE)/Makeconf $(wildcard $(WORKBENCH_BASE)/Makeconf.local)
 	$(CC) $(CPPFLAGS) -MM $< > .$*.d 2> /dev/null
 	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ "$(realpath $<)" $(COMPONENTS) $(FFMPEG_LIBS) -lz -lm -pthread $(LDFLAGS)
-all:: h264_workbench
 clean::
 	rm -f h264_workbench
 endif
@@ -117,6 +116,7 @@ endif
 
 BUILD_SAMPLES ?= $(wildcard Samples)
 ifneq ($(BUILD_SAMPLES),)
+all:: Samples
 .PRECIOUS: Samples/%.cfg Samples/%.h264 Samples/%.h264_metrics
 Samples/%.h264: Samples/%.cfg
 Samples/%.h264 Samples/%.cfg: force
