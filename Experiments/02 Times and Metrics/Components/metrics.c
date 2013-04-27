@@ -36,27 +36,26 @@ void hook_slice_any(const AVCodecContext *c)
 		usecs_per_tsc = (usecs_stop - usecs_start) / (tsc_stop - tsc_start);
 	});
 	
-	printf("%d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, ",
+	printf("%d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, ",
 	       c->metrics.type,                              //  1
 	       (c->slice.end_index - c->slice.start_index),  //  2
-	       c->metrics.bits,                              //  3
-	       c->metrics.intra_pcm,                         //  4
+	       c->metrics.bits_cabac,                        //  3
+	       c->metrics.bits_cavlc,                        //  4
 	       c->metrics.intra_4x4,                         //  5
 	       c->metrics.intra_8x8,                         //  6
 	       c->metrics.intra_16x16,                       //  7
 	       c->metrics.inter_4x4,                         //  8
 	       c->metrics.inter_8x8,                         //  9
 	       c->metrics.inter_16x16,                       // 10
-	       c->metrics.idct_4x4,                          // 11
-	       c->metrics.idct_8x8,                          // 12
-	       c->metrics.deblock_edges);                    // 13
-	printf("%f, %f, %f, %f, %f, %f, %f, ",
-	       usecs_per_tsc * c->timing.decoder_prep,       // 14
-	       usecs_per_tsc * c->timing.decompress_cabac,   // 15
-	       usecs_per_tsc * c->timing.decompress_cavlc,   // 16
-	       usecs_per_tsc * c->timing.spatial_pred,       // 17
-	       usecs_per_tsc * c->timing.temporal_pred,      // 18
-	       usecs_per_tsc * c->timing.idct,               // 19
-	       usecs_per_tsc * c->timing.post);              // 20
-	printf("%f\n", usecs_per_tsc * c->timing.total);     // 21
+	       c->metrics.idct_pcm,                          // 11
+	       c->metrics.idct_4x4,                          // 12
+	       c->metrics.idct_8x8,                          // 13
+	       c->metrics.deblock_edges);                    // 14
+	printf("%f, %f, %f, %f, %f, %f\n",
+	       usecs_per_tsc * c->timing.decompression,      // 15
+	       usecs_per_tsc * c->timing.spatial,            // 16
+	       usecs_per_tsc * c->timing.temporal,           // 17
+	       usecs_per_tsc * c->timing.transform,          // 18
+	       usecs_per_tsc * c->timing.post,               // 19
+	       usecs_per_tsc * c->timing.total);             // 20
 }

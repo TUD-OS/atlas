@@ -157,11 +157,11 @@ struct frame_node_s {
 		/* decoding time metrics */
 #if METRICS_EXTRACT || METADATA_READ
 		struct {
-			int type, bits;
-			int intra_pcm, intra_4x4, intra_8x8, intra_16x16;
-			int inter_4x4, inter_8x8, inter_16x16;
-			int idct_4x4, idct_8x8;
-			int deblock_edges;
+			uint32_t type, bits_cabac, bits_cavlc;
+			uint32_t intra_4x4, intra_8x8, intra_16x16;
+			uint32_t inter_4x4, inter_8x8, inter_16x16;
+			uint32_t idct_pcm, idct_4x4, idct_8x8;
+			uint32_t deblock_edges;
 		} metrics;
 #endif
 #if PREPROCESS

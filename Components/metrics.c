@@ -10,14 +10,15 @@
 void remember_metrics(const AVCodecContext *c)
 {
 	proc.frame->slice[proc.frame->slice_count].metrics.type          = c->metrics.type;
-	proc.frame->slice[proc.frame->slice_count].metrics.bits          = c->metrics.bits;
-	proc.frame->slice[proc.frame->slice_count].metrics.intra_pcm     = c->metrics.intra_pcm;
+	proc.frame->slice[proc.frame->slice_count].metrics.bits_cabac    = c->metrics.bits_cabac;
+	proc.frame->slice[proc.frame->slice_count].metrics.bits_cavlc    = c->metrics.bits_cavlc;
 	proc.frame->slice[proc.frame->slice_count].metrics.intra_4x4     = c->metrics.intra_4x4;
 	proc.frame->slice[proc.frame->slice_count].metrics.intra_8x8     = c->metrics.intra_8x8;
 	proc.frame->slice[proc.frame->slice_count].metrics.intra_16x16   = c->metrics.intra_16x16;
 	proc.frame->slice[proc.frame->slice_count].metrics.inter_4x4     = c->metrics.inter_4x4;
 	proc.frame->slice[proc.frame->slice_count].metrics.inter_8x8     = c->metrics.inter_8x8;
 	proc.frame->slice[proc.frame->slice_count].metrics.inter_16x16   = c->metrics.inter_16x16;
+	proc.frame->slice[proc.frame->slice_count].metrics.idct_pcm      = c->metrics.idct_pcm;
 	proc.frame->slice[proc.frame->slice_count].metrics.idct_4x4      = c->metrics.idct_4x4;
 	proc.frame->slice[proc.frame->slice_count].metrics.idct_8x8      = c->metrics.idct_8x8;
 	proc.frame->slice[proc.frame->slice_count].metrics.deblock_edges = c->metrics.deblock_edges;
@@ -28,14 +29,15 @@ void remember_metrics(const AVCodecContext *c)
 void write_metrics(const frame_node_t *frame, int slice)
 {
 	nalu_write_uint8(proc.metadata.write, frame->slice[slice].metrics.type);
-	nalu_write_uint24(proc.metadata.write, frame->slice[slice].metrics.bits);
-	nalu_write_uint24(proc.metadata.write, frame->slice[slice].metrics.intra_pcm);
+	nalu_write_uint24(proc.metadata.write, frame->slice[slice].metrics.bits_cabac);
+	nalu_write_uint24(proc.metadata.write, frame->slice[slice].metrics.bits_cavlc);
 	nalu_write_uint24(proc.metadata.write, frame->slice[slice].metrics.intra_4x4);
 	nalu_write_uint24(proc.metadata.write, frame->slice[slice].metrics.intra_8x8);
 	nalu_write_uint24(proc.metadata.write, frame->slice[slice].metrics.intra_16x16);
 	nalu_write_uint24(proc.metadata.write, frame->slice[slice].metrics.inter_4x4);
 	nalu_write_uint24(proc.metadata.write, frame->slice[slice].metrics.inter_8x8);
 	nalu_write_uint24(proc.metadata.write, frame->slice[slice].metrics.inter_16x16);
+	nalu_write_uint24(proc.metadata.write, frame->slice[slice].metrics.idct_pcm);
 	nalu_write_uint24(proc.metadata.write, frame->slice[slice].metrics.idct_4x4);
 	nalu_write_uint24(proc.metadata.write, frame->slice[slice].metrics.idct_8x8);
 	nalu_write_uint24(proc.metadata.write, frame->slice[slice].metrics.deblock_edges);
@@ -46,14 +48,15 @@ void write_metrics(const frame_node_t *frame, int slice)
 void read_metrics(frame_node_t *frame, int slice)
 {
 	frame->slice[slice].metrics.type          = nalu_read_uint8(proc.metadata.read);
-	frame->slice[slice].metrics.bits          = nalu_read_uint24(proc.metadata.read);
-	frame->slice[slice].metrics.intra_pcm     = nalu_read_uint24(proc.metadata.read);
+	frame->slice[slice].metrics.bits_cabac    = nalu_read_uint24(proc.metadata.read);
+	frame->slice[slice].metrics.bits_cavlc    = nalu_read_uint24(proc.metadata.read);
 	frame->slice[slice].metrics.intra_4x4     = nalu_read_uint24(proc.metadata.read);
 	frame->slice[slice].metrics.intra_8x8     = nalu_read_uint24(proc.metadata.read);
 	frame->slice[slice].metrics.intra_16x16   = nalu_read_uint24(proc.metadata.read);
 	frame->slice[slice].metrics.inter_4x4     = nalu_read_uint24(proc.metadata.read);
 	frame->slice[slice].metrics.inter_8x8     = nalu_read_uint24(proc.metadata.read);
 	frame->slice[slice].metrics.inter_16x16   = nalu_read_uint24(proc.metadata.read);
+	frame->slice[slice].metrics.idct_pcm      = nalu_read_uint24(proc.metadata.read);
 	frame->slice[slice].metrics.idct_4x4      = nalu_read_uint24(proc.metadata.read);
 	frame->slice[slice].metrics.idct_8x8      = nalu_read_uint24(proc.metadata.read);
 	frame->slice[slice].metrics.deblock_edges = nalu_read_uint24(proc.metadata.read);
