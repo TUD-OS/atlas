@@ -585,7 +585,7 @@ index 779c879..25de11c 100644
      is = stream_open(input_filename, file_iformat);
      if (!is) {
 diff --git a/libavcodec/avcodec.h b/libavcodec/avcodec.h
-index 96ca401..0832a0f 100644
+index 96ca401..cfb21b1 100644
 --- a/libavcodec/avcodec.h
 +++ b/libavcodec/avcodec.h
 @@ -2914,6 +2914,91 @@ typedef struct AVCodecContext {
@@ -615,7 +615,7 @@ index 96ca401..0832a0f 100644
 +#   define FFMPEG_METRICS_EXTRACT(x)
 +#endif
 +    struct {
-+        uint32_t type;
++        int32_t  type;
 +        uint32_t bits_cabac;
 +        uint32_t bits_cavlc;
 +        uint32_t intra_4x4;
