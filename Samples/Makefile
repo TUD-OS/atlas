@@ -27,6 +27,9 @@ include $(INCLUDE)
 %.h264: %.y4m %.cfg ../x264/x264 Makefile
 	../x264/x264 $(X264_$(MODE)) $(X264_$(PROFILE)) -o $@ $<
 
+%.h264: %.264 %.cfg
+	ln -sf $< $@
+
 $(notdir $(URL)):
 	curl --user-agent QuickTime $(URL) > $@
 
