@@ -50,7 +50,7 @@ FFmpeg/configure: FFmpeg/.git/config FFmpeg.patch $(WORKBENCH_BASE)/Makefile
 	cd $(@D) && git add --all
 	touch $@
 FFmpeg/.git/config:
-	git clone -n git://git.videolan.org/ffmpeg.git FFmpeg
+	git clone -n git://source.ffmpeg.org/ffmpeg.git FFmpeg
 endif
 
 
