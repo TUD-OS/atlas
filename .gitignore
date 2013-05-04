@@ -6,6 +6,7 @@
 *.mp4
 *.o
 h264_workbench
+cpuhog
 ffplay
 ssim_demo
 
