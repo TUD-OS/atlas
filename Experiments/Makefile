@@ -3,12 +3,12 @@
 all: environment
 
 all clean:
-	$(MAKE) -C 01\ Decoding\ Times $@
-	$(MAKE) -C 02\ Times\ and\ Metrics $@
-	$(MAKE) -C 03\ Preprocess\ Metrics $@
-	$(MAKE) -C 04\ GCD\ Compatibility $@
-	$(MAKE) -C 05\ Prediction $@
-	$(MAKE) -C 06\ Scheduling $@
+	$(MAKE) -C 1-01\ Decoding\ Times $@
+	$(MAKE) -C 2-01\ GCD\ Compatibility $@
+	$(MAKE) -C 3-03\ Times\ and\ Metrics $@
+	$(MAKE) -C 3-04\ Preprocess\ Metrics $@
+	$(MAKE) -C 3-05\ Prediction\ Full $@
+	$(MAKE) -C 3-29\ Background\ ATLAS $@
 
 %:
 	for subdir in $@* ; do $(MAKE) -C "$$subdir" ; done

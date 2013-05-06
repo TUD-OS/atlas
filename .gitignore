@@ -15,8 +15,8 @@ ssim_demo
 xcuserdata
 
 /Linux
-/Experiments/02 Times and Metrics/FFmpeg.patch
-/Experiments/02 Times and Metrics/FFmpeg
+/Experiments/3-03 Times and Metrics/FFmpeg.patch
+/Experiments/3-03 Times and Metrics/FFmpeg
 /FFmpeg
 /Makeconf.local
 /x264

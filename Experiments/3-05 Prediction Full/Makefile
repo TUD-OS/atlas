@@ -8,7 +8,7 @@ include $(WORKBENCH_BASE)/Makefile
 	./ffplay -f h264 -threads 1 -nostats -noframedrop -autoexit $< > $@
 
 %.h264_metrics: force
-	$(MAKE) -C ../03\ Preprocess\ Metrics $@
+	$(MAKE) -C ../3-04\ Preprocess\ Metrics $@
 
 clean::
 	rm -f *.log
