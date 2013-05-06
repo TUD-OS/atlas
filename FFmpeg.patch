@@ -1,5 +1,5 @@
 diff --git a/ffplay.c b/ffplay.c
-index 779c879..e18e61f 100644
+index 779c879..1485873 100644
 --- a/ffplay.c
 +++ b/ffplay.c
 @@ -56,6 +56,23 @@
@@ -69,7 +69,7 @@ index 779c879..e18e61f 100644
  }
  
 -static int refresh_thread(void *opaque)
-+static int refresh_stage(void *opaque)
++static int refresh_stage(void *opaque)  // called output stage in the thesis
  {
      VideoState *is= opaque;
 +    int consume_next_frame = 0;
@@ -193,7 +193,7 @@ index 779c879..e18e61f 100644
  #endif  /* CONFIG_AVFILTER */
  
 -static int video_thread(void *arg)
-+static int video_stage(void *arg)
++static int video_stage(void *arg)  // called decoder stage in the thesis
  {
      VideoState *is = arg;
 -    AVFrame *frame = avcodec_alloc_frame();
@@ -323,7 +323,7 @@ index 779c879..e18e61f 100644
  
  /* this thread gets the stream from the disk or the network */
 -static int read_thread(void *arg)
-+static int read_stage(void *arg)
++static int read_stage(void *arg)  // called input stage in the thesis
  {
      VideoState *is = arg;
 -    AVFormatContext *ic = NULL;
