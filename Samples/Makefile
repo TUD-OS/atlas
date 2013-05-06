@@ -8,7 +8,7 @@ X264_HIGH = --bframes 8 --weightp 2 --8x8dct --b-adapt 2
 X264_MAIN = --bframes 8 --weightp 2 --no-8x8dct --b-adapt 2
 X264_BASELINE = --no-cabac --bframes 0 --weightp 0 --no-8x8dct
 
-all: $(patsubst %.cfg,%.h264,$(if $(wildcard *.cfg),$(wildcard *.cfg),bbc-r_m720p.cfg))
+all: $(patsubst %.cfg,%.h264,$(wildcard *.cfg))
 
 ifeq ($(INCLUDE),)
 
@@ -36,6 +36,12 @@ include $(INCLUDE)
 %.h264: %.ts %.cfg
 	ffmpeg -i $< -vcodec copy -vframes $(FRAMES) -f h264 -y $@
 
+Sintel-4k.h264: %.h264: %.cfg ../x264/x264 Makefile
+	$(eval SHELL = bash)
+	for ((frame=1; frame<=21312; frame++)) ; do \
+		ffmpeg -i `printf $(URL) $$frame` -f rawvideo -pix_fmt yuv420p - || ((frame--)) ; \
+	done 2> /dev/null | ../x264/x264 $(X264_$(MODE)) $(X264_$(PROFILE)) -o $@ -
+
 $(notdir $(URL)):
 	curl --user-agent QuickTime $(URL) > $@
 
@@ -43,10 +49,6 @@ endif
 
 ../x264/x264: force
 	$(MAKE) -C .. x264
-
-# some demo video
-bbc-r_m720p.cfg: Makefile
-	echo 'MODE = CBR\nPROFILE = MAIN\nSLICES = 4\nBITRATE = 4000\nREFERENCES = 3\nSIZE = 1280x720\nFPS = 24\nURL = http://movies.apple.com/movies/us/hd_gallery/gl1800/bbc-r_m720p.mov' > $@
 
 clean:
 	rm -f *.h264 *.h264_*
