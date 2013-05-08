@@ -11,14 +11,16 @@
 #include <string.h>
 #include <unistd.h>
 #include <assert.h>
+#include <math.h>
 
 
 #pragma mark Job Management Configuration
 
-/* To compensate for accounting rounding errors and scheduler overhead,
+/* To compensate for misprediction, accounting drift and scheduler overhead,
  * jobs are over-allocated when reporting to the system scheduler. */
 #ifndef JOB_OVERALLOCATION
-#define JOB_OVERALLOCATION 1.01
+#define JOB_OVERALLOCATION(x)  x * 1.01
+//#define JOB_OVERALLOCATION(x)  x * 1.01 + sqrt(estimator->mse)
 #endif
 
 /* toggle job communication to scheduler */

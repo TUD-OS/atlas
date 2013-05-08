@@ -28,6 +28,7 @@ struct estimator_s {
 	double time;
 	size_t metrics_count;
 	llsp_t *llsp;
+	double mse;
 	
 	struct buffer metrics;
 };
@@ -68,6 +69,7 @@ void atlas_job_submit(void *code, pid_t tid, atlas_job_t job)
 			estimator->time = 0.0;
 			estimator->metrics_count = 0;
 			estimator->llsp = NULL;
+			estimator->mse = 0.0;
 			
 			buffer_init(&estimator->metrics);
 			
@@ -104,7 +106,7 @@ void atlas_job_submit(void *code, pid_t tid, atlas_job_t job)
 	buffer_put(&estimator->metrics, prediction);
 	
 #if JOB_SCHEDULING
-	prediction *= JOB_OVERALLOCATION;
+	prediction = JOB_OVERALLOCATION(prediction);
 	struct timeval tv_deadline = {
 		.tv_sec = job.deadline,
 		.tv_usec = 1000000 * (job.deadline - (long long)job.deadline)
@@ -154,10 +156,12 @@ void atlas_job_train(void *code)
 		double deadline = buffer_get(&estimator->metrics);
 		double prediction = buffer_get(&estimator->metrics);
 		double execution_time = time - estimator->time;
+		double mse = (prediction - execution_time) * (prediction - execution_time);
 		
 #if LLSP_PREDICT
 		llsp_add(estimator->llsp, llsp_metrics, execution_time);
 #endif
+		estimator->mse = AGING_FACTOR * estimator->mse + (1.0 - AGING_FACTOR) * mse;
 		if (hook_job_complete)
 			hook_job_complete(code, time, deadline, prediction, execution_time);
 	}
