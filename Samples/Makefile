@@ -30,6 +30,9 @@ include $(INCLUDE)
 %.h264: %.264 %.cfg
 	ln -sf $< $@
 
+%.h264: %.m4v %.cfg
+	ffmpeg -i $< -vcodec copy -vbsf h264_mp4toannexb -f h264 $@
+
 $(notdir $(URL)):
 	curl --user-agent QuickTime $(URL) > $@
 

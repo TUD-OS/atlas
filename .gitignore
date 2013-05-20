@@ -4,6 +4,7 @@
 *.h264_metrics
 *.log
 *.mp4
+*.m4v
 *.o
 h264_workbench
 cpuhog
