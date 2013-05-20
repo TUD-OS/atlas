@@ -49,7 +49,7 @@ clean:
 	rm -f *.h264 *.h264_*
 
 cleanall: clean
-	rm -f *.mov
+	rm -f *.mov *.y4m
 
 force:
 	
