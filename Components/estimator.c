@@ -105,18 +105,20 @@ void atlas_job_submit(void *code, pid_t tid, atlas_job_t job)
 	buffer_put(&estimator->metrics, job.deadline);
 	buffer_put(&estimator->metrics, prediction);
 	
+	double reservation = JOB_OVERALLOCATION(prediction);
 #if JOB_SCHEDULING
-	prediction = JOB_OVERALLOCATION(prediction);
 	struct timeval tv_deadline = {
 		.tv_sec = job.deadline,
 		.tv_usec = 1000000 * (job.deadline - (long long)job.deadline)
 	};
 	struct timeval tv_exectime = {
-		.tv_sec = prediction,
-		.tv_usec = 1000000 * (prediction - (long long)prediction)
+		.tv_sec = reservation,
+		.tv_usec = 1000000 * (reservation - (long long)reservation)
 	};
 	sched_submit(tid, &tv_exectime, &tv_deadline, sched_deadline_absolute);
 #endif
+	if (hook_job_submit)
+		hook_job_submit(code, prediction, reservation, job.deadline);
 	
 	pthread_mutex_unlock(&estimator->lock);
 }

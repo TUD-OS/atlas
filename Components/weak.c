@@ -9,6 +9,7 @@
 #pragma clang diagnostic ignored "-Wgcc-compat"
 #include "libavcodec/avcodec.h"
 
+void hook_job_submit(void *code, double prediction, double reservation, double deadline) __attribute__((weak)) {}
 void hook_job_release(void *code) __attribute__((weak)) {}
 void hook_job_complete(void *code, double thread_time, double deadline, double prediction, double execution) __attribute__((weak)) {}
 void hook_slice_any(const AVCodecContext *c) __attribute__((weak)) {}
