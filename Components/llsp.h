@@ -11,13 +11,17 @@
  * metrics and target values. With an aging factor a little lower than one,
  * the solution will slightly lean towards newly added metrics/targets,
  * exhibting properties of a sliding average. */
+#ifndef AGING_FACTOR
 #define AGING_FACTOR 0.999L
+#endif
 
 /* During the column dropping check, each column's contribution to the accuracy
  * of the result is analyzed. An individual column must improve the accuracy by
  * at least this factor, otherwise it is considered a rank-deficiency and is
  * dropped. */
+#ifndef COLUMN_CONTRIBUTION
 #define COLUMN_CONTRIBUTION 1.1L
+#endif
 
 /* an opaque handle for the LLSP solver/predictor */
 typedef struct llsp_s llsp_t;
