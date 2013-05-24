@@ -1,5 +1,5 @@
 diff --git a/ffplay.c b/ffplay.c
-index 779c879..25de11c 100644
+index 779c879..e791a39 100644
 --- a/ffplay.c
 +++ b/ffplay.c
 @@ -56,6 +56,23 @@
@@ -401,7 +401,7 @@ index 779c879..25de11c 100644
  
      for (;;) {
 +        atlas_job_t job = {
-+            .deadline = is->frame_timer + is->videoq.nb_packets / 2 * av_q2d(is->video_st->codec->time_base),
++            .deadline = is->frame_timer + av_q2d(is->video_st->codec->time_base),
 +            .metrics_count = 0,
 +            .metrics = NULL
 +        };
@@ -435,7 +435,7 @@ index 779c879..25de11c 100644
 +
 +                double metrics[METRICS_COUNT] = { 0.0 };
 +                atlas_job_t job = {
-+                    .deadline = is->frame_timer + (is->videoq.nb_packets + is->pictq_size / 2) * av_q2d(is->video_st->codec->time_base),
++                    .deadline = is->frame_timer + is->videoq.nb_packets * av_q2d(is->video_st->codec->time_base),
 +                    .metrics_count = METRICS_COUNT,
 +                    .metrics = metrics
 +                };
@@ -520,7 +520,7 @@ index 779c879..25de11c 100644
              packet_queue_put(&is->videoq, pkt);
 +
 +            atlas_job_t job = {
-+                .deadline = is->frame_timer + (is->videoq.nb_packets + is->pictq_size / 2) * av_q2d(is->video_st->codec->time_base),
++                .deadline = is->frame_timer + is->videoq.nb_packets * av_q2d(is->video_st->codec->time_base),
 +                .metrics_count = METRICS_COUNT,
 +                .metrics = metrics
 +            };
