@@ -232,7 +232,7 @@ bool check_slice_start(nalu_write_t *write)
 
 void copy_nalu(nalu_write_t *write)
 {
-	int write_bytes, read_bytes;
+	size_t write_bytes, read_bytes;
 	/* skip our own NALUs, if the file has already been preprocessed */
 	const int skip =
 		(write->buf[0] == 0) &&
@@ -254,6 +254,6 @@ void copy_nalu(nalu_write_t *write)
 			write_bytes = read_bytes;
 		if (!skip)
 			fwrite(write->buf, 1, write_bytes, write->to);
-		fseek(write->from, write_bytes - read_bytes, SEEK_CUR);
+		fseek(write->from, (long)(write_bytes - read_bytes), SEEK_CUR);
 	} while (write_bytes == read_bytes - 2);
 }

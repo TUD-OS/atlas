@@ -26,7 +26,7 @@ void remember_metrics(const AVCodecContext *c)
 #endif
 
 #if METADATA_WRITE && (METRICS_EXTRACT || METADATA_READ)
-void write_metrics(const frame_node_t *frame, int slice)
+void write_metrics(const frame_node_t *frame, size32_t slice)
 {
 	nalu_write_unsigned(proc.metadata.write, frame->slice[slice].metrics.type);
 	nalu_write_unsigned(proc.metadata.write, frame->slice[slice].metrics.bits_cabac);
@@ -45,7 +45,7 @@ void write_metrics(const frame_node_t *frame, int slice)
 #endif
 
 #if METADATA_READ
-void read_metrics(frame_node_t *frame, int slice)
+void read_metrics(frame_node_t *frame, size32_t slice)
 {
 	frame->slice[slice].metrics.type          = nalu_read_unsigned(proc.metadata.read);
 	frame->slice[slice].metrics.bits_cabac    = nalu_read_unsigned(proc.metadata.read);

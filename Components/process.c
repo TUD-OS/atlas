@@ -18,7 +18,7 @@ static void process_metadata(const uint8_t *);
 #if METADATA_WRITE
 static void write_metadata(void);
 #endif
-static void resize_storage(int mb_width, int mb_height);
+static void resize_storage(size32_t mb_width, size32_t mb_height);
 static void setup_frame(const AVCodecContext *c);
 static void destroy_frames_list(void);
 
@@ -33,7 +33,7 @@ struct proc_s proc = {
 #if PREPROCESS
 .temp_frame = { .data = { NULL, NULL, NULL, NULL } },
 #endif
-.mb_width =  -1, .mb_height =  -1
+.mb_width = 0, .mb_height = 0
 };
 
 
@@ -190,17 +190,15 @@ static void process_slice(AVCodecContext *c)
 #if METADATA_READ
 static void process_metadata(const uint8_t *nalu)
 {
-	int i;
-	
 	nalu_read_start(proc.metadata.read, nalu);
 	uint_fast16_t mb_width  = nalu_read_unsigned(proc.metadata.read);
 	uint_fast16_t mb_height = nalu_read_unsigned(proc.metadata.read);
 	resize_storage(mb_width, mb_height);
 	proc.frame->slice_count = nalu_read_unsigned(proc.metadata.read);
-	for (i = 0; i < proc.frame->slice_count; i++)
+	for (size32_t i = 0; i < proc.frame->slice_count; i++)
 		read_metrics(proc.frame, i);
 	read_replacement_tree(NULL);
-	for (i = 0; i < proc.frame->slice_count; i++) {
+	for (size32_t i = 0; i < proc.frame->slice_count; i++) {
 		proc.frame->slice[i].start_index = nalu_read_unsigned(proc.metadata.read);
 		if (i > 0)
 			proc.frame->slice[i-1].end_index = proc.frame->slice[i].start_index;
@@ -209,7 +207,7 @@ static void process_metadata(const uint8_t *nalu)
 		if (proc.frame->replacement)
 			proc.frame->slice[i].direct_quality_loss = nalu_read_float(proc.metadata.read);
 	}
-	for (i = 0; i < proc.frame->slice_count; i++)
+	for (size32_t i = 0; i < proc.frame->slice_count; i++)
 		proc.frame->slice[i].emission_factor = nalu_read_float(proc.metadata.read);
 	
 #if METADATA_READ && !PREPROCESS && (SCHEDULING_METHOD == LIFETIME)
@@ -250,12 +248,9 @@ static void process_metadata(const uint8_t *nalu)
 #if METADATA_WRITE
 static void write_metadata(void)
 {
-	frame_node_t *frame;
-	int i;
-	
-	for (frame = proc.last_idr; frame; frame = frame->next) {
+	for (frame_node_t *frame = proc.last_idr; frame; frame = frame->next) {
 		/* copy slices worth a full frame */
-		for (i = 0; i < frame->slice_count; i++) {
+		for (size32_t i = 0; i < frame->slice_count; i++) {
 			// forward to the next slice start
 			while (!check_slice_start(proc.metadata.write))
 				copy_nalu(proc.metadata.write);
@@ -269,12 +264,12 @@ static void write_metadata(void)
 		nalu_write_unsigned(proc.metadata.write, proc.mb_height);
 		nalu_write_unsigned(proc.metadata.write, frame->slice_count);
 #if METRICS_EXTRACT || METADATA_READ
-		for (i = 0; i < frame->slice_count; i++)
+		for (size32_t i = 0; i < frame->slice_count; i++)
 			write_metrics(frame, i);
 #endif
 #if PREPROCESS || METADATA_READ
 		write_replacement_tree(frame->replacement);
-		for (i = 0; i < frame->slice_count; i++) {
+		for (size32_t i = 0; i < frame->slice_count; i++) {
 			nalu_write_unsigned(proc.metadata.write, frame->slice[i].start_index);
 			if (frame->replacement)
 				nalu_write_float(proc.metadata.write, frame->slice[i].direct_quality_loss);
@@ -283,10 +278,10 @@ static void write_metadata(void)
 		nalu_write_unsigned(proc.metadata.write, 0);  // empty replacement tree: depth
 		nalu_write_signed(proc.metadata.write, 0);    // empty replacement tree: reference
 		nalu_write_unsigned(proc.metadata.write, 0);  // first slice's start_index
-		for (i = 0; i < frame->slice_count - 1; i++)
+		for (size32_t i = 0; i < frame->slice_count - 1; i++)
 			nalu_write_unsigned(proc.metadata.write, proc.mb_width * proc.mb_height);
 #endif
-		for (i = 0; i < frame->slice_count; i++)
+		for (size32_t i = 0; i < frame->slice_count; i++)
 #if PREPROCESS || METADATA_READ
 			nalu_write_float(proc.metadata.write, frame->slice[i].emission_factor);
 #else
@@ -302,7 +297,7 @@ static void write_metadata(void)
 }
 #endif
 
-static void resize_storage(int mb_width, int mb_height)
+static void resize_storage(size32_t mb_width, size32_t mb_height)
 {
 	if (mb_width != proc.mb_width || mb_height != proc.mb_height) {
 #if PREPROCESS
@@ -325,10 +320,6 @@ static void resize_storage(int mb_width, int mb_height)
 
 static void setup_frame(const AVCodecContext *c)
 {
-#if PREPROCESS
-	int slice;
-#endif
-	
 	frame_node_t *frame;
 	
 	/* allocate new frame node */
@@ -358,9 +349,8 @@ static void setup_frame(const AVCodecContext *c)
 	proc.frame->slice[SLICE_MAX].rect.max_x = c->width;
 	proc.frame->slice[SLICE_MAX].rect.max_y = c->height;
 	proc.frame->replacement = NULL;
-#endif
-#if PREPROCESS
-	for (slice = 0; slice < SLICE_MAX + 1; slice++) {
+	
+	for (size32_t slice = 0; slice < SLICE_MAX + 1; slice++) {
 		memset(proc.frame->slice[slice].immission_base, 0, sizeof(proc.frame->slice[0].immission_base));
 		proc.frame->slice[slice].immission = proc.frame->slice[slice].immission_base + REF_MAX;
 	}

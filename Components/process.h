@@ -3,6 +3,8 @@
  * economic rights: Technische Universitaet Dresden (Germany)
  */
 
+#include <stdint.h>
+
 #include "config.h"
 #include "libavcodec/avcodec.h"
 
@@ -129,6 +131,7 @@ extern void hook_frame_end(const AVCodecContext *c) WEAK_SYMBOL;
 typedef struct replacement_node_s replacement_node_t;
 typedef struct frame_node_s frame_node_t;
 typedef float propagation_t[SLICE_MAX];
+typedef uint_fast32_t size32_t;
 
 /* node in the quadtree describing frame replacement */
 struct replacement_node_s {
@@ -151,17 +154,17 @@ struct frame_node_s {
 	int reference_count;
 #endif
 	
-	int slice_count;
+	size32_t slice_count;
 	/* storage for per-slice data, slice[SLICE_MAX] is a pseudo-slice covering the whole frame */
 	struct {
 		/* decoding time metrics */
 #if METRICS_EXTRACT || METADATA_READ
 		struct {
-			uint32_t type, bits_cabac, bits_cavlc;
-			uint32_t intra_4x4, intra_8x8, intra_16x16;
-			uint32_t inter_4x4, inter_8x8, inter_16x16;
-			uint32_t idct_pcm, idct_4x4, idct_8x8;
-			uint32_t deblock_edges;
+			size32_t type, bits_cabac, bits_cavlc;
+			size32_t intra_4x4, intra_8x8, intra_16x16;
+			size32_t inter_4x4, inter_8x8, inter_16x16;
+			size32_t idct_pcm, idct_4x4, idct_8x8;
+			size32_t deblock_edges;
 		} metrics;
 #endif
 #if PREPROCESS
@@ -255,7 +258,7 @@ extern struct proc_s {
 	} schedule;
 #endif
 	/* current video size */
-	int mb_width, mb_height;
+	size32_t mb_width, mb_height;
 #if PREPROCESS
 	/* intermediary frame storage */
 	AVPicture temp_frame;
@@ -295,10 +298,10 @@ void process_finish(AVCodecContext *c);
 void remember_metrics(const AVCodecContext *c);
 #endif
 #if METADATA_WRITE && (METRICS_EXTRACT || METADATA_READ)
-void write_metrics(const frame_node_t *frame, int slice);
+void write_metrics(const frame_node_t *frame, size32_t slice);
 #endif
 #if METADATA_READ
-void read_metrics(frame_node_t *frame, int slice);
+void read_metrics(frame_node_t *frame, size32_t slice);
 #endif
 
 #pragma mark -
