@@ -5,6 +5,7 @@
 
 #define IMPLEMENTS_HOOKS
 
+#include <stdio.h>
 #include <stdint.h>
 #include <unistd.h>
 #include <sys/time.h>
@@ -27,9 +28,9 @@ void hook_slice_any(const AVCodecContext *c)
 		
 		gettimeofday(&tv, NULL);
 		double usecs_start = 1000000.0 * tv.tv_sec + (double)tv.tv_usec;
-		uint64_t tsc_start = read_time();
+		uint_fast64_t tsc_start = read_time();
 		usleep(1000000);
-		uint64_t tsc_stop = read_time();
+		uint_fast64_t tsc_stop = read_time();
 		gettimeofday(&tv, NULL);
 		double usecs_stop = 1000000.0 * tv.tv_sec + (double)tv.tv_usec;
 		
