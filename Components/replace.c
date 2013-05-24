@@ -526,15 +526,16 @@ float do_replacement(const AVCodecContext *c, const AVPicture *frame, int slice,
 void write_replacement_tree(const replacement_node_t *node)
 {
 	if (!node) {
-		/* this must be the root node, so treat as a special case, since we must write something */
-		nalu_write_uint16(proc.metadata.write, 0);
+		/* this must be the root node; treat as a special case, since we must write something */
+		nalu_write_unsigned(proc.metadata.write, 0);
+		nalu_write_signed(proc.metadata.write, 0);
 		return;
 	}
 	if (!node->node[0]) {
-		nalu_write_uint8(proc.metadata.write, node->depth);
-		nalu_write_int8(proc.metadata.write, node->reference);
-		nalu_write_int16(proc.metadata.write, node->x);
-		nalu_write_int16(proc.metadata.write, node->y);
+		nalu_write_unsigned(proc.metadata.write, node->depth);
+		nalu_write_signed(proc.metadata.write, node->reference);
+		nalu_write_signed(proc.metadata.write, node->x);
+		nalu_write_signed(proc.metadata.write, node->y);
 	} else {
 		write_replacement_tree(node->node[0]);
 		write_replacement_tree(node->node[1]);
@@ -624,18 +625,18 @@ void read_replacement_tree(replacement_node_t *node)
 			/* nothing left to do here, this subtree is finished */
 			return;
 		if (depth == read_next_depth)
-			depth = nalu_read_uint8(proc.metadata.read);
+			depth = nalu_read_unsigned(proc.metadata.read);
 		if (depth == node->depth) {
 			/* this is our node */
-			node->reference = nalu_read_int8(proc.metadata.read);
+			node->reference = nalu_read_signed(proc.metadata.read);
 			if (!node->reference) {
 				/* special case: empty root node */
 				av_free(node);
 				proc.frame->replacement = NULL;
 				return;
 			}
-			node->x = nalu_read_int16(proc.metadata.read);
-			node->y = nalu_read_int16(proc.metadata.read);
+			node->x = nalu_read_signed(proc.metadata.read);
+			node->y = nalu_read_signed(proc.metadata.read);
 			depth = read_next_depth;
 			return;
 		}

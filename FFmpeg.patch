@@ -1,5 +1,5 @@
 diff --git a/ffplay.c b/ffplay.c
-index 779c879..e791a39 100644
+index 779c879..4bf78b8 100644
 --- a/ffplay.c
 +++ b/ffplay.c
 @@ -56,6 +56,23 @@
@@ -489,15 +489,15 @@ index 779c879..e791a39 100644
 +                uint_fast8_t slice_type;
 +
 +                nalu_read_start(nalu, metadata);
-+                mb_width = nalu_read_uint16(nalu);
-+                mb_height = nalu_read_uint16(nalu);
++                mb_width = nalu_read_unsigned(nalu);
++                mb_height = nalu_read_unsigned(nalu);
 +                metrics[0] = mb_width * mb_height;
-+                slice_count = nalu_read_uint8(nalu);
++                slice_count = nalu_read_unsigned(nalu);
 +                for (; slice_count; slice_count--) {
-+                    slice_type = nalu_read_uint8(nalu);
++                    slice_type = nalu_read_unsigned(nalu);
 +                    assert(METRICS_COUNT == 13);
 +                    for (size_t i = 1; i < 13; i++)
-+                        metrics[i] += nalu_read_uint24(nalu);
++                        metrics[i] += nalu_read_unsigned(nalu);
 +                }
 +#elif defined(METRICS_REDUCED)
 +                uint_fast16_t mb_width, mb_height;
@@ -505,10 +505,10 @@ index 779c879..e791a39 100644
 +                uint_fast8_t slice_type;
 +
 +                nalu_read_start(nalu, metadata);
-+                mb_width = nalu_read_uint16(nalu);
-+                mb_height = nalu_read_uint16(nalu);
-+                slice_count = nalu_read_uint8(nalu);
-+                slice_type = nalu_read_uint8(nalu);
++                mb_width = nalu_read_unsigned(nalu);
++                mb_height = nalu_read_unsigned(nalu);
++                slice_count = nalu_read_unsigned(nalu);
++                slice_type = nalu_read_unsigned(nalu);
 +                metrics[0] = mb_width * mb_height;
 +                metrics[1] = pkt->size;
 +                metrics[2] = (slice_type == 0);

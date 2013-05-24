@@ -190,19 +190,18 @@ static void process_slice(AVCodecContext *c)
 #if METADATA_READ
 static void process_metadata(const uint8_t *nalu)
 {
-	uint16_t mb_width, mb_height;
 	int i;
 	
 	nalu_read_start(proc.metadata.read, nalu);
-	mb_width  = nalu_read_uint16(proc.metadata.read);
-	mb_height = nalu_read_uint16(proc.metadata.read);
+	uint_fast16_t mb_width  = nalu_read_unsigned(proc.metadata.read);
+	uint_fast16_t mb_height = nalu_read_unsigned(proc.metadata.read);
 	resize_storage(mb_width, mb_height);
-	proc.frame->slice_count = nalu_read_uint8(proc.metadata.read);
+	proc.frame->slice_count = nalu_read_unsigned(proc.metadata.read);
 	for (i = 0; i < proc.frame->slice_count; i++)
 		read_metrics(proc.frame, i);
 	read_replacement_tree(NULL);
 	for (i = 0; i < proc.frame->slice_count; i++) {
-		proc.frame->slice[i].start_index = nalu_read_uint16(proc.metadata.read);
+		proc.frame->slice[i].start_index = nalu_read_unsigned(proc.metadata.read);
 		if (i > 0)
 			proc.frame->slice[i-1].end_index = proc.frame->slice[i].start_index;
 		if (i == proc.frame->slice_count - 1)
@@ -266,9 +265,9 @@ static void write_metadata(void)
 		
 		/* write our metadata as a custom NALU */
 		nalu_write_start(proc.metadata.write);
-		nalu_write_uint16(proc.metadata.write, proc.mb_width);
-		nalu_write_uint16(proc.metadata.write, proc.mb_height);
-		nalu_write_uint8(proc.metadata.write, frame->slice_count);
+		nalu_write_unsigned(proc.metadata.write, proc.mb_width);
+		nalu_write_unsigned(proc.metadata.write, proc.mb_height);
+		nalu_write_unsigned(proc.metadata.write, frame->slice_count);
 #if METRICS_EXTRACT || METADATA_READ
 		for (i = 0; i < frame->slice_count; i++)
 			write_metrics(frame, i);
@@ -276,15 +275,16 @@ static void write_metadata(void)
 #if PREPROCESS || METADATA_READ
 		write_replacement_tree(frame->replacement);
 		for (i = 0; i < frame->slice_count; i++) {
-			nalu_write_uint16(proc.metadata.write, frame->slice[i].start_index);
+			nalu_write_unsigned(proc.metadata.write, frame->slice[i].start_index);
 			if (frame->replacement)
 				nalu_write_float(proc.metadata.write, frame->slice[i].direct_quality_loss);
 		}
 #else
-		nalu_write_uint16(proc.metadata.write, 0);  /* empty replacement tree */
-		nalu_write_uint16(proc.metadata.write, 0);  /* first slice's start_index */
+		nalu_write_unsigned(proc.metadata.write, 0);  // empty replacement tree: depth
+		nalu_write_signed(proc.metadata.write, 0);    // empty replacement tree: reference
+		nalu_write_unsigned(proc.metadata.write, 0);  // first slice's start_index
 		for (i = 0; i < frame->slice_count - 1; i++)
-			nalu_write_uint16(proc.metadata.write, proc.mb_width * proc.mb_height);
+			nalu_write_unsigned(proc.metadata.write, proc.mb_width * proc.mb_height);
 #endif
 		for (i = 0; i < frame->slice_count; i++)
 #if PREPROCESS || METADATA_READ

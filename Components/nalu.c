@@ -4,8 +4,8 @@
  */
 
 #include <stdio.h>
-#include <stdint.h>
 #include <stdlib.h>
+#include <math.h>
 #include <string.h>
 #include <assert.h>
 
@@ -14,24 +14,29 @@
 
 struct nalu_read_s {
 	const uint8_t * restrict nalu;
-	uint8_t byte;
-	uint8_t bits;
+	uint_fast8_t byte;
+	uint_fast8_t bits;
 };
 
 struct nalu_write_s {
 	FILE *from, *to;
 	uint8_t buf[4096];
 	uint8_t history[3];
-	uint32_t remain;
-	uint8_t remain_bits;
+	uint8_t byte;
+	uint_fast8_t bits;
 };
 
+static inline uint32_t reverse_bits(uint32_t x)
+{
+	x = ((x >>  1) & 0x55555555u) | ((x & 0x55555555u) <<  1);
+	x = ((x >>  2) & 0x33333333u) | ((x & 0x33333333u) <<  2);
+	x = ((x >>  4) & 0x0f0f0f0fu) | ((x & 0x0f0f0f0fu) <<  4);
+	x = ((x >>  8) & 0x00ff00ffu) | ((x & 0x00ff00ffu) <<  8);
+	x = ((x >> 16) & 0x0000ffffu) | ((x & 0x0000ffffu) << 16);
+	return x;
+}
 
-/* metadata is compressed using Fibonacci coding,
- * see http://en.wikipedia.org/wiki/Fibonacci_coding for details */
-static const uint8_t fibonacci[] = {
-	1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233
-};
+#pragma mark -
 
 
 #pragma mark Metadata NALU Reading
@@ -48,79 +53,44 @@ void nalu_read_start(nalu_read_t *read, const uint8_t *nalu)
 	read->bits = 8;
 }
 
-uint8_t nalu_read_uint8(nalu_read_t *read)
+static inline uint_fast8_t nalu_read_bit(nalu_read_t *read)
 {
-	return (uint8_t)nalu_read_int8(read);
-}
-
-uint16_t nalu_read_uint16(nalu_read_t *read)
-{
-	/* big endian stream */
-	uint16_t value = 0;
-	value |= ((uint16_t)nalu_read_uint8(read) << 8);
-	value |= ((uint16_t)nalu_read_uint8(read) << 0);
-	return value;
-}
-
-uint32_t nalu_read_uint24(nalu_read_t *read)
-{
-	/* big endian stream */
-	uint32_t value = 0;
-	value |= ((uint32_t)nalu_read_uint8(read) << 16);
-	value |= ((uint32_t)nalu_read_uint8(read) <<  8);
-	value |= ((uint32_t)nalu_read_uint8(read) <<  0);
-	return value;
-}
-
-uint32_t nalu_read_uint32(nalu_read_t *read)
-{
-	/* big endian stream */
-	uint32_t value = 0;
-	value |= ((uint32_t)nalu_read_uint8(read) << 24);
-	value |= ((uint32_t)nalu_read_uint8(read) << 16);
-	value |= ((uint32_t)nalu_read_uint8(read) <<  8);
-	value |= ((uint32_t)nalu_read_uint8(read) <<  0);
-	return value;
-}
-
-int8_t nalu_read_int8(nalu_read_t *read)
-{
-	unsigned coded = 0;
-	int i, bit, last_bit = 0;
-	
-	for (i = 0; i < sizeof(fibonacci) / sizeof(fibonacci[0]); i++) {
-		bit = read->byte & (1 << 7);
-		read->byte <<= 1;
-		if (!(--read->bits)) {
-			read->nalu++;
-			read->byte = *read->nalu;
-			read->bits = 8;
-		}
-		if (bit && last_bit) break;
-		if (bit) coded += fibonacci[i];
-		last_bit = bit;
+	uint_fast8_t bit = (read->byte >> 7) & 1;
+	read->byte <<= 1;
+	if (!(--read->bits)) {
+		read->nalu++;
+		read->byte = *read->nalu;
+		read->bits = 8;
 	}
-	/* map to positive and negative integers with zero */
-	if (coded & 1)
-		return (int8_t)-((coded - 1) / 2);
-	else
-		return (int8_t)(coded / 2);
+	return bit;
 }
 
-int16_t nalu_read_int16(nalu_read_t *read)
+uint_fast32_t nalu_read_unsigned(nalu_read_t *read)
 {
-	return (int16_t)nalu_read_uint16(read);
+	size_t leading_zeros = 0;
+	while (nalu_read_bit(read) == 0)
+		leading_zeros++;
+	assert(leading_zeros < 32);
+	
+	uint_fast32_t coded = 1;
+	while (leading_zeros--)
+		coded = (coded << 1) | nalu_read_bit(read);
+	
+	return coded - 1;
+}
+
+int_fast32_t nalu_read_signed(nalu_read_t *read)
+{
+	uint_fast32_t coded = nalu_read_unsigned(read);
+	return (coded & 1) ? (coded >> 1) + 1 : -(coded >> 1);
 }
 
 float nalu_read_float(nalu_read_t *read)
 {
-	union {
-		uint32_t in;
-		float out;
-	} convert;
-	assert(sizeof(float) == sizeof(uint32_t));
-	convert.in = nalu_read_uint32(read);
-	return convert.out;
+	uint32_t coded = nalu_read_unsigned(read);
+	int32_t fixedpoint = (int32_t)reverse_bits(coded);
+	int exponent = fixedpoint ? nalu_read_signed(read) : 0;
+	return ldexpf((float)fixedpoint, exponent - 31);
 }
 
 void nalu_read_free(nalu_read_t *read)
@@ -157,122 +127,78 @@ void nalu_write_start(nalu_write_t *write)
 	
 	fwrite(custom, 1, 4, write->to);
 	write->history[2] = 0xFF;
-	write->remain = 0;
-	write->remain_bits = 0;
+	write->byte = 0;
+	write->bits = 0;
 }
 
-static void nalu_write_byte(nalu_write_t *write, uint8_t value)
+static inline void nalu_write_bit(nalu_write_t *write, uint_fast8_t bit)
 {
-	const uint8_t fill = 0x03;
+	assert(bit == 0 || bit == 1);
 	
-	write->history[0] = write->history[1];
-	write->history[1] = write->history[2];
-	write->history[2] = value;
-	/* the three byte sequences 0x000001, 0x000002 and 0x000003 are special in H.264 NAL;
-	 * if they do appear regularly, they must be disguised by inserting an extra 0x03 */
-	if (write->history[0] == 0 && write->history[1] == 0 && write->history[2] < 4) {
-		fwrite(&fill, 1, 1, write->to);
-		write->history[1] = 0xFF;
-	}
-	fwrite(&value, 1, 1, write->to);
-}
-
-void nalu_write_end(nalu_write_t *write)
-{
-	uint32_t coded = write->remain;
-	int bits = write->remain_bits;
-	/* flush all remaining bits */
-	for (; bits > 0; bits -= 8, coded <<= 8)
-		nalu_write_byte(write, (uint8_t)(coded >> 24));
-}
-
-void nalu_write_uint8(nalu_write_t *write, uint8_t value)
-{
-	nalu_write_int8(write, (int8_t)value);
-}
-
-void nalu_write_uint16(nalu_write_t *write, uint16_t value)
-{
-	/* big endian stream */
-	nalu_write_uint8(write, (value >> 8) & 0xFF);
-	nalu_write_uint8(write, (value >> 0) & 0xFF);
-}
-
-void nalu_write_uint24(nalu_write_t *write, uint32_t value)
-{
-	/* big endian stream */
-	nalu_write_uint8(write, (value >> 16) & 0xFF);
-	nalu_write_uint8(write, (value >>  8) & 0xFF);
-	nalu_write_uint8(write, (value >>  0) & 0xFF);
-}
-
-void nalu_write_uint32(nalu_write_t *write, uint32_t value)
-{
-	/* big endian stream */
-	nalu_write_uint8(write, (value >> 24) & 0xFF);
-	nalu_write_uint8(write, (value >> 16) & 0xFF);
-	nalu_write_uint8(write, (value >>  8) & 0xFF);
-	nalu_write_uint8(write, (value >>  0) & 0xFF);
-}
-
-void nalu_write_int8(nalu_write_t *write, int8_t value)
-{
-	/* map to positive values greater zero */
-	unsigned normalized =
-		((value <  0) ? (2 * -(int)value + 1) :
-		 ((value == 0) ? 1 :
-		  ((value >  0) ? (2 * (int)value) : 0)));
-	/* create the coded number in the higher bits in reverse */
-	uint32_t coded;
-	int i, bits;
-	
-	/* search for the highest contribution */
-	for (i = sizeof(fibonacci) / sizeof(fibonacci[0]) - 1; i >= 0; i--)
-		if (fibonacci[i] <= normalized) break;
-	/* bit count is one more than i because i starts counting with zero
-	 * and maybe an additional one more because of the one bit already in coded */
-	if (i == sizeof(fibonacci) / sizeof(fibonacci[0]) - 1) {
-		/* we can omit the end marker if the number is of maximal bitlength */
-		coded = 0;
-		bits = i + 1;
-	} else {
-		coded = (1 << 31);
-		bits = i + 2;
-	}
-	for (; i >= 0; i--) {
-		coded >>= 1;
-		if (fibonacci[i] <= normalized) {
-			coded |= (1 << 31);
-			normalized -= fibonacci[i];
+	write->byte <<= 1;
+	write->byte |= bit;
+	if (++write->bits == 8) {
+		const uint8_t fill = 0x03;
+		
+		write->history[0] = write->history[1];
+		write->history[1] = write->history[2];
+		write->history[2] = write->byte;
+		/* the three byte sequences 0x000001, 0x000002 and 0x000003 are special in H.264 NAL;
+		 * if they do appear regularly, they must be disguised by inserting an extra 0x03 */
+		if (write->history[0] == 0 && write->history[1] == 0 && write->history[2] < 4) {
+			fwrite(&fill, 1, 1, write->to);
+			write->history[1] = 0xFF;
 		}
+		
+		fwrite(&write->byte, 1, 1, write->to);
+		write->byte = 0;
+		write->bits = 0;
 	}
-	assert(normalized == 0);
-	/* merge with not yet written bits */
-	bits += write->remain_bits;
-	coded >>= write->remain_bits;
-	coded |= write->remain;
-	/* write all completed bytes */
-	for (; bits >= 8; bits -= 8, coded <<= 8)
-		nalu_write_byte(write, (uint8_t)(coded >> 24));
-	/* remember the remainder for later */
-	write->remain_bits = bits;
-	write->remain = coded;
 }
 
-void nalu_write_int16(nalu_write_t *write, int16_t value)
+void nalu_write_unsigned(nalu_write_t *write, uint_fast32_t value)
 {
-	nalu_write_uint16(write, (uint16_t)value);
+	assert(value < (1 << 31));
+	value = value + 1;
+	
+	uint_fast32_t temp = value;
+	size_t significant_bits = 0;
+	while (temp) {
+		significant_bits++;
+		temp >>= 1;
+	}
+	for (size_t i = 1; i < significant_bits; i++)
+		nalu_write_bit(write, 0);
+	
+	while (significant_bits--)
+		nalu_write_bit(write, (value >> significant_bits) & 1);
+}
+
+void nalu_write_signed(nalu_write_t *write, int_fast32_t value)
+{
+	uint_fast32_t coded = (value > 0) ? (value << 1) - 1 : (-value) << 1;
+	nalu_write_unsigned(write, coded);
 }
 
 void nalu_write_float(nalu_write_t *write, float value)
 {
-	union {
-		float in;
-		uint32_t out;
-	} convert;
-	assert(sizeof(float) == sizeof(uint32_t));
-	convert.in = value;
-	nalu_write_uint32(write, convert.out);
+	int exponent;
+	float magnitude = frexpf(value, &exponent);
+	assert(isfinite(magnitude));
+	int32_t fixedpoint = ldexpf(magnitude, 31);
+	
+	/* reverse because lower bits are more likely zero */
+	uint32_t coded = reverse_bits((uint32_t)fixedpoint);
+	nalu_write_unsigned(write, coded);
+	if (fixedpoint)
+		nalu_write_signed(write, exponent);
+}
+
+void nalu_write_end(nalu_write_t *write)
+{
+	/* flush all remaining bits */
+	while (write->bits)
+		nalu_write_bit(write, 0);
 }
 
 void nalu_write_free(nalu_write_t *write)
