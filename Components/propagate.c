@@ -3,6 +3,7 @@
  * economic rights: Technische Universitaet Dresden (Germany)
  */
 
+#include <assert.h>
 #include "process.h"
 
 #ifdef SCHEDULE_EXECUTE
