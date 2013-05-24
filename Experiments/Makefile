@@ -5,6 +5,9 @@ all: environment
 all clean:
 	$(MAKE) -C 1-01\ Decoding\ Times $@
 	$(MAKE) -C 2-01\ GCD\ Compatibility $@
+	$(MAKE) -C 2-02\ FFplay\ Characteristics $@
+	$(MAKE) -C 3-01\ Background\ Load $@
+	$(MAKE) -C 3-02\ Decoding\ Times\ Repeat $@
 	$(MAKE) -C 3-03\ Times\ and\ Metrics $@
 	$(MAKE) -C 3-04\ Preprocess\ Metrics $@
 	$(MAKE) -C 3-05\ Prediction\ Full $@
