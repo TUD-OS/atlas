@@ -355,18 +355,16 @@ static void setup_frame(const AVCodecContext *c)
 		proc.frame->slice[slice].immission = proc.frame->slice[slice].immission_base + REF_MAX;
 	}
 	proc.frame->reference = proc.frame->reference_base + REF_MAX;
-#endif
 	
-#if !METADATA_READ || METRICS_EXTRACT || PREPROCESS
-	proc.frame->slice_count = 0;
-#endif
-#if PREPROCESS
 	/* attach the frame node to the frame so it travels nicely through FFmpeg,
 	 * opaque needs to be a double-pointer, because we are modifying a copy of the actual
 	 * AVFrame here; so modifying a direct pointer would have no effect on the original */
 	*(frame_node_t **)c->frame.current->opaque = proc.frame;
 	/* the frame must be unused by both FFmpeg and ourselves */
 	proc.frame->reference_count = 2;
+#endif
+#if !METADATA_READ || METRICS_EXTRACT || PREPROCESS
+	proc.frame->slice_count = 0;
 #endif
 }
 
