@@ -15,6 +15,7 @@
 void hook_job_submit(void *code, double prediction, double reservation, double deadline) __attribute__((weak)) {}
 void hook_job_release(void *code) __attribute__((weak)) {}
 void hook_job_complete(void *code, double thread_time, double deadline, double prediction, double execution) __attribute__((weak)) {}
+void hook_llsp_result(const double *result, size_t count) __attribute__((weak)) {}
 void hook_slice_any(const AVCodecContext *c) __attribute__((weak)) {}
 void hook_slice_end(const AVCodecContext *c) __attribute__((weak)) {}
 void hook_frame_end(const AVCodecContext *c) __attribute__((weak)) {}

@@ -85,6 +85,7 @@ double atlas_progress(void);
 extern void hook_job_submit(void *code, double prediction, double reservation, double deadline) WEAK_SYMBOL;
 extern void hook_job_release(void *code) WEAK_SYMBOL;
 extern void hook_job_complete(void *code, double thread_time, double deadline, double prediction, double execution) WEAK_SYMBOL;
+extern void hook_llsp_result(const double *result, size_t count) WEAK_SYMBOL;
 
 #pragma mark -
 

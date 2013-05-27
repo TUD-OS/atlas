@@ -163,7 +163,9 @@ void atlas_job_train(void *code)
 		
 #if LLSP_PREDICT
 		llsp_add(estimator->llsp, llsp_metrics, execution_time);
-		llsp_solve(estimator->llsp);
+		const double *result = llsp_solve(estimator->llsp);
+		if (hook_llsp_result)
+			hook_llsp_result(result, estimator->metrics_count + 1);
 #endif
 		estimator->mse = (1.0 - AGING_FACTOR) * estimator->mse + AGING_FACTOR * mse;
 		if (hook_job_complete)
