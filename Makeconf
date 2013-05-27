@@ -1,5 +1,4 @@
 WORKBENCH_BASE ?= .
--include $(WORKBENCH_BASE)/Makeconf.local
 
 ARCH ?= core2
 CPUS ?= $(shell case `uname` in (Darwin) ioreg | fgrep -c ' AppleACPICPU ' ;; (Linux) grep -c ^processor /proc/cpuinfo ;; esac)
@@ -21,3 +20,5 @@ ifeq ($(shell uname),Linux)
 override CPPFLAGS := -D_GNU_SOURCE $(CPPFLAGS)
 override LDFLAGS := -ldispatch -lBlocksRuntime -lrt $(LDFLAGS)
 endif
+
+-include $(WORKBENCH_BASE)/Makeconf.local
