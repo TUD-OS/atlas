@@ -4,21 +4,25 @@
  */
 
 #include <stdio.h>
-#include "estimator.h"
+#include <time.h>
 
-static void start(void) __attribute__((constructor));
 static void stop(void) __attribute__((destructor));
-
-static double start_time;
-
-
-static void start(void)
-{
-	start_time = atlas_now();
-}
 
 static void stop(void)
 {
-	printf("%lf\n", atlas_now() - start_time);
+	double time;
+	
+#ifdef __linux__
+	/* a per-process clock, which only counts the time spent by this application */
+	struct timespec ts;
+	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &ts);
+	time = (double)ts.tv_sec + (double)ts.tv_nsec / 1000000000.0;
+#else
+#warning falling back to gettimeofday() which includes blocking and waiting time, results will be wrong
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	time = (double)tv.tv_sec + (double)tv.tv_usec / 1000000.0;
+#endif
+	
+	printf("%lf\n", time);
 }
-
