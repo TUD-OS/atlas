@@ -96,8 +96,7 @@ void atlas_job_submit(void *code, pid_t tid, atlas_job_t job)
 		else
 			llsp_metrics[i] = 1.0;  // add an extra 1-column
 	}
-	if (llsp_solve(estimator->llsp))
-		prediction = llsp_predict(estimator->llsp, llsp_metrics);
+	prediction = llsp_predict(estimator->llsp, llsp_metrics);
 #endif
 	
 	for (size_t i = 0; i < estimator->metrics_count; i++)
@@ -164,6 +163,7 @@ void atlas_job_train(void *code)
 		
 #if LLSP_PREDICT
 		llsp_add(estimator->llsp, llsp_metrics, execution_time);
+		llsp_solve(estimator->llsp);
 #endif
 		estimator->mse = (1.0 - AGING_FACTOR) * estimator->mse + AGING_FACTOR * mse;
 		if (hook_job_complete)
