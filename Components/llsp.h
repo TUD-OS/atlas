@@ -12,7 +12,7 @@
  * the solution will slightly lean towards newly added metrics/targets,
  * exhibting properties of a sliding average. */
 #ifndef AGING_FACTOR
-#define AGING_FACTOR 0.001L
+#define AGING_FACTOR 0.001
 #endif
 
 /* During the column dropping check, each column's contribution to the accuracy
@@ -20,7 +20,7 @@
  * at least this factor, otherwise it is considered a rank-deficiency and is
  * dropped. */
 #ifndef COLUMN_CONTRIBUTION
-#define COLUMN_CONTRIBUTION 1.1L
+#define COLUMN_CONTRIBUTION 1.1
 #endif
 
 /* an opaque handle for the LLSP solver/predictor */

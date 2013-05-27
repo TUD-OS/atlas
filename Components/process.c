@@ -62,6 +62,8 @@ void process_init(AVCodecContext *c, const char *file)
 #endif
 #if METADATA_WRITE
 	proc.metadata.write = nalu_write_alloc(file);
+#else
+	(void)file;
 #endif
 #if (METADATA_WRITE && PREPROCESS) || (METADATA_READ && !PREPROCESS && (SCHEDULING_METHOD == LIFETIME))
 	size_t length = strlen(file);
@@ -88,6 +90,7 @@ void process_init(AVCodecContext *c, const char *file)
 
 void process_finish(AVCodecContext *c)
 {
+	(void)c;
 #if PREPROCESS
 	accumulate_quality_loss(proc.last_idr);
 #endif
@@ -362,6 +365,8 @@ static void setup_frame(const AVCodecContext *c)
 	*(frame_node_t **)c->frame.current->opaque = proc.frame;
 	/* the frame must be unused by both FFmpeg and ourselves */
 	proc.frame->reference_count = 2;
+#else
+	(void)c;
 #endif
 #if !METADATA_READ || METRICS_EXTRACT || PREPROCESS
 	proc.frame->slice_count = 0;

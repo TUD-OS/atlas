@@ -116,6 +116,8 @@ void atlas_job_submit(void *code, pid_t tid, atlas_job_t job)
 		.tv_usec = 1000000 * (reservation - (long long)reservation)
 	};
 	sched_submit(tid, &tv_exectime, &tv_deadline, sched_deadline_absolute);
+#else
+	(void)tid;
 #endif
 	if (hook_job_submit)
 		hook_job_submit(code, prediction, reservation, job.deadline);
@@ -182,7 +184,8 @@ void atlas_pin_cpu(int cpu)
 	const struct sigaction action = { .sa_handler = SIG_IGN };
 	if (sigaction(SIGXCPU, &action, NULL) != 0) abort();
 #else
-#warning CPU affinity not supported
+#pragma message "CPU affinity not supported"
+	(void)cpu;
 #endif
 }
 
@@ -213,7 +216,7 @@ double atlas_progress(void)
 	clock_gettime(CLOCK_THREAD_CPUTIME_ID, &ts);
 	return (double)ts.tv_sec + (double)ts.tv_nsec / 1000000000.0;
 #else
-#warning falling back to gettimeofday() which includes blocking and waiting time, results will be wrong
+#pragma message "falling back to gettimeofday() which includes blocking and waiting time, results will be wrong"
 	struct timeval tv;
 	gettimeofday(&tv, NULL);
 	return (double)tv.tv_sec + (double)tv.tv_usec / 1000000.0;

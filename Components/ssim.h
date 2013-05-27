@@ -3,12 +3,14 @@
  * economic rights: Technische Universitaet Dresden (Germany)
  */
 
+#include <stdint.h>
+
 typedef struct {
 	/* rectangle around the area of change, min inclusive, max exclusive */
-	int min_x;
-	int min_y;
-	int max_x;
-	int max_y;
+	uint_fast32_t min_x;
+	uint_fast32_t min_y;
+	uint_fast32_t max_x;
+	uint_fast32_t max_y;
 } change_rect_t;
 
 typedef struct {
@@ -16,11 +18,11 @@ typedef struct {
 	uint8_t * restrict Y;
 	uint8_t * restrict Cb;
 	uint8_t * restrict Cr;
-	int line_stride_Y;
-	int line_stride_Cb;
-	int line_stride_Cr;
-	int width;
-	int height;
+	uint_fast32_t line_stride_Y;
+	uint_fast32_t line_stride_Cb;
+	uint_fast32_t line_stride_Cr;
+	uint_fast32_t width;
+	uint_fast32_t height;
 } picture_t;
 
 /* visualizes SSIM error for an entire image in map,

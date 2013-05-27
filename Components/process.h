@@ -3,10 +3,17 @@
  * economic rights: Technische Universitaet Dresden (Germany)
  */
 
+// FIXME: temporary silence some yet unfixed warnings
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wundef"
+#pragma clang diagnostic ignored "-Wcast-align"
+#pragma clang diagnostic ignored "-Wpadded"
+
 #include <stdint.h>
 
 #include "config.h"
 #include "libavcodec/avcodec.h"
+#undef restrict
 
 
 #pragma mark Workbench Configuration
@@ -228,6 +235,7 @@ extern struct proc_s {
 	/* current frame */
 	frame_node_t *frame;
 	
+#if METADATA_READ || METADATA_WRITE
 	/* state variables for metadata reading/writing */
 	struct {
 #if METADATA_READ
@@ -242,6 +250,7 @@ extern struct proc_s {
 		FILE *propagation;
 #endif
 	} metadata;
+#endif
 	
 #ifdef SCHEDULE_EXECUTE
 	/* just some helpers for error propagation visualization */
@@ -268,15 +277,15 @@ extern struct proc_s {
 } proc;
 
 static const int mb_size_log = 4;	/* log2 of the edge length of a macroblock */
-static const float ssim_precision = 0.05;
-static const float subdivision_threshold = 0.01;
+static const float ssim_precision = 0.05f;
+static const float subdivision_threshold = 0.01f;
 static const int output_queue = 10;     /* length of simulated player's frame queue */
 #if SLICE_SKIP
-static const float safety_margin_decode  = 1.1;
-static const float safety_margin_replace = 1.2;
+static const float safety_margin_decode  = 1.1f;
+static const float safety_margin_replace = 1.2f;
 #else
-static const float safety_margin_decode  = 1.0;
-static const float safety_margin_replace = 1.0;
+static const float safety_margin_decode  = 1.0f;
+static const float safety_margin_replace = 1.0f;
 #endif
 
 #pragma mark -
@@ -380,3 +389,5 @@ static inline byte_block_t checkerboard(int mb_x, int mb_y)
 {
 	return ((mb_x & 1) ^ (mb_y & 1)) ? (byte_spread * 0xA0) : (byte_spread * 0x60);
 }
+
+#pragma clang diagnostic pop

@@ -12,6 +12,8 @@
 #include "libavcodec/avcodec.h"
 #include "nalu.h"
 
+#pragma clang diagnostic ignored "-Wpadded"
+
 struct nalu_read_s {
 	const uint8_t * restrict nalu;
 	uint_fast8_t byte;
@@ -87,9 +89,9 @@ int_fast32_t nalu_read_signed(nalu_read_t *read)
 
 float nalu_read_float(nalu_read_t *read)
 {
-	uint32_t coded = nalu_read_unsigned(read);
+	uint32_t coded = (uint32_t)nalu_read_unsigned(read);
 	int32_t fixedpoint = (int32_t)reverse_bits(coded);
-	int exponent = fixedpoint ? nalu_read_signed(read) : 0;
+	int32_t exponent = fixedpoint ? (int32_t)nalu_read_signed(read) : 0;
 	return ldexpf((float)fixedpoint, exponent - 31);
 }
 
@@ -158,7 +160,7 @@ static inline void nalu_write_bit(nalu_write_t *write, uint_fast8_t bit)
 
 void nalu_write_unsigned(nalu_write_t *write, uint_fast32_t value)
 {
-	assert(value < (1 << 31));
+	assert(value < (1u << 31));
 	value = value + 1;
 	
 	uint_fast32_t temp = value;
@@ -176,7 +178,7 @@ void nalu_write_unsigned(nalu_write_t *write, uint_fast32_t value)
 
 void nalu_write_signed(nalu_write_t *write, int_fast32_t value)
 {
-	uint_fast32_t coded = (value > 0) ? (value << 1) - 1 : (-value) << 1;
+	uint_fast32_t coded = (value > 0) ? ((uint_fast32_t)value << 1) - 1 : (uint_fast32_t)(-value) << 1;
 	nalu_write_unsigned(write, coded);
 }
 
@@ -185,7 +187,7 @@ void nalu_write_float(nalu_write_t *write, float value)
 	int exponent;
 	float magnitude = frexpf(value, &exponent);
 	assert(isfinite(magnitude));
-	int32_t fixedpoint = ldexpf(magnitude, 31);
+	int32_t fixedpoint = (int32_t)(ldexpf(magnitude, 31));
 	
 	/* reverse because lower bits are more likely zero */
 	uint32_t coded = reverse_bits((uint32_t)fixedpoint);

@@ -6,6 +6,8 @@
 #include <libavformat/avformat.h>
 #include "estimator.h"
 
+#pragma clang diagnostic ignored "-Wunused-parameter"
+
 /* empty implementation */
 void atlas_job_submit(void *code, pid_t tid, atlas_job_t job) {}
 void atlas_job_next(void *code) {}

@@ -34,7 +34,7 @@ void hook_slice_any(const AVCodecContext *c)
 		gettimeofday(&tv, NULL);
 		double usecs_stop = 1000000.0 * tv.tv_sec + (double)tv.tv_usec;
 		
-		usecs_per_tsc = (usecs_stop - usecs_start) / (tsc_stop - tsc_start);
+		usecs_per_tsc = (float)((usecs_stop - usecs_start) / (tsc_stop - tsc_start));
 	});
 	
 	printf("%d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, ",

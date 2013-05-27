@@ -203,7 +203,7 @@ static void stabilize(struct matrix *sort, struct matrix *good)
 	 * We would actually copy the whole matrix, but when dropping from the right,
 	 * Givens fixup always affects only the last column, so we hand just the
 	 * last column through all possible positions. */
-	for (ssize_t column = index_last; column >= 0; column--) {
+	for (size_t column = index_last; (ssize_t)column >= 0; column--) {
 		good->matrix[column] = good->matrix[index_last];
 		givens_fixup(*good, column + 1, column);
 		
@@ -222,25 +222,26 @@ static void stabilize(struct matrix *sort, struct matrix *good)
 	 * represents our target vector, so we must never drop it. */
 	
 	/* move all to-be-dropped columns to the right */
-	ssize_t insert_column = index_last - 1;  // current insert position
-	for (ssize_t drop_column = index_last - 1; drop_column >= 0; drop_column--) {
+	size_t keep_columns = index_last;  // number of columns to keep, starts with all
+	for (size_t drop_column = index_last - 1; (ssize_t)drop_column >= 0; drop_column--) {
 		if (!drop[drop_column]) continue;
 		
-		if (drop_column < insert_column) {  // column must move
+		keep_columns--;
+		
+		if (drop_column < keep_columns) {  // column must move
 			double *temp = sort->matrix[drop_column];
 			memmove(&sort->matrix[drop_column], &sort->matrix[drop_column + 1],
-					(insert_column - drop_column) * sizeof(double *));
-			sort->matrix[insert_column] = temp;
+					(keep_columns - drop_column) * sizeof(double *));
+			sort->matrix[keep_columns] = temp;
 			
-			for (size_t column = drop_column; column < insert_column; column++)
+			for (size_t column = drop_column; column < keep_columns; column++)
 				givens_fixup(*sort, column + 1, column);
 		}
-		insert_column--;
 	}
 	
 	/* setup good-column matrix */
 	good->columns = sort->columns;
-	memcpy(good->matrix, sort->matrix, (insert_column + 1) * sizeof(double *));  // non-drop columns
+	memcpy(good->matrix, sort->matrix, keep_columns * sizeof(double *));  // non-drop columns
 	memcpy(good->matrix[index_last], sort->matrix[index_last], column_size);   // copy last column
 	
 	/* Conceptually, we now drop the to-be-dropped columns from the right.
@@ -254,7 +255,7 @@ static void stabilize(struct matrix *sort, struct matrix *good)
 	 * The resulting coeffients however will be the same as with an actual
 	 * column-reduced matrix, because the diagonal elements for all
 	 * dropped columns are zero. */
-	for (ssize_t column = index_last; column > insert_column; column--) {
+	for (size_t column = index_last; (ssize_t)column >= (ssize_t)keep_columns; column--) {
 		good->matrix[column] = good->matrix[index_last];
 		good->matrix[column][column] = 0.0;
 	}
@@ -266,8 +267,8 @@ static void trisolve(struct matrix m)
 	for (size_t column = 0; column < m.columns - 1; column++)
 		m.matrix[column][result_row] = 0.0;
 	
-	for (ssize_t row = result_row - 2; row >= 0; row--) {
-		ssize_t column = row;
+	for (size_t row = result_row - 2; (ssize_t)row >= 0; row--) {
+		size_t column = row;
 		
 		if (fabs(m.matrix[column][row]) >= EPSILON) {
 			column = m.columns - 1;
@@ -277,7 +278,7 @@ static void trisolve(struct matrix m)
 				intermediate -= m.matrix[column][result_row] * m.matrix[column][row];
 			m.matrix[column][result_row] = intermediate / m.matrix[column][row];
 
-			for (column--; column >= 0; column--)
+			for (column--; (ssize_t)column >= 0; column--)
 				// must be upper triangular matrix
 				assert(m.matrix[column][row] == 0.0);
 		} else

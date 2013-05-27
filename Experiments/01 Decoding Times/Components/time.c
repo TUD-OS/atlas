@@ -30,12 +30,15 @@ static inline double get_time(void)
 
 void process_init(AVCodecContext *c, const char *file)
 {
+	(void)file;
+	
 	c->thread_count = 1;
 	c->process_slice = (void (*)(void *))measure_times;
 }
 
 void process_finish(AVCodecContext *c)
 {
+	(void)c;
 }
 
 static void measure_times(AVCodecContext *c)

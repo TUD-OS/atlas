@@ -7,6 +7,9 @@
 #ifdef __APPLE__
 
 #pragma clang diagnostic ignored "-Wgcc-compat"
+#pragma clang diagnostic ignored "-Wmissing-prototypes"
+#pragma clang diagnostic ignored "-Wunused-parameter"
+
 #include "libavcodec/avcodec.h"
 
 void hook_job_submit(void *code, double prediction, double reservation, double deadline) __attribute__((weak)) {}

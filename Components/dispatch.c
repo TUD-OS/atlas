@@ -3,7 +3,7 @@
  * economic rights: Technische Universitaet Dresden (Germany)
  */
 
-#if DISPATCH_ATLAS
+#if defined(DISPATCH_ATLAS) && DISPATCH_ATLAS
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -17,6 +17,8 @@
 
 #include <dispatch/dispatch.h>  // to get dispatch_semaphore_t early
 #include "scheduler.h"  // for gettid()
+
+#pragma clang diagnostic ignored "-Wpadded"
 
 typedef struct {
 	void (^block)(void);
@@ -64,7 +66,7 @@ dispatch_queue_t dispatch_queue_create(const char *label, dispatch_queue_attr_t 
 	dispatch_queue_t queue = malloc(sizeof(struct dispatch_queue_s));
 	if (!queue) return NULL;
 	
-	queue->magic = 'atls';
+	queue->magic = 0x61746C73;  // 'atls'
 	queue->refcount = 1;
 	queue->label = strdup(label);
 	queue->init = dispatch_semaphore_create(0);
@@ -129,14 +131,15 @@ void dispatch_sync(dispatch_queue_t queue, dispatch_block_t block)
 }
 
 #define ORIGINAL_GCD(function, object) \
-	if (queue->magic != 'atls') { \
+	if (queue->magic != 0x61746C73) { \
 		static void (*original_dispatch_ ## function)(dispatch_object_t); \
 		static dispatch_once_t predicate; \
 		dispatch_once(&predicate, ^{ \
-			original_dispatch_ ## function = dlsym(RTLD_NEXT, "dispatch_" #function); \
+			original_dispatch_ ## function = (void(*)(dispatch_object_t))dlsym(RTLD_NEXT, "dispatch_" #function); \
 			assert(original_dispatch_ ## function); \
 		}); \
-		return original_dispatch_ ## function (object); \
+		original_dispatch_ ## function (object); \
+		return; \
 	}
 
 void dispatch_retain(dispatch_object_t object)
@@ -161,7 +164,7 @@ void dispatch_release(dispatch_object_t object)
 	assert(queue->refcount);
 	if (--queue->refcount == 0) {
 		dispatch_queue_element_t element = {
-			.block = ^{
+			.block = ^  __attribute__((noreturn)) {
 				pthread_exit(NULL);
 			}
 		};
@@ -195,7 +198,7 @@ struct Block_layout {
 
 void dispatch_async_atlas(dispatch_queue_t queue, atlas_job_t job, dispatch_block_t block)
 {
-	void *code = ((struct Block_layout *)block)->invoke;
+	void *code = (void *)((struct Block_layout *)block)->invoke;
 	dispatch_queue_element_t element = {
 		.block = Block_copy(block),
 		.is_copied = true,
@@ -234,7 +237,7 @@ static void *dispatch_queue_worker(void *context)
 		dispatch_queue_element_t element = buffer_get(&queue->blocks);
 		pthread_mutex_unlock(&queue->lock);
 		
-		void *code = ((struct Block_layout *)element.block)->invoke;
+		void *code = (void *)((struct Block_layout *)element.block)->invoke;
 		if (element.is_realtime)
 			atlas_job_next(code);
 		
@@ -258,6 +261,7 @@ static void *dispatch_queue_worker(void *context)
 
 void dispatch_async_atlas(dispatch_queue_t queue, atlas_job_t job, dispatch_block_t block)
 {
+	(void)job;
 	dispatch_async(queue, block);
 }
 

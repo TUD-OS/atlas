@@ -559,7 +559,7 @@ index 779c879..d7327f9 100644
      is = stream_open(input_filename, file_iformat);
      if (!is) {
 diff --git a/libavcodec/avcodec.h b/libavcodec/avcodec.h
-index 96ca401..cfb21b1 100644
+index 96ca401..0fefe45 100644
 --- a/libavcodec/avcodec.h
 +++ b/libavcodec/avcodec.h
 @@ -2914,6 +2914,91 @@ typedef struct AVCodecContext {
@@ -628,8 +628,8 @@ index 96ca401..cfb21b1 100644
 +        int flag_idr;
 +        AVFrame *current;
 +        AVFrame *display;
-+        int mb_width;
-+        int mb_height;
++        uint32_t mb_width;
++        uint32_t mb_height;
 +    } frame;
 +
 +    /* slice structure; does not support FMO */

@@ -187,13 +187,12 @@ void ssim_map(const uint8_t * restrict x, const uint8_t * restrict y,
 			  uint8_t * restrict map, float * restrict hist,
 			  const unsigned width, const unsigned height, const unsigned line_stride)
 {
-	double ssim;
-	int i, j;
-	
-#pragma omp parallel for private(j, ssim)
-	for (i = 0; i < height - BLOCK_HEIGHT; i++) {
-		for (j = 0; j < width - BLOCK_WIDTH; j++) {
-			ssim = 1 - ssim_block(&x[i * line_stride + j * PIXEL_STRIDE], &y[i * line_stride + j * PIXEL_STRIDE], line_stride, line_stride);
+#pragma omp parallel for
+	for (uint_fast32_t i = 0; i < height - BLOCK_HEIGHT; i++) {
+		for (uint_fast32_t j = 0; j < width - BLOCK_WIDTH; j++) {
+			double ssim = 1 - ssim_block(&x[i * line_stride + j * PIXEL_STRIDE],
+										 &y[i * line_stride + j * PIXEL_STRIDE],
+										 line_stride, line_stride);
 			if (hist)
 				hist[(i + (BLOCK_HEIGHT / 2)) * width + (j + (BLOCK_WIDTH / 2)) * PIXEL_STRIDE] += ssim;
 			if (ssim <= 0.0)
@@ -201,7 +200,7 @@ void ssim_map(const uint8_t * restrict x, const uint8_t * restrict y,
 			else if (ssim >= 1.0)
 				map[(i + (BLOCK_HEIGHT / 2)) * line_stride + (j + (BLOCK_WIDTH / 2)) * PIXEL_STRIDE] = 255;
 			else
-				map[(i + (BLOCK_HEIGHT / 2)) * line_stride + (j + (BLOCK_WIDTH / 2)) * PIXEL_STRIDE] = 255 * ssim;
+				map[(i + (BLOCK_HEIGHT / 2)) * line_stride + (j + (BLOCK_WIDTH / 2)) * PIXEL_STRIDE] = (uint8_t)(255 * ssim);
 		}
 	}
 }
@@ -210,34 +209,33 @@ float ssim_quality_loss(const picture_t * restrict x, const picture_t * restrict
 						const change_rect_t * restrict rect, const float precision)
 {
 	double ssim = 0.0;
-	unsigned i, j;
 	
 	/* note: random() is not thread-safe, meaning that concurrent use could mess up
 	 * internal state and your random numbers are no longer random. Gotta love POSIX. */
 	unsigned short prng_state[3][3];
 	static const unsigned long nrand48_max = (1UL << 31) - 1;
 	
-	for (i = 0; i < 3; i++)
-		for (j = 0; j < 3; j++)
+	for (uint_fast32_t i = 0; i < 3; i++)
+		for (uint_fast32_t j = 0; j < 3; j++)
 			prng_state[i][j] = (unsigned short)random();
 
 	/* TODO: limited to a parallelism of only 3 threads */
-#pragma omp parallel sections private(i,j) reduction(+: ssim)
+#pragma omp parallel sections reduction(+: ssim)
 	{
 		/* Y */
 #pragma omp section
-		for (i = 0; i < x->height - BLOCK_HEIGHT; i++)
+		for (uint_fast32_t i = 0; i < x->height - BLOCK_HEIGHT; i++)
 			if (!rect || (i + BLOCK_HEIGHT > rect->min_y && i < rect->max_y))
-				for (j = 0; j < x->width - BLOCK_WIDTH; j++)
+				for (uint_fast32_t j = 0; j < x->width - BLOCK_WIDTH; j++)
 					if (!rect || (j + BLOCK_WIDTH  > rect->min_x && j < rect->max_x))
 						if (nrand48(prng_state[0]) < precision * nrand48_max)
 							ssim += WEIGHT_Y * (1.0 - ssim_block(&x->Y[i * x->line_stride_Y + j * PIXEL_STRIDE], &y->Y[i * y->line_stride_Y + j * PIXEL_STRIDE], x->line_stride_Y, y->line_stride_Y));
 		
 #pragma omp section
 		/* Cb */
-		for (i = 0; i < x->height / 2 - BLOCK_HEIGHT; i++)
+		for (uint_fast32_t i = 0; i < x->height / 2 - BLOCK_HEIGHT; i++)
 			if (!rect || (i + BLOCK_HEIGHT > rect->min_y / 2 && i <= rect->max_y / 2))
-				for (j = 0; j < x->width / 2 - BLOCK_WIDTH; j++)
+				for (uint_fast32_t j = 0; j < x->width / 2 - BLOCK_WIDTH; j++)
 					if (!rect || (j + BLOCK_WIDTH > rect->min_x / 2 && j <= rect->max_x / 2))
 						if (nrand48(prng_state[1]) < precision * nrand48_max)
 							/* due to subsampling, one chroma window is worth 4 luma windows, hence the factor 4 */
@@ -245,14 +243,14 @@ float ssim_quality_loss(const picture_t * restrict x, const picture_t * restrict
 		
 #pragma omp section
 		/* Cr */
-		for (i = 0; i < x->height / 2 - BLOCK_HEIGHT; i++)
+		for (uint_fast32_t i = 0; i < x->height / 2 - BLOCK_HEIGHT; i++)
 			if (!rect || (i + BLOCK_HEIGHT > rect->min_y / 2 && i <= rect->max_y / 2))
-				for (j = 0; j < x->width / 2 - BLOCK_WIDTH; j++)
+				for (uint_fast32_t j = 0; j < x->width / 2 - BLOCK_WIDTH; j++)
 					if (!rect || (j + BLOCK_WIDTH > rect->min_x / 2 && j <= rect->max_x / 2))
 						if (nrand48(prng_state[2]) < precision * nrand48_max)
 							/* due to subsampling, one chroma window is worth 4 luma windows, hence the factor 4 */
 							ssim += 4 * WEIGHT_CR * (1.0 - ssim_block(&x->Cr[i * x->line_stride_Cr + j * PIXEL_STRIDE], &y->Cr[i * y->line_stride_Cr + j * PIXEL_STRIDE], x->line_stride_Cr, y->line_stride_Cr));
 	}
 	
-	return ssim / (x->width * x->height * precision);
+	return (float)(ssim / (x->width * x->height * precision));
 }

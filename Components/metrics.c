@@ -3,13 +3,15 @@
  * economic rights: Technische Universitaet Dresden (Germany)
  */
 
+#include <assert.h>
 #include "process.h"
 
 
 #if METRICS_EXTRACT
 void remember_metrics(const AVCodecContext *c)
 {
-	proc.frame->slice[proc.frame->slice_count].metrics.type          = c->metrics.type;
+	assert(c->metrics.type >= 0);
+	proc.frame->slice[proc.frame->slice_count].metrics.type          = (size32_t)c->metrics.type;
 	proc.frame->slice[proc.frame->slice_count].metrics.bits_cabac    = c->metrics.bits_cabac;
 	proc.frame->slice[proc.frame->slice_count].metrics.bits_cavlc    = c->metrics.bits_cavlc;
 	proc.frame->slice[proc.frame->slice_count].metrics.intra_4x4     = c->metrics.intra_4x4;

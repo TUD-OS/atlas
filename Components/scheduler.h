@@ -44,12 +44,12 @@ static inline int sched_submit(pid_t pid, struct timeval *exectime, struct timev
 
 static inline int sched_next(void)
 {
-	return syscall(SYS_atlas_next);
+	return (int)syscall(SYS_atlas_next);
 }
 
 static inline int sched_debug(void)
 {
-	return syscall(SYS_atlas_debug);
+	return (int)syscall(SYS_atlas_debug);
 }
 
 #else
@@ -58,10 +58,14 @@ static inline int sched_debug(void)
 #include <sys/time.h>
 #include <errno.h>
 
-#warning Jobs will not be forwarded to the scheduler.
+#pragma message "jobs will not be forwarded to the scheduler"
 
 static inline int sched_submit(pid_t pid, struct timeval *exectime, struct timeval *deadline, enum sched_timeref reference)
 {
+	(void)pid;
+	(void)exectime;
+	(void)deadline;
+	(void)reference;
 	return ENOTSUP;
 }
 
@@ -85,7 +89,7 @@ static inline int sched_debug(void)
 static inline pid_t gettid(void)
 {
 #ifdef __linux__
-	return syscall(SYS_gettid);
+	return (pid_t)syscall(SYS_gettid);
 #else
 	return 0;
 #endif

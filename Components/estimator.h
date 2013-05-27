@@ -6,7 +6,6 @@
 #pragma once
 
 #include <stddef.h>
-#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -69,7 +68,7 @@ void atlas_job_train(void *code);
 #pragma mark Threads and Time
 
 /* pin thread to CPU */
-void atlas_pin_cpu();
+void atlas_pin_cpu(int cpu);
 
 /* the current time in ATLAS' timebase */
 double atlas_now(void);
@@ -120,7 +119,7 @@ static inline void buffer_put(struct buffer *buffer, BUFFER_TYPE value)
 	if (++buffer->write >= buffer->ring + buffer->size)
 		buffer->write = buffer->ring;  // ring buffer wrap around
 	if (buffer->write == buffer->read) {  // buffer full
-		ptrdiff_t old_pos = buffer->read - buffer->ring;
+		size_t old_pos = (size_t)(buffer->read - buffer->ring);
 		size_t old_end = buffer->size;
 		buffer->size += buffer_size_increment;
 		buffer->ring = realloc(buffer->ring, buffer->size * sizeof(BUFFER_TYPE));
