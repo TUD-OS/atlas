@@ -11,6 +11,9 @@ all clean:
 	$(MAKE) -C 3-03\ Times\ and\ Metrics $@
 	$(MAKE) -C 3-04\ Preprocess\ Metrics $@
 	$(MAKE) -C 3-05\ Prediction\ Full $@
+	$(MAKE) -C 3-06\ Prediction\ Reduced $@
+	$(MAKE) -C 3-07\ Prediction\ None $@
+	$(MAKE) -C 3-08\ Prediction\ Input\ Output $@
 	$(MAKE) -C 3-29\ Background\ ATLAS $@
 
 %:
