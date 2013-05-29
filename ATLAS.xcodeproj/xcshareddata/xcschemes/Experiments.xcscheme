@@ -17,7 +17,7 @@
                BlueprintIdentifier = "4C24BA0511EDE77700E67981"
                BuildableName = "Experiments"
                BlueprintName = "Experiments"
-               ReferencedContainer = "container:Workbench.xcodeproj">
+               ReferencedContainer = "container:ATLAS.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>

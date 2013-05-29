@@ -57,7 +57,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
-		08FB7794FE84155DC02AAC07 /* Workbench */ = {
+		08FB7794FE84155DC02AAC07 /* ATLAS */ = {
 			isa = PBXGroup;
 			children = (
 				4C24B9EA11EDE6D600E67981 /* Makefile */,
@@ -73,7 +73,7 @@
 				4C24B8FB11EDE6B900E67981 /* FFmpeg */,
 				4C24B8FD11EDE6B900E67981 /* x264 */,
 			);
-			name = Workbench;
+			name = ATLAS;
 			sourceTree = "<group>";
 		};
 		4C24B9EB11EDE6D600E67981 /* Components */ = {
@@ -191,8 +191,8 @@
 			knownRegions = (
 				en,
 			);
-			mainGroup = 08FB7794FE84155DC02AAC07 /* Workbench */;
-			productRefGroup = 08FB7794FE84155DC02AAC07 /* Workbench */;
+			mainGroup = 08FB7794FE84155DC02AAC07 /* ATLAS */;
+			productRefGroup = 08FB7794FE84155DC02AAC07 /* ATLAS */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
