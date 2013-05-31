@@ -163,7 +163,7 @@ void atlas_job_train(void *code)
 #if LLSP_PREDICT
 		llsp_add(estimator->llsp, llsp_metrics, execution_time);
 #endif
-		estimator->mse = AGING_FACTOR * estimator->mse + (1.0 - AGING_FACTOR) * mse;
+		estimator->mse = (1.0 - AGING_FACTOR) * estimator->mse + AGING_FACTOR * mse;
 		if (hook_job_complete)
 			hook_job_complete(code, time, deadline, prediction, execution_time);
 	}

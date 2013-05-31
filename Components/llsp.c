@@ -88,7 +88,7 @@ void llsp_add(llsp_t *llsp, const double *metrics, double target)
 	
 	/* age out the past a little bit */
 	for (size_t element = 0; element < row_count * column_count; element++)
-		llsp->data[element] *= AGING_FACTOR;
+		llsp->data[element] *= 1.0 - AGING_FACTOR;
 	
 	/* add new row to the top of the solving matrix */
 	memmove(llsp->data + 1, llsp->data, data_size - sizeof(double));
