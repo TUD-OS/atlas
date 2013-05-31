@@ -14,6 +14,16 @@ all clean:
 	$(MAKE) -C 3-06\ Prediction\ Reduced $@
 	$(MAKE) -C 3-07\ Prediction\ None $@
 	$(MAKE) -C 3-08\ Prediction\ Input\ Output $@
+	$(MAKE) -C 3-09\ Prediction\ Overhead $@
+	$(MAKE) -C 3-10\ Prediction\ Quick\ Full $@
+	$(MAKE) -C 3-11\ Prediction\ Quick\ Reduced $@
+	$(MAKE) -C 3-12\ Prediction\ Quick\ None $@
+	$(MAKE) -C 3-13\ Prediction\ Slow\ Full $@
+	$(MAKE) -C 3-14\ Prediction\ Slow\ Reduced $@
+	$(MAKE) -C 3-15\ Prediction\ Slow\ None $@
+	$(MAKE) -C 3-16\ Prediction\ No\ Drop $@
+	$(MAKE) -C 3-17\ Prediction\ More\ Drop $@
+	$(MAKE) -C 3-18\ Prediction\ Subsetting $@
 	$(MAKE) -C 3-29\ Background\ ATLAS $@
 
 %:
