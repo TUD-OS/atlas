@@ -1,5 +1,5 @@
 diff --git a/ffplay.c b/ffplay.c
-index 779c879..d7327f9 100644
+index 779c879..338a6e0 100644
 --- a/ffplay.c
 +++ b/ffplay.c
 @@ -56,6 +56,23 @@
@@ -160,8 +160,8 @@ index 779c879..d7327f9 100644
 +            .metrics_count = 0,
 +            .metrics = NULL
 +        };
-+        dispatch_async_atlas(is->refresh_queue, job, ^{ refresh_stage(is); });
 +        atlas_job_submit(video_refresh, is->main_thread, job);
++        dispatch_async_atlas(is->refresh_queue, job, ^{ refresh_stage(is); });
      }
      return 0;
  }
