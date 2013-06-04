@@ -12,7 +12,7 @@
  * the solution will slightly lean towards newly added metrics/targets,
  * exhibting properties of a sliding average. */
 #ifndef AGING_FACTOR
-#define AGING_FACTOR 0.001
+#define AGING_FACTOR 0.01
 #endif
 
 /* During the column dropping check, each column's contribution to the accuracy
