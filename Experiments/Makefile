@@ -8,6 +8,7 @@ all clean:
 	$(MAKE) -C 03\ Preprocess\ Metrics $@
 	$(MAKE) -C 04\ GCD\ Compatibility $@
 	$(MAKE) -C 05\ Prediction $@
+	$(MAKE) -C 06\ Scheduling $@
 
 %:
 	$(MAKE) -C '$(wildcard $@*)'
