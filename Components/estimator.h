@@ -108,7 +108,7 @@ static const size_t buffer_size_increment = 1024;
 static inline void buffer_init(struct buffer *buffer)
 {
 	buffer->size = buffer_size_increment;
-	buffer->ring = malloc(buffer->size * sizeof(BUFFER_TYPE));
+	buffer->ring = (BUFFER_TYPE *)malloc(buffer->size * sizeof(BUFFER_TYPE));
 	if (!buffer->ring) abort();
 	buffer->read = buffer->ring;
 	buffer->write = buffer->ring;
@@ -123,7 +123,7 @@ static inline void buffer_put(struct buffer *buffer, BUFFER_TYPE value)
 		size_t old_pos = (size_t)(buffer->read - buffer->ring);
 		size_t old_end = buffer->size;
 		buffer->size += buffer_size_increment;
-		buffer->ring = realloc(buffer->ring, buffer->size * sizeof(BUFFER_TYPE));
+		buffer->ring = (BUFFER_TYPE *)realloc(buffer->ring, buffer->size * sizeof(BUFFER_TYPE));
 		if (!buffer->ring) abort();
 		buffer->read = buffer->ring + old_pos;
 		buffer->write = buffer->ring + old_pos;

@@ -107,12 +107,12 @@ void atlas_job_submit(void *code, pid_t tid, atlas_job_t job)
 	double reservation = JOB_OVERALLOCATION(prediction);
 #if JOB_SCHEDULING
 	struct timeval tv_deadline = {
-		.tv_sec = job.deadline,
-		.tv_usec = 1000000 * (job.deadline - (long long)job.deadline)
+		.tv_sec = (time_t)job.deadline,
+		.tv_usec = (suseconds_t)(1000000 * (job.deadline - (time_t)job.deadline))
 	};
 	struct timeval tv_exectime = {
-		.tv_sec = reservation,
-		.tv_usec = 1000000 * (reservation - (long long)reservation)
+		.tv_sec = (time_t)reservation,
+		.tv_usec = (suseconds_t)(1000000 * (reservation - (time_t)reservation))
 	};
 	sched_submit(tid, &tv_exectime, &tv_deadline, sched_deadline_absolute);
 #else
