@@ -1,0 +1,78 @@
+--- /dev/null	2012-10-28 12:33:01.331261529 +0100
++++ parsec/config/clang-serial.bldconf	2013-06-11 13:13:39.000000000 +0200
+@@ -0,0 +1,17 @@
++#!/bin/bash
++
++# clang-serial.bldconf - configuration file for PARSEC
++
++source ${PARSECDIR}/config/gcc-serial.bldconf
++
++CC=clang
++CXX=clang++
++CPPFLAGS="${CPPFLAGS} -I${PARSECDIR}/../Components"
++LDFLAGS="${LDFLAGS} -pthread -lm -ldl"
++
++case `uname` in
++Linux)
++	CPPFLAGS="-D_GNU_SOURCE ${CPPFLAGS}"
++	LDFLAGS="${PARSECDIR}/../Components/estimator.o ${PARSECDIR}/../Components/experiment.o ${PARSECDIR}/../Components/llsp.o ${PARSECDIR}/../Components/weak.o -lrt ${LDFLAGS}"
++	;;
++esac
+--- /dev/null	2012-10-28 12:33:01.331261529 +0100
++++ parsec/pkgs/apps/bodytrack/parsec/clang-serial.bldconf	2012-10-27 16:38:46.000000000 +0200
+@@ -0,0 +1,3 @@
++#!/bin/bash
++
++source ${PARSECDIR}/pkgs/apps/bodytrack/parsec/gcc-serial.bldconf
+--- parsec/pkgs/apps/bodytrack/parsec/native.runconf	2012-10-28 13:37:53.000000000 +0100
++++ parsec/pkgs/apps/bodytrack/parsec/native.runconf	2013-06-11 14:04:22.000000000 +0200
+@@ -16,5 +16,5 @@
+ run_exec="bin/bodytrack"
+ 
+ # Arguments to use
+-run_args="sequenceB_261 4 261 4000 5 0 ${NTHREADS}"
++run_args="sequenceB_261 4 261 750 3 0 1 0"
+ 
+--- parsec/pkgs/apps/bodytrack/src/TrackingBenchmark/main.cpp	2012-10-27 16:19:38.000000000 +0200
++++ parsec/pkgs/apps/bodytrack/src/TrackingBenchmark/main.cpp	2013-06-11 13:08:49.000000000 +0200
+@@ -65,6 +65,8 @@
+ #include "TrackingModel.h"
+ #include "system.h"
+ 
++#include "estimator.h"
++#include "scheduler.h"
+ 
+ using namespace std;
+ 
+@@ -347,8 +349,23 @@
+ #if defined(ENABLE_PARSEC_HOOKS)
+         __parsec_roi_begin();
+ #endif
++	atlas_pin_cpu(0);
++	pid_t tid = gettid();
++
++	double deadline = atlas_now();
++	/* submit 8 frames = 2 seconds ahead */
++	for(int i = 0; i < 8; i++)
++	{	deadline += 0.25;
++		atlas_job_t job = { .deadline = deadline };
++		atlas_job_submit((void *)mainSingleThread, tid, job);
++	}
++
+ 	for(int i = 0; i < frames; i++)														//process each set of frames
+ 	{	cout << "Processing frame " << i << endl;
++		deadline += 0.25;
++		atlas_job_t job = { .deadline = deadline };
++		atlas_job_submit((void *)mainSingleThread, tid, job);
++		atlas_job_next((void *)mainSingleThread);
+ 		if(!pf.Update((float)i))														//Run particle filter step
+ 		{	cout << "Error loading observation data" << endl;
+ 			return 0;
+@@ -357,6 +374,7 @@
+ 		WritePose(outputFileAvg, estimate);
+ 		if(OutputBMP)
+ 			pf.Model().OutputBMP(estimate, i);											//save output bitmap file
++		atlas_job_train((void *)mainSingleThread);
+ 	}
+ #if defined(ENABLE_PARSEC_HOOKS)
+         __parsec_roi_end();

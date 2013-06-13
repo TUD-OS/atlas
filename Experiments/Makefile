@@ -24,6 +24,12 @@ all clean:
 	$(MAKE) -C 3-16\ Prediction\ No\ Drop $@
 	$(MAKE) -C 3-17\ Prediction\ More\ Drop $@
 	$(MAKE) -C 3-18\ Prediction\ Subsetting $@
+	$(MAKE) -C 3-19\ Bodytrack\ Alone $@
+	$(MAKE) -C 3-20\ Bodytrack\ CFS $@
+	$(MAKE) -C 3-21\ Bodytrack\ ATLAS $@
+	$(MAKE) -C 3-22\ Bodytrack\ RT $@
+	$(MAKE) -C 3-23\ Bodytrack\ RT\ Fail $@
+	$(MAKE) -C 3-24\ Bodytrack\ ATLAS\ Fail $@
 	$(MAKE) -C 3-29\ Background\ ATLAS $@
 
 %:
@@ -36,6 +42,7 @@ all clean:
 # $USER ALL = NOPASSWD: /usr/sbin/wrmsr
 
 environment:
+	$(MAKE) -C Bodytrack
 	@uname -sr | grep -q 'Linux.*atlas' || { echo '*** Boot the ATLAS kernel. ***' ; false ; }
 	@fgrep -q 1 /proc/sys/kernel/sched_atlas_advance_in_cfs || echo -n 1 | sudo dd of=/proc/sys/kernel/sched_atlas_advance_in_cfs
 	@fgrep -q performance /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor || { echo '*** Use the "performance" CPU frequency governor. ***' ; false ; }
