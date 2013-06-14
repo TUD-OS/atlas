@@ -1,5 +1,5 @@
 diff --git a/ffplay.c b/ffplay.c
-index 779c879..338a6e0 100644
+index 779c879..cf2e90c 100644
 --- a/ffplay.c
 +++ b/ffplay.c
 @@ -56,6 +56,23 @@
@@ -150,22 +150,20 @@ index 779c879..338a6e0 100644
                  }
              }
  
-@@ -1477,6 +1531,14 @@ static int queue_picture(VideoState *is, AVFrame *src_frame, double pts1, int64_
+@@ -1477,6 +1531,12 @@ static int queue_picture(VideoState *is, AVFrame *src_frame, double pts1, int64_
          SDL_LockMutex(is->pictq_mutex);
          is->pictq_size++;
          SDL_UnlockMutex(is->pictq_mutex);
 +
 +        atlas_job_t job = {
-+            .deadline = is->frame_timer + is->pictq_size * av_q2d(is->video_st->codec->time_base),
-+            .metrics_count = 0,
-+            .metrics = NULL
++            .deadline = is->frame_timer + is->pictq_size * av_q2d(is->video_st->codec->time_base)
 +        };
 +        atlas_job_submit(video_refresh, is->main_thread, job);
 +        dispatch_async_atlas(is->refresh_queue, job, ^{ refresh_stage(is); });
      }
      return 0;
  }
-@@ -1688,8 +1750,14 @@ static int input_request_frame(AVFilterLink *link)
+@@ -1688,8 +1748,14 @@ static int input_request_frame(AVFilterLink *link)
      AVPacket pkt;
      int ret;
  
@@ -181,7 +179,7 @@ index 779c879..338a6e0 100644
      if (ret < 0)
          return -1;
  
-@@ -1775,7 +1843,7 @@ static int configure_video_filters(AVFilterGraph *graph, VideoState *is, const c
+@@ -1775,7 +1841,7 @@ static int configure_video_filters(AVFilterGraph *graph, VideoState *is, const c
  #if FF_API_OLD_VSINK_API
      ret = avfilter_graph_create_filter(&filt_out,
                                         avfilter_get_by_name("buffersink"),
@@ -190,7 +188,7 @@ index 779c879..338a6e0 100644
  #else
      buffersink_params->pixel_fmts = pix_fmts;
      ret = avfilter_graph_create_filter(&filt_out,
-@@ -1825,29 +1893,43 @@ static int configure_video_filters(AVFilterGraph *graph, VideoState *is, const c
+@@ -1825,29 +1891,43 @@ static int configure_video_filters(AVFilterGraph *graph, VideoState *is, const c
  
  #endif  /* CONFIG_AVFILTER */
  
@@ -242,7 +240,7 @@ index 779c879..338a6e0 100644
  
      for (;;) {
  #if !CONFIG_AVFILTER
-@@ -1872,6 +1954,8 @@ static int video_thread(void *arg)
+@@ -1872,6 +1952,8 @@ static int video_thread(void *arg)
              last_h = is->video_st->codec->height;
          }
          ret = av_buffersink_get_buffer_ref(filt_out, &picref, 0);
@@ -251,7 +249,7 @@ index 779c879..338a6e0 100644
          if (picref) {
              avfilter_fill_frame_from_video_buffer_ref(frame, picref);
              pts_int = picref->pts;
-@@ -1895,19 +1979,22 @@ static int video_thread(void *arg)
+@@ -1895,19 +1977,22 @@ static int video_thread(void *arg)
          pos = pkt.pos;
          av_free_packet(&pkt);
          if (ret == 0)
@@ -276,7 +274,7 @@ index 779c879..338a6e0 100644
  #endif
  
          pts = pts_int * av_q2d(is->video_st->time_base);
-@@ -1919,6 +2006,8 @@ static int video_thread(void *arg)
+@@ -1919,6 +2004,8 @@ static int video_thread(void *arg)
  
          if (is->step)
              stream_toggle_pause(is);
@@ -285,7 +283,7 @@ index 779c879..338a6e0 100644
      }
   the_end:
      avcodec_flush_buffers(is->video_st->codec);
-@@ -2272,6 +2361,7 @@ static int stream_component_open(VideoState *is, int stream_index)
+@@ -2272,6 +2359,7 @@ static int stream_component_open(VideoState *is, int stream_index)
          case AVMEDIA_TYPE_AUDIO   : is->last_audio_stream    = stream_index; if(audio_codec_name   ) codec= avcodec_find_decoder_by_name(   audio_codec_name); break;
          case AVMEDIA_TYPE_SUBTITLE: is->last_subtitle_stream = stream_index; if(subtitle_codec_name) codec= avcodec_find_decoder_by_name(subtitle_codec_name); break;
          case AVMEDIA_TYPE_VIDEO   : is->last_video_stream    = stream_index; if(video_codec_name   ) codec= avcodec_find_decoder_by_name(   video_codec_name); break;
@@ -293,7 +291,7 @@ index 779c879..338a6e0 100644
      }
      if (!codec)
          return -1;
-@@ -2380,7 +2470,7 @@ static int stream_component_open(VideoState *is, int stream_index)
+@@ -2380,7 +2468,7 @@ static int stream_component_open(VideoState *is, int stream_index)
          is->video_st = ic->streams[stream_index];
  
          packet_queue_start(&is->videoq);
@@ -302,7 +300,7 @@ index 779c879..338a6e0 100644
          break;
      case AVMEDIA_TYPE_SUBTITLE:
          is->subtitle_stream = stream_index;
-@@ -2427,6 +2517,7 @@ static void stream_component_close(VideoState *is, int stream_index)
+@@ -2427,6 +2515,7 @@ static void stream_component_close(VideoState *is, int stream_index)
          break;
      case AVMEDIA_TYPE_VIDEO:
          packet_queue_abort(&is->videoq);
@@ -310,7 +308,7 @@ index 779c879..338a6e0 100644
  
          /* note: we also signal this mutex to make sure we deblock the
             video thread in all cases */
-@@ -2434,7 +2525,8 @@ static void stream_component_close(VideoState *is, int stream_index)
+@@ -2434,7 +2523,8 @@ static void stream_component_close(VideoState *is, int stream_index)
          SDL_CondSignal(is->pictq_cond);
          SDL_UnlockMutex(is->pictq_mutex);
  
@@ -320,7 +318,7 @@ index 779c879..338a6e0 100644
  
          packet_queue_flush(&is->videoq);
          break;
-@@ -2484,15 +2576,22 @@ static int decode_interrupt_cb(void *ctx)
+@@ -2484,15 +2574,22 @@ static int decode_interrupt_cb(void *ctx)
  }
  
  /* this thread gets the stream from the disk or the network */
@@ -348,7 +346,7 @@ index 779c879..338a6e0 100644
      AVDictionaryEntry *t;
      AVDictionary **opts;
      int orig_nb_streams;
-@@ -2509,12 +2608,12 @@ static int read_thread(void *arg)
+@@ -2509,12 +2606,12 @@ static int read_thread(void *arg)
      if (err < 0) {
          print_error(is->filename, err);
          ret = -1;
@@ -363,7 +361,7 @@ index 779c879..338a6e0 100644
      }
      is->ic = ic;
  
-@@ -2528,7 +2627,7 @@ static int read_thread(void *arg)
+@@ -2528,7 +2625,7 @@ static int read_thread(void *arg)
      if (err < 0) {
          fprintf(stderr, "%s: could not find codec parameters\n", is->filename);
          ret = -1;
@@ -372,7 +370,7 @@ index 779c879..338a6e0 100644
      }
      for (i = 0; i < orig_nb_streams; i++)
          av_dict_free(&opts[i]);
-@@ -2586,11 +2685,10 @@ static int read_thread(void *arg)
+@@ -2586,11 +2683,10 @@ static int read_thread(void *arg)
          stream_component_open(is, st_index[AVMEDIA_TYPE_AUDIO]);
      }
  
@@ -386,7 +384,7 @@ index 779c879..338a6e0 100644
      if (is->show_mode == SHOW_MODE_NONE)
          is->show_mode = ret >= 0 ? SHOW_MODE_VIDEO : SHOW_MODE_RDFT;
  
-@@ -2601,8 +2699,24 @@ static int read_thread(void *arg)
+@@ -2601,8 +2697,22 @@ static int read_thread(void *arg)
      if (is->video_stream < 0 && is->audio_stream < 0) {
          fprintf(stderr, "%s: could not open codecs\n", is->filename);
          ret = -1;
@@ -401,18 +399,16 @@ index 779c879..338a6e0 100644
 +
 +    atlas_job_t job = {
 +#ifdef DEADLINE_FAR
-+        .deadline = is->frame_timer + is->videoq.nb_packets * av_q2d(is->video_st->codec->time_base),
++        .deadline = is->frame_timer + is->videoq.nb_packets * av_q2d(is->video_st->codec->time_base)
 +#else
-+        .deadline = is->frame_timer + av_q2d(is->video_st->codec->time_base),
++        .deadline = is->frame_timer + av_q2d(is->video_st->codec->time_base)
 +#endif
-+        .metrics_count = 0,
-+        .metrics = NULL
 +    };
 +    dispatch_async_atlas(is->read_queue, job, ^{ read_stage(is); });
  
      for (;;) {
          if (is->abort_request)
-@@ -2668,6 +2782,7 @@ static int read_thread(void *arg)
+@@ -2668,6 +2778,7 @@ static int read_thread(void *arg)
                  pkt->size = 0;
                  pkt->stream_index = is->video_stream;
                  packet_queue_put(&is->videoq, pkt);
@@ -420,7 +416,7 @@ index 779c879..338a6e0 100644
              }
              if (is->audio_stream >= 0 &&
                  is->audio_st->codec->codec->capabilities & CODEC_CAP_DELAY) {
-@@ -2682,6 +2797,9 @@ static int read_thread(void *arg)
+@@ -2682,6 +2793,9 @@ static int read_thread(void *arg)
                  if (loop != 1 && (!loop || --loop)) {
                      stream_seek(is, start_time != AV_NOPTS_VALUE ? start_time : 0, 0, 0);
                  } else if (autoexit) {
@@ -430,7 +426,7 @@ index 779c879..338a6e0 100644
                      ret = AVERROR_EOF;
                      goto fail;
                  }
-@@ -2696,7 +2814,7 @@ static int read_thread(void *arg)
+@@ -2696,7 +2810,7 @@ static int read_thread(void *arg)
              if (ic->pb && ic->pb->error)
                  break;
              SDL_Delay(100); /* wait for user event */
@@ -439,7 +435,7 @@ index 779c879..338a6e0 100644
          }
          /* check if packet is in play range specified by user, then queue, otherwise discard */
          pkt_in_play_range = duration == AV_NOPTS_VALUE ||
-@@ -2707,12 +2825,70 @@ static int read_thread(void *arg)
+@@ -2707,12 +2821,70 @@ static int read_thread(void *arg)
          if (pkt->stream_index == is->audio_stream && pkt_in_play_range) {
              packet_queue_put(&is->audioq, pkt);
          } else if (pkt->stream_index == is->video_stream && pkt_in_play_range) {
@@ -510,7 +506,7 @@ index 779c879..338a6e0 100644
      }
      /* wait until the end */
      while (!is->abort_request) {
-@@ -2731,6 +2907,8 @@ static int read_thread(void *arg)
+@@ -2731,6 +2903,8 @@ static int read_thread(void *arg)
      if (is->ic) {
          avformat_close_input(&is->ic);
      }
@@ -519,7 +515,7 @@ index 779c879..338a6e0 100644
  
      if (ret != 0) {
          SDL_Event event;
-@@ -2766,11 +2944,15 @@ static VideoState *stream_open(const char *filename, AVInputFormat *iformat)
+@@ -2766,11 +2940,15 @@ static VideoState *stream_open(const char *filename, AVInputFormat *iformat)
      packet_queue_init(&is->subtitleq);
  
      is->av_sync_type = av_sync_type;
@@ -537,7 +533,7 @@ index 779c879..338a6e0 100644
      return is;
  }
  
-@@ -3007,7 +3189,11 @@ static void event_loop(VideoState *cur_stream)
+@@ -3007,7 +3185,11 @@ static void event_loop(VideoState *cur_stream)
              alloc_picture(event.user.data1);
              break;
          case FF_REFRESH_EVENT:
@@ -549,7 +545,7 @@ index 779c879..338a6e0 100644
              cur_stream->refresh = 0;
              break;
          default:
-@@ -3282,7 +3468,7 @@ int main(int argc, char **argv)
+@@ -3282,7 +3464,7 @@ int main(int argc, char **argv)
      }
  
      av_init_packet(&flush_pkt);
