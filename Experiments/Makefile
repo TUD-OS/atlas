@@ -30,6 +30,10 @@ all clean:
 	$(MAKE) -C 3-22\ Bodytrack\ RT $@
 	$(MAKE) -C 3-23\ Bodytrack\ RT\ Fail $@
 	$(MAKE) -C 3-24\ Bodytrack\ ATLAS\ Fail $@
+	$(MAKE) -C 3-25\ UI-Worker\ CFS\ Alone $@
+	$(MAKE) -C 3-26\ UI-Worker\ ATLAS\ Alone $@
+	$(MAKE) -C 3-27\ UI-Worker\ CFS\ Load $@
+	$(MAKE) -C 3-28\ UI-Worker\ ATLAS\ Load $@
 	$(MAKE) -C 3-29\ Background\ ATLAS $@
 
 %:
