@@ -1,0 +1,3 @@
+override CPPFLAGS = -DMETRICS_NONE -DDISPATCH_ATLAS -DLLSP_PREDICT -DJOB_SCHEDULING
+VIDEOS = 720p50_parkrun_ter FVDO_Shore_4cif blackswan-tlr1c_h480p \
+	hungergames-tlr1_h1080p rush_hour_1080p25

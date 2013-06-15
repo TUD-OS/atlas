@@ -35,6 +35,10 @@ all clean:
 	$(MAKE) -C 3-27\ UI-Worker\ CFS\ Load $@
 	$(MAKE) -C 3-28\ UI-Worker\ ATLAS\ Load $@
 	$(MAKE) -C 3-29\ Background\ ATLAS $@
+	$(MAKE) -C 3-30\ Scheduling\ Full $@
+	$(MAKE) -C 3-31\ Scheduling\ Reduced $@
+	$(MAKE) -C 3-32\ Scheduling\ None $@
+	$(MAKE) -C 3-33\ Scheduling\ CFS $@
 
 %:
 	for subdir in $@* ; do $(MAKE) -C "$$subdir" ; done
