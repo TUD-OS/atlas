@@ -1,7 +1,5 @@
 .PHONY: all clean cleanall force
 
-.INTERMEDIATE: $(patsubst %.cfg,%.mov,$(wildcard *.cfg)) $(patsubst %.cfg,%.y4m,$(wildcard *.cfg))
-
 X264_CBR = --input-res $(SIZE) --fps $(FPS) --bitrate $(BITRATE) --slices $(SLICES) --sliced-threads --threads $(SLICES)
 X264_CRF = --input-res $(SIZE) --fps $(FPS) --crf $(QUALITY) --slices $(SLICES) --sliced-threads --threads $(SLICES)
 
@@ -21,6 +19,8 @@ else
 
 include $(INCLUDE)
 
+.INTERMEDIATE: $(notdir $(URL))
+
 %.h264: %.mov %.cfg ../x264/x264 Makefile
 	ffmpeg -i $< -s $(SIZE) -f rawvideo - 2> /dev/null | ../x264/x264 $(X264_$(MODE)) $(X264_$(PROFILE)) -o $@ -
 
@@ -31,7 +31,10 @@ include $(INCLUDE)
 	ln -sf $< $@
 
 %.h264: %.m4v %.cfg
-	ffmpeg -i $< -vcodec copy -vbsf h264_mp4toannexb -f h264 $@
+	ffmpeg -i $< -vcodec copy -vbsf h264_mp4toannexb -f h264 -y $@
+
+%.h264: %.ts %.cfg
+	ffmpeg -i $< -vcodec copy -vframes $(FRAMES) -f h264 -y $@
 
 $(notdir $(URL)):
 	curl --user-agent QuickTime $(URL) > $@

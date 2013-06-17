@@ -7,6 +7,7 @@
 *.mp4
 *.m4v
 *.o
+*.ts
 h264_workbench
 cpuhog
 ffplay
