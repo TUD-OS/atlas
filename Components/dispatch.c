@@ -245,13 +245,11 @@ static void *dispatch_queue_worker(void *context)
 		
 		if (element.is_copied)
 			Block_release(element.block);
-		if (element.is_realtime)
-			atlas_job_train(code);
-		
 		dispatch_release(queue);
-		
 		if (element.signal_completion)
 			dispatch_semaphore_signal(*element.signal_completion);
+		if (element.is_realtime)
+			atlas_job_train(code);
 	}
 }
 

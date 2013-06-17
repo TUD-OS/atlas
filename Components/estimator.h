@@ -18,7 +18,7 @@
 /* To compensate for misprediction, accounting drift and scheduler overhead,
  * jobs are over-allocated when reporting to the system scheduler. */
 #ifndef JOB_OVERALLOCATION
-#define JOB_OVERALLOCATION(x)  x * 1.01
+#define JOB_OVERALLOCATION(x)  (x > 0.01) ? (x * 1.01) : (x + 0.0001)
 //#define JOB_OVERALLOCATION(x)  x * 1.01 + sqrt(estimator->mse)
 #endif
 
