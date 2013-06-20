@@ -2,8 +2,8 @@ all:: \
 	720p50_parkrun_ter.log \
 	FVDO_Shore_4cif.log \
 	blackswan-tlr1c_h480p.log \
-	hungergames-tlr1_h1080p.log \
-	rush_hour_1080p25.log
+	charlie.log \
+	hungergames-tlr1_h1080p.log
 
 BUILD_FFMPEG = true
 WORKBENCH_BASE ?= ../..
