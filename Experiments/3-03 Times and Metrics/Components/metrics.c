@@ -21,18 +21,11 @@
 
 void hook_slice_any(const AVCodecContext *c)
 {
+	if (!c->slice.flag_last) return;
+	
 	static dispatch_once_t predicate;
 	static float usecs_per_tsc = 0.0;
-	static size_t slice_count = 0;
 	
-	if (c->metrics.type < 0) {
-		slice_count = 0;
-		return;
-	} else {
-		slice_count++;
-		assert(slice_count == 1);  // evaluation wants single-slice videos
-	}
-
 	dispatch_once(&predicate, ^{
 		struct timeval tv;
 		

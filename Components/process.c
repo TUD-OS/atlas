@@ -177,8 +177,10 @@ static void process_slice(AVCodecContext *c)
 	
 	if (hook_slice_end) hook_slice_end(c);
 	
+    if (c->metrics.type < 0) {  // dirty multi-slice support: do not zero between slices so the last one contains everything
 	memset(&c->metrics,   0, sizeof(c->metrics  ));
 	memset(&c->timing ,   0, sizeof(c->timing   ));
+    }
 	memset(&c->slice,     0, sizeof(c->slice    ));
 	
 	/* pass skipping hint to FFmpeg so it can drop the decoding of the upcoming slice */
@@ -198,7 +200,7 @@ static void process_metadata(const uint8_t *nalu)
 	uint_fast16_t mb_height = nalu_read_unsigned(proc.metadata.read);
 	resize_storage(mb_width, mb_height);
 	proc.frame->slice_count = nalu_read_unsigned(proc.metadata.read);
-	for (size32_t i = 0; i < proc.frame->slice_count; i++)
+	for (size32_t i = proc.frame->slice_count - 1; i < proc.frame->slice_count; i++)  // dirty multi-slice support: only handle last slice
 		read_metrics(proc.frame, i);
 	read_replacement_tree(NULL);
 	for (size32_t i = 0; i < proc.frame->slice_count; i++) {
@@ -267,7 +269,7 @@ static void write_metadata(void)
 		nalu_write_unsigned(proc.metadata.write, proc.mb_height);
 		nalu_write_unsigned(proc.metadata.write, frame->slice_count);
 #if METRICS_EXTRACT || METADATA_READ
-		for (size32_t i = 0; i < frame->slice_count; i++)
+		for (size32_t i = frame->slice_count - 1; i < frame->slice_count; i++)  // dirty multi-slice support: only handle last slice
 			write_metrics(frame, i);
 #endif
 #if PREPROCESS || METADATA_READ
@@ -281,7 +283,7 @@ static void write_metadata(void)
 		nalu_write_unsigned(proc.metadata.write, 0);  // empty replacement tree: depth
 		nalu_write_signed(proc.metadata.write, 0);    // empty replacement tree: reference
 		nalu_write_unsigned(proc.metadata.write, 0);  // first slice's start_index
-		for (size32_t i = 0; i < frame->slice_count - 1; i++)
+		for (size32_t i = 1; i < frame->slice_count; i++)
 			nalu_write_unsigned(proc.metadata.write, proc.mb_width * proc.mb_height);
 #endif
 		for (size32_t i = 0; i < frame->slice_count; i++)

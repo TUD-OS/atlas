@@ -1,5 +1,5 @@
 diff --git a/ffplay.c b/ffplay.c
-index 779c879..1485873 100644
+index 779c879..72b1a3a 100644
 --- a/ffplay.c
 +++ b/ffplay.c
 @@ -56,6 +56,23 @@
@@ -459,7 +459,7 @@ index 779c879..1485873 100644
 +                mb_height = nalu_read_unsigned(nalu);
 +                metrics[0] = mb_width * mb_height;
 +                slice_count = nalu_read_unsigned(nalu);
-+                for (; slice_count; slice_count--) {
++                for (slice_count = 1; slice_count; slice_count--) {  // dirty multi-slice support: only one slice with aggregate metrics
 +                    slice_type = nalu_read_unsigned(nalu);
 +                    assert(METRICS_COUNT == 13);
 +                    for (size_t i = 1; i < 13; i++)
