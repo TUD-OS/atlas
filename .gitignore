@@ -17,8 +17,8 @@ worker
 xcuserdata
 
 /Linux
-/Experiments/3-03 Times and Metrics/FFmpeg.patch
-/Experiments/3-03 Times and Metrics/FFmpeg
+/Experiments/4-02 Times and Metrics/FFmpeg.patch
+/Experiments/4-02 Times and Metrics/FFmpeg
 /Experiments/Bodytrack/parsec
 /FFmpeg
 /Makeconf.local

@@ -7,38 +7,38 @@ all clean:
 	$(MAKE) -C 2-01\ GCD\ Compatibility $@
 	$(MAKE) -C 2-02\ FFplay\ Characteristics $@
 	$(MAKE) -C 3-01\ Background\ Load $@
-	$(MAKE) -C 3-02\ Decoding\ Times\ Repeat $@
-	$(MAKE) -C 3-03\ Times\ and\ Metrics $@
-	$(MAKE) -C 3-04\ Preprocess\ Metrics $@
-	$(MAKE) -C 3-05\ Prediction\ Full $@
-	$(MAKE) -C 3-06\ Prediction\ Reduced $@
-	$(MAKE) -C 3-07\ Prediction\ None $@
-	$(MAKE) -C 3-08\ Prediction\ Input\ Output $@
-	$(MAKE) -C 3-09\ Prediction\ Overhead $@
-	$(MAKE) -C 3-10\ Prediction\ Quick\ Full $@
-	$(MAKE) -C 3-11\ Prediction\ Quick\ Reduced $@
-	$(MAKE) -C 3-12\ Prediction\ Quick\ None $@
-	$(MAKE) -C 3-13\ Prediction\ Slow\ Full $@
-	$(MAKE) -C 3-14\ Prediction\ Slow\ Reduced $@
-	$(MAKE) -C 3-15\ Prediction\ Slow\ None $@
-	$(MAKE) -C 3-16\ Prediction\ No\ Drop $@
-	$(MAKE) -C 3-17\ Prediction\ More\ Drop $@
-	$(MAKE) -C 3-18\ Prediction\ Subsetting $@
-	$(MAKE) -C 3-19\ Bodytrack\ Alone $@
-	$(MAKE) -C 3-20\ Bodytrack\ CFS $@
-	$(MAKE) -C 3-21\ Bodytrack\ ATLAS $@
-	$(MAKE) -C 3-22\ Bodytrack\ RT $@
-	$(MAKE) -C 3-23\ Bodytrack\ RT\ Fail $@
-	$(MAKE) -C 3-24\ Bodytrack\ ATLAS\ Fail $@
-	$(MAKE) -C 3-25\ UI-Worker\ CFS\ Alone $@
-	$(MAKE) -C 3-26\ UI-Worker\ ATLAS\ Alone $@
-	$(MAKE) -C 3-27\ UI-Worker\ CFS\ Load $@
-	$(MAKE) -C 3-28\ UI-Worker\ ATLAS\ Load $@
-	$(MAKE) -C 3-29\ Background\ ATLAS $@
-	$(MAKE) -C 3-30\ Scheduling\ Full $@
-	$(MAKE) -C 3-31\ Scheduling\ Reduced $@
-	$(MAKE) -C 3-32\ Scheduling\ None $@
-	$(MAKE) -C 3-33\ Scheduling\ CFS $@
+	$(MAKE) -C 4-01\ Decoding\ Times\ Repeat $@
+	$(MAKE) -C 4-02\ Times\ and\ Metrics $@
+	$(MAKE) -C 4-03\ Preprocess\ Metrics $@
+	$(MAKE) -C 4-04\ Prediction\ Full $@
+	$(MAKE) -C 4-05\ Prediction\ Reduced $@
+	$(MAKE) -C 4-06\ Prediction\ None $@
+	$(MAKE) -C 4-07\ Prediction\ Input\ Output $@
+	$(MAKE) -C 4-08\ Prediction\ Overhead $@
+	$(MAKE) -C 4-09\ Prediction\ Quick\ Full $@
+	$(MAKE) -C 4-10\ Prediction\ Quick\ Reduced $@
+	$(MAKE) -C 4-11\ Prediction\ Quick\ None $@
+	$(MAKE) -C 4-12\ Prediction\ Slow\ Full $@
+	$(MAKE) -C 4-13\ Prediction\ Slow\ Reduced $@
+	$(MAKE) -C 4-14\ Prediction\ Slow\ None $@
+	$(MAKE) -C 4-15\ Prediction\ No\ Drop $@
+	$(MAKE) -C 4-16\ Prediction\ More\ Drop $@
+	$(MAKE) -C 4-17\ Prediction\ Subsetting $@
+	$(MAKE) -C 6-01\ Bodytrack\ Alone $@
+	$(MAKE) -C 6-02\ Bodytrack\ CFS $@
+	$(MAKE) -C 6-03\ Bodytrack\ ATLAS $@
+	$(MAKE) -C 6-04\ Bodytrack\ RT $@
+	$(MAKE) -C 6-05\ Bodytrack\ RT\ Fail $@
+	$(MAKE) -C 6-06\ Bodytrack\ ATLAS\ Fail $@
+	$(MAKE) -C 6-07\ UI-Worker\ CFS\ Alone $@
+	$(MAKE) -C 6-08\ UI-Worker\ ATLAS\ Alone $@
+	$(MAKE) -C 6-09\ UI-Worker\ CFS\ Load $@
+	$(MAKE) -C 6-10\ UI-Worker\ ATLAS\ Load $@
+	$(MAKE) -C 6-11\ Background\ ATLAS $@
+	$(MAKE) -C 6-12\ Scheduling\ Full $@
+	$(MAKE) -C 6-13\ Scheduling\ Reduced $@
+	$(MAKE) -C 6-14\ Scheduling\ None $@
+	$(MAKE) -C 6-15\ Scheduling\ CFS $@
 
 %:
 	for subdir in $@* ; do $(MAKE) -C "$$subdir" ; done
