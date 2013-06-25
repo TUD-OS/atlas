@@ -1,5 +1,5 @@
 diff --git a/ffplay.c b/ffplay.c
-index 779c879..cf2e90c 100644
+index 779c879..e18e61f 100644
 --- a/ffplay.c
 +++ b/ffplay.c
 @@ -56,6 +56,23 @@
@@ -533,19 +533,21 @@ index 779c879..cf2e90c 100644
      return is;
  }
  
-@@ -3007,7 +3185,11 @@ static void event_loop(VideoState *cur_stream)
+@@ -3007,6 +3185,13 @@ static void event_loop(VideoState *cur_stream)
              alloc_picture(event.user.data1);
              break;
          case FF_REFRESH_EVENT:
-+            if (event.user.code)
++            if (event.user.code) {
++                static int train_job = 0;
++                if (train_job)
++                    atlas_job_train(video_refresh);
 +                atlas_job_next(video_refresh);
++                train_job = 1;
++            }
              video_refresh(event.user.data1);
-+            if (event.user.code)
-+                atlas_job_train(video_refresh);
              cur_stream->refresh = 0;
              break;
-         default:
-@@ -3282,7 +3464,7 @@ int main(int argc, char **argv)
+@@ -3282,7 +3467,7 @@ int main(int argc, char **argv)
      }
  
      av_init_packet(&flush_pkt);
