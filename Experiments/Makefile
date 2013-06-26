@@ -11,7 +11,7 @@ all clean:
 	$(MAKE) -C 06\ Scheduling $@
 
 %:
-	$(MAKE) -C '$(wildcard $@*)'
+	for subdir in $@* ; do $(MAKE) -C "$$subdir" ; done
 
 # suggestion: to prevent the sudo prompt, put this in /etc/sudoers.d/
 # $USER ALL = NOPASSWD: /bin/dd of=/proc/sys/kernel/sched_atlas_advance_in_cfs
