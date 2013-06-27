@@ -39,6 +39,22 @@ all clean:
 	$(MAKE) -C 6-13\ Scheduling\ Reduced $@
 	$(MAKE) -C 6-14\ Scheduling\ None $@
 	$(MAKE) -C 6-15\ Scheduling\ CFS $@
+	$(MAKE) -C 6-16\ Scheduling\ Light\ Full $@
+	$(MAKE) -C 6-17\ Scheduling\ Light\ Reduced $@
+	$(MAKE) -C 6-18\ Scheduling\ Light\ None $@
+	$(MAKE) -C 6-19\ Scheduling\ Light\ CFS $@
+	$(MAKE) -C 6-20\ Scheduling\ Max\ Full $@
+	$(MAKE) -C 6-21\ Scheduling\ Max\ Reduced $@
+	$(MAKE) -C 6-22\ Scheduling\ Max\ None $@
+	$(MAKE) -C 6-23\ Scheduling\ Precise\ Full $@
+	$(MAKE) -C 6-24\ Scheduling\ Precise\ Reduced $@
+	$(MAKE) -C 6-25\ Scheduling\ Precise\ None $@
+	$(MAKE) -C 6-26\ Scheduling\ MSE\ Full $@
+	$(MAKE) -C 6-27\ Scheduling\ MSE\ Reduced $@
+	$(MAKE) -C 6-28\ Scheduling\ MSE\ None $@
+	$(MAKE) -C 6-29\ Scheduling\ Tight\ Full $@
+	$(MAKE) -C 6-30\ Scheduling\ Tight\ Reduced $@
+	$(MAKE) -C 6-31\ Scheduling\ Tight\ None $@
 
 %:
 	for subdir in $@* ; do $(MAKE) -C "$$subdir" ; done
