@@ -55,6 +55,10 @@ all clean:
 	$(MAKE) -C 6-29\ Scheduling\ Tight\ Full $@
 	$(MAKE) -C 6-30\ Scheduling\ Tight\ Reduced $@
 	$(MAKE) -C 6-31\ Scheduling\ Tight\ None $@
+	$(MAKE) -C 6-32\ FFplay\ and\ Worker\ ATLAS $@
+	$(MAKE) -C 6-33\ FFplay\ and\ Worker\ CFS $@
+	$(MAKE) -C 6-34\ FFplay\ and\ Worker\ RT $@
+	$(MAKE) -C 6-35\ FFplay\ RT\ and\ Worker $@
 
 %:
 	for subdir in $@* ; do $(MAKE) -C "$$subdir" ; done
