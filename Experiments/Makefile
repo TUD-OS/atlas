@@ -59,6 +59,9 @@ all clean:
 	$(MAKE) -C 6-33\ FFplay\ and\ Worker\ CFS $@
 	$(MAKE) -C 6-34\ FFplay\ and\ Worker\ RT $@
 	$(MAKE) -C 6-35\ FFplay\ RT\ and\ Worker $@
+	$(MAKE) -C 6-36\ Miss-Detect\ Full $@
+	$(MAKE) -C 6-37\ Miss-Detect\ Reduced $@
+	$(MAKE) -C 6-38\ Miss-Detect\ None $@
 
 %:
 	for subdir in $@* ; do $(MAKE) -C "$$subdir" ; done

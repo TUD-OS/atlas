@@ -1,0 +1,13 @@
+--- a/ffplay.c
++++ b/ffplay.c
+@@ -1997,7 +1997,9 @@ dispatch_once(&predicate, ^{
+ 
+         pts = pts_int * av_q2d(is->video_st->time_base);
+ 
+-        ret = queue_picture(is, frame, pts, pos);
++        ret = 0;
++        is->frame_timer = atlas_now();
++        avfilter_unref_buffer(picref);
+ 
+         if (ret < 0)
+             goto the_end;
