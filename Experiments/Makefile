@@ -62,6 +62,7 @@ all clean:
 	$(MAKE) -C 6-36\ Miss-Detect\ Full $@
 	$(MAKE) -C 6-37\ Miss-Detect\ Reduced $@
 	$(MAKE) -C 6-38\ Miss-Detect\ None $@
+	$(MAKE) -C 7-01\ Teaser\ LLCM $@
 
 %:
 	for subdir in $@* ; do $(MAKE) -C "$$subdir" ; done
