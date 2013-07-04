@@ -1,4 +1,0 @@
-override CPPFLAGS = -DMETRICS_EXTRACT -DPREPROCESS -DMETADATA_WRITE
-
-WORKBENCH_BASE ?= ../../..
-include $(WORKBENCH_BASE)/Components/Makefile
