@@ -1,0 +1,43 @@
+--- estimator.c	2013-03-16 15:48:02.000000000 +0100
++++ estimator.c	2013-09-20 15:32:27.000000000 +0200
+@@ -46,6 +46,14 @@
+ 	return estimator;
+ }
+ 
++static int scheduling_enabled = 0;
++
++static void query_scheduling(void) __attribute__((constructor));
++static void query_scheduling(void)
++{
++	if (getenv("DEMO_ATLAS")) scheduling_enabled = 1;
++}
++
+ #pragma mark -
+ 
+ 
+@@ -106,6 +114,7 @@
+ 	
+ 	double reservation = JOB_OVERALLOCATION(prediction);
+ #if JOB_SCHEDULING
++if (scheduling_enabled) {
+ 	struct timeval tv_deadline = {
+ 		.tv_sec = (time_t)job.deadline,
+ 		.tv_usec = (suseconds_t)(1000000 * (job.deadline - (time_t)job.deadline))
+@@ -115,6 +124,7 @@
+ 		.tv_usec = (suseconds_t)(1000000 * (reservation - (time_t)reservation))
+ 	};
+ 	sched_submit(tid, &tv_exectime, &tv_deadline, sched_deadline_absolute);
++}
+ #else
+ 	(void)tid;
+ #endif
+@@ -133,7 +143,9 @@
+ 	estimator->time = time;
+ 	
+ #if JOB_SCHEDULING
++if (scheduling_enabled) {
+ 	sched_next();
++}
+ #endif
+ 	if (hook_job_release)
+ 		hook_job_release(code);

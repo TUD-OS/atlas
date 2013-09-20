@@ -1,0 +1,21 @@
+diff --git a/ffplay.c b/ffplay.c
+index 56cbf3d..662535f 100644
+--- a/ffplay.c
++++ b/ffplay.c
+@@ -1564,7 +1564,6 @@
+         is->video_current_pos = -1;
+         is->frame_last_pts = AV_NOPTS_VALUE;
+         is->frame_last_duration = 0;
+-        is->frame_timer = (double)av_gettime() / 1000000.0;
+         is->frame_last_dropped_pts = AV_NOPTS_VALUE;
+         SDL_UnlockMutex(is->pictq_mutex);
+ 
+@@ -2944,7 +2943,7 @@
+ 
+     is->av_sync_type = av_sync_type;
+     is->main_thread = gettid();
+-    is->frame_timer = atlas_now();  // deadlines are based on frame_timer, set early
++    is->frame_timer = (double)atoll(getenv("DEMO_START")) / 1000000.0;
+     is->read_queue = dispatch_queue_create("read", DISPATCH_QUEUE_SERIAL);
+     if (!is->read_queue) {
+         av_free(is);
