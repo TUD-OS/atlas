@@ -10,12 +10,15 @@ override CPPFLAGS := $(if $(DEBUG),-DDEBUG,) -DTHREADS=$(CPUS) $(CPPFLAGS)
 override CPPFLAGS := -isystem "$(shell sdl-config --prefix)/include/SDL" $(CPPFLAGS)
 override CPPFLAGS := -isystem "$(realpath FFmpeg)" -isystem "$(realpath ../FFmpeg)" $(CPPFLAGS)
 override CPPFLAGS := -I"$(realpath .)" "-I$(realpath Components)" $(CPPFLAGS)
+unexport CPPFLAGS
 
 override CFLAGS := $(if $(DEBUG),-g -O0,-O3) $(CFLAGS)
 override CFLAGS := -march=$(ARCH) -fblocks -std=c99 $(CFLAGS)
 override CFLAGS := -Weverything $(CFLAGS)
+unexport CFLAGS
 
 override LDFLAGS := -pthread -lm -ldl $(LDFLAGS)
+unexport LDFLAGS
 
 ifeq ($(shell uname),Linux)
 override CPPFLAGS := -D_GNU_SOURCE $(CPPFLAGS)
