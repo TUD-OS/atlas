@@ -50,16 +50,16 @@ llsp_t *llsp_new(size_t count);
 /* This function adds another tuple of (metrics, measured target value) to the
  * LLSP solution. The metrics array must have as many values as stated in count
  * on llsp_new(). */
-void llsp_add(llsp_t *llsp, const double *metrics, double target);
+void llsp_add(llsp_t *restrict llsp, const double *restrict metrics, double target);
 
 /* Solves the LLSP and returns a pointer to the resulting coefficients or NULL
  * if the training phase could not be successfully finalized. The pointer
  * remains valid until the LLSP context is freed. */
-const double *llsp_solve(llsp_t *llsp);
+const double *llsp_solve(llsp_t *restrict llsp);
 
 /* Predicts the target value from the given metrics. The context has to be
  * populated with a set of prediction coefficients by running llsp_solve(). */
-double llsp_predict(llsp_t *llsp, const double *metrics);
+double llsp_predict(llsp_t *restrict llsp, const double *restrict metrics);
 
 /* Frees the LLSP context. */
-void llsp_dispose(llsp_t *llsp);
+void llsp_dispose(llsp_t *restrict llsp);

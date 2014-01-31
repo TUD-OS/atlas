@@ -60,7 +60,7 @@ llsp_t *llsp_new(size_t count)
 	return llsp;
 }
 
-void llsp_add(llsp_t *llsp, const double *metrics, double target)
+void llsp_add(llsp_t *restrict llsp, const double *restrict metrics, double target)
 {
 	const size_t column_count = llsp->full.columns;
 	const size_t row_count = llsp->full.columns + 1;  // extra row for shifting down and trisolve
@@ -105,7 +105,7 @@ void llsp_add(llsp_t *llsp, const double *metrics, double target)
 	llsp->last_measured = target;
 }
 
-const double *llsp_solve(llsp_t *llsp)
+const double *llsp_solve(llsp_t *restrict llsp)
 {
 	double *result = NULL;
 	
@@ -123,7 +123,7 @@ const double *llsp_solve(llsp_t *llsp)
 	return result;
 }
 
-double llsp_predict(llsp_t *llsp, const double *metrics)
+double llsp_predict(llsp_t *restrict llsp, const double *restrict metrics)
 {
 	/* calculate prediction by dot product */
 	double result = 0.0;
@@ -136,7 +136,7 @@ double llsp_predict(llsp_t *llsp, const double *metrics)
 		return llsp->last_measured;
 }
 
-void llsp_dispose(llsp_t *llsp)
+void llsp_dispose(llsp_t *restrict llsp)
 {
 	const size_t index_last = llsp->good.columns - 1;
 	
