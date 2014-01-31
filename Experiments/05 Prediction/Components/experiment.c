@@ -18,8 +18,7 @@ void hook_job_complete(void *code, double thread_time, double deadline, double p
 	(void)thread_time;
 	(void)deadline;
 	
-	dispatch_queue_t queue = dispatch_get_current_queue();
-	const char *label = dispatch_queue_get_label(queue);
+	const char *label = dispatch_queue_get_label(DISPATCH_CURRENT_QUEUE_LABEL);
 	
 	if (label && strcmp(label, "video") == 0)
 		/* decoder stage */

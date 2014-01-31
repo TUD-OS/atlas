@@ -23,8 +23,7 @@ void hook_job_complete(void *code, double thread_time, double deadline, double p
 	static double start_time = 0.0;
 	static double previous_completion = 0.0;
 	
-	dispatch_queue_t queue = dispatch_get_current_queue();
-	const char *label = dispatch_queue_get_label(queue);
+	const char *label = dispatch_queue_get_label(DISPATCH_CURRENT_QUEUE_LABEL);
 	
 	if (label && strcmp(label, "refresh") == 0) {
 		double time = atlas_now();

@@ -31,8 +31,7 @@ void dispatch_async_atlas(dispatch_queue_t queue, atlas_job_t job, dispatch_bloc
 /* for experiments: given a NULL-terminated array of queue labels, get the current queue's index */
 static inline size_t dispatch_queue_id(const char * const *queue_labels)
 {
-	dispatch_queue_t queue = dispatch_get_current_queue();
-	const char *label = dispatch_queue_get_label(queue);
+	const char *label = dispatch_queue_get_label(DISPATCH_CURRENT_QUEUE_LABEL);
 	size_t id;
 	
 	for (id = 0; queue_labels[id]; id++)

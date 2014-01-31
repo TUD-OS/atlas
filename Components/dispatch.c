@@ -83,14 +83,16 @@ dispatch_queue_t dispatch_queue_create(const char *label, dispatch_queue_attr_t 
 	return queue;
 }
 
-dispatch_queue_t dispatch_get_current_queue(void)
-{
-	return pthread_getspecific(current_queue);
-}
-
 const char *dispatch_queue_get_label(dispatch_queue_t queue)
 {
-	return queue ? queue->label : NULL;
+	switch (queue) {
+		case NULL:
+			return NULL;
+		case DISPATCH_CURRENT_QUEUE_LABEL:
+			return ((dispatch_queue_t)pthread_getspecific(current_queue))->label;
+		default:
+			return queue->label;
+	}
 }
 
 void dispatch_async(dispatch_queue_t queue, dispatch_block_t block)
