@@ -19,15 +19,15 @@
 
 
 struct matrix {
-	double **matrix;         // matrix data, indexed columns first, rows second
+	double **matrix;         // pointers to matrix data, indexed columns first, rows second
 	size_t   columns;        // column count
 };
 
 struct llsp_s {
 	size_t        metrics;   // metrics count
 	double       *data;      // pointer to the malloc'ed data block, matrix is transposed
-	struct matrix full;      // pointers to the individual columns for easy column dropping
-	struct matrix sort;      // matrix columns with dropped metrics moved to the right
+	struct matrix full;      // pointers to the matrix in its original form with all columns
+	struct matrix sort;      // matrix with to-be-dropped columns shuffled to the right
 	struct matrix good;      // reduced matrix with low-contribution columns dropped
 	double        last_measured;
 	double        result[];  // the resulting coefficients
@@ -223,7 +223,7 @@ static void stabilize(struct matrix *sort, struct matrix *good)
 	/* The drop result for the last column is never used. The last column
 	 * represents our target vector, so we must never drop it. */
 	
-	/* move all to-be-dropped columns to the right */
+	/* shuffle all to-be-dropped columns to the right */
 	size_t keep_columns = index_last;  // number of columns to keep, starts with all
 	for (size_t drop_column = index_last - 1; (ssize_t)drop_column >= 0; drop_column--) {
 		if (!drop[drop_column]) continue;

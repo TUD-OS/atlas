@@ -5,8 +5,24 @@
 
 #include <stddef.h>
 
+/* An online updating solver for Linear Least Squares Problems.
+ * Uses automatic stabilization by dropping columns to prevent overfitting.
+ *
+ * Typical use:
+ * 
+ * setup:
+ *     llsp_t *solver = llsp_new(count);
+ * add knowledge:
+ *     llsp_add(solver, metrics, target_value);
+ *     (void)llsp_solve(solver);
+ * obtain a prediction:
+ *     prediction = llsp_predict(solver, metrics);
+ * tear down:
+ *     llsp_dispose(solver);
+ */
+
 /* The running solution can be made to age out previously acquired knowledge
- * over time. When this aging factor is set to 1.0, no aging is performed. This
+ * over time. When this aging factor is set to 0, no aging is performed. This
  * means the solution will be equivalent to a LLS-solution over all previous
  * metrics and target values. With an aging factor a little lower than one,
  * the solution will slightly lean towards newly added metrics/targets,
@@ -18,7 +34,9 @@
 /* During the column dropping check, each column's contribution to the accuracy
  * of the result is analyzed. An individual column must improve the accuracy by
  * at least this factor, otherwise it is considered a rank-deficiency and is
- * dropped. */
+ * dropped. Values above 1.0 enable dropping. Higher values drop more, leading
+ * to more stable, but less precise predictions. Set this to 0 to reliably
+ * prevent dropping entirely. */
 #ifndef COLUMN_CONTRIBUTION
 #define COLUMN_CONTRIBUTION 1.1
 #endif
