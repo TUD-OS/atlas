@@ -12,6 +12,8 @@
 
 #include "llsp.h"
 
+#pragma clang diagnostic ignored "-Wvla"
+
 /* float values below this are considered to be 0 */
 #define EPSILON 1E-10
 

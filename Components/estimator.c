@@ -20,6 +20,8 @@
 #include "scheduler.h"
 #include "llsp.h"
 
+#pragma clang diagnostic ignored "-Wvla"
+
 struct estimator_s {
 	struct estimator_s *next;
 	pthread_mutex_t lock;

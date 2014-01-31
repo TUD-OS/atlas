@@ -13,6 +13,7 @@
 #include "nalu.h"
 
 #pragma clang diagnostic ignored "-Wpadded"
+#pragma clang diagnostic ignored "-Wvla"
 
 struct nalu_read_s {
 	const uint8_t * restrict nalu;
