@@ -29,31 +29,31 @@
 		4C24B8FD11EDE6B900E67981 /* x264 */ = {isa = PBXFileReference; lastKnownFileType = folder; path = x264; sourceTree = "<group>"; };
 		4C24B9E911EDE6D600E67981 /* h264_workbench.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = h264_workbench.c; sourceTree = "<group>"; };
 		4C24B9EA11EDE6D600E67981 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
-		4C24B9EC11EDE6D600E67981 /* digits.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = digits.h; sourceTree = "<group>"; };
+		4C24B9EC11EDE6D600E67981 /* digits.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = digits.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		4C24B9ED11EDE6D600E67981 /* llsp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = llsp.c; sourceTree = "<group>"; };
 		4C24B9EE11EDE6D600E67981 /* llsp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = llsp.h; sourceTree = "<group>"; };
 		4C24B9F011EDE6D600E67981 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
-		4C24B9F111EDE6D600E67981 /* metrics.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = metrics.c; sourceTree = "<group>"; };
+		4C24B9F111EDE6D600E67981 /* metrics.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = metrics.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
 		4C24B9F311EDE6D600E67981 /* nalu.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = nalu.c; sourceTree = "<group>"; };
-		4C24B9F511EDE6D600E67981 /* process.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = process.c; sourceTree = "<group>"; };
-		4C24B9F611EDE6D600E67981 /* process.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = process.h; sourceTree = "<group>"; };
-		4C24B9F811EDE6D600E67981 /* propagate.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = propagate.c; sourceTree = "<group>"; };
-		4C24B9FA11EDE6D600E67981 /* replace.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = replace.c; sourceTree = "<group>"; };
-		4C24B9FC11EDE6D600E67981 /* adapt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = adapt.c; sourceTree = "<group>"; };
-		4C24B9FE11EDE6D600E67981 /* ssim.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ssim.c; sourceTree = "<group>"; };
-		4C24B9FF11EDE6D600E67981 /* ssim.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ssim.h; sourceTree = "<group>"; };
+		4C24B9F511EDE6D600E67981 /* process.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = process.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
+		4C24B9F611EDE6D600E67981 /* process.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = process.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		4C24B9F811EDE6D600E67981 /* propagate.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = propagate.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
+		4C24B9FA11EDE6D600E67981 /* replace.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = replace.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
+		4C24B9FC11EDE6D600E67981 /* adapt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = adapt.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
+		4C24B9FE11EDE6D600E67981 /* ssim.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = ssim.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
+		4C24B9FF11EDE6D600E67981 /* ssim.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = ssim.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		4C3E4E7F126D9BCF004DACE5 /* Makeconf */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = Makeconf; sourceTree = "<group>"; };
 		4C4847D114CED7F0009DDAAF /* ffplay.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = ffplay.c; path = FFmpeg/ffplay.c; sourceTree = "<group>"; usesTabs = 0; };
-		4C8CC59714D41C0800595140 /* nalu.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = nalu.h; sourceTree = "<group>"; };
+		4C8CC59714D41C0800595140 /* nalu.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = nalu.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		4C8CC59914D7F27F00595140 /* FFmpeg.patch */ = {isa = PBXFileReference; lastKnownFileType = text; path = FFmpeg.patch; sourceTree = "<group>"; };
 		4C8CC59A14D81B2400595140 /* estimator.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = estimator.c; sourceTree = "<group>"; };
-		4C8CC59C14D81B4000595140 /* estimator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = estimator.h; sourceTree = "<group>"; };
+		4C8CC59C14D81B4000595140 /* estimator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = estimator.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		4C93FEB315D6A49F0073DA23 /* Linux.patch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Linux.patch; sourceTree = "<group>"; };
 		4CAA9F08135C59C400AEA9EB /* h264_workbench */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = h264_workbench; sourceTree = BUILT_PRODUCTS_DIR; };
-		4CC4C87C15DD44BC004D06C2 /* scheduler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = scheduler.h; sourceTree = "<group>"; };
+		4CC4C87C15DD44BC004D06C2 /* scheduler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = scheduler.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		4CD285681655232200E4775B /* dispatch.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = dispatch.h; sourceTree = "<group>"; };
 		4CD2856A165523C000E4775B /* dispatch.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = dispatch.c; sourceTree = "<group>"; };
-		4CF0A7011202CA0800817B42 /* weak.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = weak.c; sourceTree = "<group>"; };
+		4CF0A7011202CA0800817B42 /* weak.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = weak.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -181,10 +181,10 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0440;
+				LastUpgradeCheck = 0500;
 				ORGANIZATIONNAME = "TU Dresden";
 			};
-			buildConfigurationList = 1DEB919308733D9F0010E9CD /* Build configuration list for PBXProject "Workbench" */;
+			buildConfigurationList = 1DEB919308733D9F0010E9CD /* Build configuration list for PBXProject "ATLAS" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 1;
@@ -248,7 +248,6 @@
 		1DEB919008733D9F0010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
 				CPPFLAGS = "-DMETRICS_EXTRACT -DMETADATA_WRITE";
 			};
 			name = Debug;
@@ -256,7 +255,6 @@
 		1DEB919108733D9F0010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
 				CPPFLAGS = "-DMETRICS_EXTRACT -DMETADATA_WRITE";
 			};
 			name = Release;
@@ -264,9 +262,9 @@
 		1DEB919408733D9F0010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				CC = clang;
 				DEBUG = true;
+				ONLY_ACTIVE_ARCH = YES;
 				PATH = "$(HOME)/.bin:$(PATH):/opt/fink/bin:/sw/bin:/usr/local/bin";
 			};
 			name = Debug;
@@ -274,7 +272,6 @@
 		1DEB919508733D9F0010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				CC = clang;
 				PATH = "$(HOME)/.bin:$(PATH):/opt/fink/bin:/sw/bin:/usr/local/bin";
 			};
@@ -283,7 +280,6 @@
 		4C24BA0311EDE76D00E67981 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
 				CPPFLAGS = "-DDISPATCH_ATLAS -DJOB_SCHEDULING -DLLSP_PREDICT";
 			};
 			name = Debug;
@@ -291,7 +287,6 @@
 		4C24BA0411EDE76D00E67981 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
 				CPPFLAGS = "-DDISPATCH_ATLAS -DJOB_SCHEDULING -DLLSP_PREDICT";
 			};
 			name = Release;
@@ -299,14 +294,12 @@
 		4C24BA0611EDE77700E67981 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
 			};
 			name = Debug;
 		};
 		4C24BA0711EDE77700E67981 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
 			};
 			name = Release;
 		};
@@ -356,7 +349,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		1DEB919308733D9F0010E9CD /* Build configuration list for PBXProject "Workbench" */ = {
+		1DEB919308733D9F0010E9CD /* Build configuration list for PBXProject "ATLAS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1DEB919408733D9F0010E9CD /* Debug */,

@@ -8,6 +8,7 @@
 *.m4v
 *.o
 *.ts
+*.xccheckout
 h264_workbench
 cpuhog
 ffplay
