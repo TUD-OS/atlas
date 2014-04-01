@@ -13,6 +13,10 @@
 #define DISPATCH_QUEUE_SERIAL 0
 #endif
 
+#ifndef DISPATCH_CURRENT_QUEUE_LABEL
+#define DISPATCH_CURRENT_QUEUE_LABEL NULL
+#endif
+
 /* use my ATLAS-modified minimal libdispatch or the original */
 #ifdef DISPATCH_ATLAS
 #	define DISPATCH_ATLAS 1
