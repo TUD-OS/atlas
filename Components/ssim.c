@@ -47,7 +47,7 @@
 
 
 static double ssim_block(const uint8_t * restrict x, const uint8_t * restrict y,
-						 const unsigned line_stride_x, const unsigned line_stride_y)
+                         const uint_fast32_t line_stride_x, const uint_fast32_t line_stride_y)
 {
 #if defined(__SSE__)
 	__m128 vec_mean_x   = { 0.0, 0.0, 0.0, 0.0 };

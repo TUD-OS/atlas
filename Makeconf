@@ -12,7 +12,7 @@ override CPPFLAGS := -isystem "$(realpath FFmpeg)" -isystem "$(realpath ../FFmpe
 override CPPFLAGS := -I"$(realpath .)" "-I$(realpath Components)" $(CPPFLAGS)
 unexport CPPFLAGS
 
-override CFLAGS := $(if $(DEBUG),-g -O0,-O3) $(CFLAGS)
+override CFLAGS := $(if $(DEBUG),-g -O0,-Ofast) $(CFLAGS)
 override CFLAGS := -march=$(ARCH) -fblocks -std=c99 $(CFLAGS)
 override CFLAGS := -Weverything $(CFLAGS)
 unexport CFLAGS

@@ -30,4 +30,6 @@ void frame_storage_destroy(AVCodecContext *c, AVFrame *frame) __attribute__((wea
 	avcodec_default_release_buffer(c, frame);
 }
 
+#else
+#pragma clang diagnostic ignored "-Wempty-translation-unit"
 #endif
