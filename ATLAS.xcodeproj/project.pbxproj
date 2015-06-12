@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 46;
+	objectVersion = 47;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -68,8 +68,8 @@
 				4C4847D414CED846009DDAAF /* Shortcuts */,
 				4C24B8FC11EDE6B900E67981 /* Samples */,
 				4C24B00211EDE6B800E67981 /* Experiments */,
-				4C8CC59914D7F27F00595140 /* FFmpeg.patch */,
 				4C93FEB315D6A49F0073DA23 /* Linux.patch */,
+				4C8CC59914D7F27F00595140 /* FFmpeg.patch */,
 				4C24B8FB11EDE6B900E67981 /* FFmpeg */,
 				4C24B8FD11EDE6B900E67981 /* x264 */,
 			);
@@ -181,11 +181,11 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0500;
+				LastUpgradeCheck = 0700;
 				ORGANIZATIONNAME = "TU Dresden";
 			};
 			buildConfigurationList = 1DEB919308733D9F0010E9CD /* Build configuration list for PBXProject "ATLAS" */;
-			compatibilityVersion = "Xcode 3.2";
+			compatibilityVersion = "Xcode 6.3";
 			developmentRegion = English;
 			hasScannedForEncodings = 1;
 			knownRegions = (
@@ -264,6 +264,7 @@
 			buildSettings = {
 				CC = clang;
 				DEBUG = true;
+				ENABLE_TESTABILITY = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				PATH = "$(HOME)/.bin:$(PATH):/opt/fink/bin:/sw/bin:/usr/local/bin";
 			};

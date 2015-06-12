@@ -1,0 +1,42 @@
+{
+  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "53D63C0E6A351C84B98C2FEDDBD3FE1CFB0608FA",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
+
+  },
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
+    "05AC6CD993F68C0709F9EF73F594686697E91EEE" : 0,
+    "53D63C0E6A351C84B98C2FEDDBD3FE1CFB0608FA" : 0,
+    "8CEE2920F82777E0800DD1AD4CACD1E31E585E07" : 0
+  },
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "8FF19D09-D328-4CA7-BD0C-E8AF37F82F7E",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
+    "05AC6CD993F68C0709F9EF73F594686697E91EEE" : "ATLAS\/x264\/",
+    "53D63C0E6A351C84B98C2FEDDBD3FE1CFB0608FA" : "ATLAS\/",
+    "8CEE2920F82777E0800DD1AD4CACD1E31E585E07" : "ATLAS\/FFmpeg\/"
+  },
+  "DVTSourceControlWorkspaceBlueprintNameKey" : "ATLAS",
+  "DVTSourceControlWorkspaceBlueprintVersion" : 203,
+  "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "ATLAS.xcodeproj",
+  "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "git:\/\/git.videolan.org\/x264.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "05AC6CD993F68C0709F9EF73F594686697E91EEE"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "github.com:TUD-OS\/ATLAS.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "53D63C0E6A351C84B98C2FEDDBD3FE1CFB0608FA"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "\/Users\/Michael\/Developer.localized\/ATLAS\/Experiments\/02%20Times%20and%20Metrics\/..\/..\/FFmpeg\/.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "8CEE2920F82777E0800DD1AD4CACD1E31E585E07"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "git:\/\/git.videolan.org\/ffmpeg.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "8CEE2920F82777E0800DD1AD4CACD1E31E585E07"
+    }
+  ]
+}
