@@ -74,7 +74,7 @@ x264/config.mak: x264/configure
 	cd $(@D) && CC=$(CC) CPPFLAGS= CFLAGS= ./configure --extra-cflags=-march=$(ARCH)
 x264/configure: x264/.git/config $(WORKBENCH_BASE)/Makefile
 	cd $(@D) && git diff --name-status --exit-code
-	cd $(@D) && git reset --hard aff928d2a2f601072cebecfd1ac5ff768880cf88
+	cd $(@D) && git reset --hard b7a50c16414631c8ff5e417da51b190c8999027e
 	cd $(@D) && git clean -dfx
 	touch $@
 x264/.git/config:
