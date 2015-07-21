@@ -24,9 +24,9 @@
 /* The running solution can be made to age out previously acquired knowledge
  * over time. When this aging factor is set to 0, no aging is performed. This
  * means the solution will be equivalent to a LLS-solution over all previous
- * metrics and target values. With an aging factor a little lower than one,
- * the solution will slightly lean towards newly added metrics/targets,
- * exhibting properties of a sliding average. */
+ * metrics and target values. With an aging factor above zero, the solution will
+ * slightly lean towards newly added metrics/targets, exhibting properties of a
+ * sliding average. */
 #ifndef AGING_FACTOR
 #define AGING_FACTOR 0.01
 #endif
@@ -44,12 +44,12 @@
 /* an opaque handle for the LLSP solver/predictor */
 typedef struct llsp_s llsp_t;
 
-/* Allocated a new LLSP handle with the given number of metrics. */
+/* Allocates a new LLSP handle with the given number of metrics. */
 llsp_t *llsp_new(size_t count);
 
 /* This function adds another tuple of (metrics, measured target value) to the
  * LLSP solution. The metrics array must have as many values as stated in count
- * on llsp_new(). */
+ * passed to llsp_new(). */
 void llsp_add(llsp_t *restrict llsp, const double *restrict metrics, double target);
 
 /* Solves the LLSP and returns a pointer to the resulting coefficients or NULL

@@ -19,7 +19,6 @@
  * jobs are over-allocated when reporting to the system scheduler. */
 #ifndef JOB_OVERALLOCATION
 #define JOB_OVERALLOCATION(x)  (x > 0.001) ? (x * 1.025) : (x + 0.000025)
-//#define JOB_OVERALLOCATION(x)  (x > 0.001) ? (x * 1.025) : (x + 0.000025) + sqrt(estimator->mse)
 #endif
 
 /* toggle job communication to scheduler */

@@ -4,7 +4,11 @@
  */
 
 #include <stdio.h>
-#include <time.h>
+#ifdef __linux__
+#  include <time.h>
+#else
+#  include <sys/time.h>
+#endif
 
 static void stop(void) __attribute__((destructor));
 

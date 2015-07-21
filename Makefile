@@ -37,11 +37,9 @@ FFmpeg $(wildcard FFmpeg/) .FFmpeg: FFmpeg/config.mak force
 	$(MAKE) -j$(CPUS) -C FFmpeg
 FFmpeg/config.mak: FFmpeg/configure
 	cd $(@D) && CPPFLAGS= CFLAGS= ./configure \
-		--cc=$(CC) --cpu=$(ARCH) --enable-pthreads \
+		--cc=$(CC) --cpu=$(ARCH) --disable-everything --enable-pthreads \
 		--disable-doc --disable-ffplay --disable-ffprobe --disable-ffserver \
-		--disable-decoders --disable-encoders --disable-parsers --disable-demuxers --disable-muxers \
-		--disable-protocols --disable-filters --disable-bsfs --disable-indevs --disable-outdevs --disable-hwaccels \
-		--enable-decoder=h264 --enable-parser=h264 --enable-demuxer=h264 --enable-protocol=file --enable-rdft
+		--enable-protocol=file --enable-parser=h264 --enable-demuxer=h264 --enable-decoder=h264 --enable-rdft
 FFmpeg/configure: FFmpeg/.git/config FFmpeg.patch $(WORKBENCH_BASE)/Makefile
 	cd $(@D) && git diff --name-status --exit-code
 	cd $(@D) && git fetch --prune

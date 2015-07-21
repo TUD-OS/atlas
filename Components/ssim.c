@@ -10,22 +10,13 @@
 
 #include "ssim.h"
 
-#if defined(__SSE__)
+#ifdef __SSE__
 #include <xmmintrin.h>
-#elif defined(__ALTIVEC__)
-#include <altivec.h>
-#endif
-
-#ifdef __GNUC__
-#define PREFETCH(x) __builtin_prefetch(x);
-#else
-#define PREFETCH(x) ;
-#endif
-
 #ifdef __SSE3__
 #include <pmmintrin.h>
 #else
 #define HORIZ_ADD(x)  (x[0] + x[1] + x[2] + x[3])
+#endif
 #endif
 
 #define BLOCK_WIDTH  8
@@ -49,7 +40,7 @@
 static double ssim_block(const uint8_t * restrict x, const uint8_t * restrict y,
                          const uint_fast32_t line_stride_x, const uint_fast32_t line_stride_y)
 {
-#if defined(__SSE__)
+#ifdef __SSE__
 	__m128 vec_mean_x   = { 0.0, 0.0, 0.0, 0.0 };
 	__m128 vec_mean_y   = { 0.0, 0.0, 0.0, 0.0 };
 	__m128 vec_var_x    = { 0.0, 0.0, 0.0, 0.0 };
@@ -57,15 +48,6 @@ static double ssim_block(const uint8_t * restrict x, const uint8_t * restrict y,
 	__m128 vec_covar_xy = { 0.0, 0.0, 0.0, 0.0 };
 	__m128 vec_x;
 	__m128 vec_y;
-	float unpack[4] __attribute__((aligned(16)));
-#elif defined(__ALTIVEC__)
-	vector float vec_mean_x   = { 0.0, 0.0, 0.0, 0.0 };
-	vector float vec_mean_y   = { 0.0, 0.0, 0.0, 0.0 };
-	vector float vec_var_x    = { 0.0, 0.0, 0.0, 0.0 };
-	vector float vec_var_y    = { 0.0, 0.0, 0.0, 0.0 };
-	vector float vec_covar_xy = { 0.0, 0.0, 0.0, 0.0 };
-	vector float vec_x;
-	vector float vec_y;
 	float unpack[4] __attribute__((aligned(16)));
 #endif
 	double mean_x   = 0.0;
@@ -75,12 +57,15 @@ static double ssim_block(const uint8_t * restrict x, const uint8_t * restrict y,
 	double covar_xy = 0.0;
 	unsigned i, j;
 	
-#if defined(__SSE__)
+#ifdef __SSE__
 	assert(BLOCK_WIDTH % 4 == 0);
 	
 	for (i = 0; i < BLOCK_HEIGHT; i++) {
-		PREFETCH(x + i * line_stride_x);
-		PREFETCH(y + i * line_stride_y);
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wcast-qual"
+		_mm_prefetch(x + i * line_stride_x, _MM_HINT_T0);
+		_mm_prefetch(y + i * line_stride_y, _MM_HINT_T0);
+#pragma clang diagnostic pop
 		for (j = 0; j < BLOCK_WIDTH; j += 4) {
 			unpack[0] = (float)x[i * line_stride_x + (j + 0) * PIXEL_STRIDE];
 			unpack[1] = (float)x[i * line_stride_x + (j + 1) * PIXEL_STRIDE];
@@ -123,44 +108,8 @@ static double ssim_block(const uint8_t * restrict x, const uint8_t * restrict y,
 	_mm_store_ps(unpack, vec_covar_xy);
 	covar_xy = HORIZ_ADD(unpack);
 #endif
-#elif defined(__ALTIVEC__)
-	assert(BLOCK_WIDTH % 4 == 0);
-	
-	for (i = 0; i < BLOCK_HEIGHT; i++) {
-		PREFETCH(x + i * line_stride_x);
-		PREFETCH(y + i * line_stride_y);
-		for (j = 0; j < BLOCK_WIDTH; j += 4) {
-			unpack[0] = (float)x[i * line_stride_x + (j + 0) * PIXEL_STRIDE];
-			unpack[1] = (float)x[i * line_stride_x + (j + 1) * PIXEL_STRIDE];
-			unpack[2] = (float)x[i * line_stride_x + (j + 2) * PIXEL_STRIDE];
-			unpack[3] = (float)x[i * line_stride_x + (j + 3) * PIXEL_STRIDE];
-			vec_x = vec_ld(0, unpack);
-			unpack[0] = (float)y[i * line_stride_y + (j + 0) * PIXEL_STRIDE];
-			unpack[1] = (float)y[i * line_stride_y + (j + 1) * PIXEL_STRIDE];
-			unpack[2] = (float)y[i * line_stride_y + (j + 2) * PIXEL_STRIDE];
-			unpack[3] = (float)y[i * line_stride_y + (j + 3) * PIXEL_STRIDE];
-			vec_y = vec_ld(0, unpack);
-			vec_mean_x   = vec_add(vec_x, vec_mean_x);
-			vec_mean_y   = vec_add(vec_y, vec_mean_y);
-			vec_var_x    = vec_madd(vec_x, vec_x, vec_var_x);
-			vec_var_y    = vec_madd(vec_y, vec_y, vec_var_y);
-			vec_covar_xy = vec_madd(vec_x, vec_y, vec_covar_xy);
-		}
-	}
-	vec_st(vec_mean_x, 0, unpack);
-	mean_x = HORIZ_ADD(unpack);
-	vec_st(vec_mean_y, 0, unpack);
-	mean_y = HORIZ_ADD(unpack);
-	vec_st(vec_var_x, 0, unpack);
-	var_x = HORIZ_ADD(unpack);
-	vec_st(vec_var_y, 0, unpack);
-	var_y = HORIZ_ADD(unpack);
-	vec_st(vec_covar_xy, 0, unpack);
-	covar_xy = HORIZ_ADD(unpack);
 #else
 	for (i = 0; i < BLOCK_HEIGHT; i++) {
-		PREFETCH(x + i * line_stride_x);
-		PREFETCH(y + i * line_stride_y);
 		for (j = 0; j < BLOCK_WIDTH; j++) {
 			const float x_ij = (float)x[i * line_stride_x + j * PIXEL_STRIDE];
 			const float y_ij = (float)y[i * line_stride_y + j * PIXEL_STRIDE];

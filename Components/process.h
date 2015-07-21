@@ -377,9 +377,9 @@ void read_immission(frame_node_t *frame);
 
 /* for efficient handling of eight bytes at once */
 typedef uint64_t byte_block_t;
-static const byte_block_t byte_spread = 0x0101010101010101ULL;
+static byte_block_t byte_spread = 0x0101010101010101ULL;
 #define BLOCK(base, offset) *cast_to_byte_block_pointer(base, offset)
-static inline byte_block_t *cast_to_byte_block_pointer(const uint8_t *const restrict base, const int offset)
+static inline byte_block_t *cast_to_byte_block_pointer(uint8_t *const restrict base, const int offset)
 {
 	return (byte_block_t *)(base + offset);
 }
