@@ -23,6 +23,7 @@ clean::
 	rm -f h264_workbench
 endif
 
+
 BUILD_FFMPEG ?= $(filter .,$(WORKBENCH_BASE))$(wildcard FFmpeg)
 ifneq ($(BUILD_FFMPEG),)
 ffplay: %: FFmpeg/%.c FFmpeg/cmdutils.o $(COMPONENTS) $(FFMPEG_LIBS) Makefile $(WORKBENCH_BASE)/Makefile $(WORKBENCH_BASE)/Makeconf $(wildcard $(WORKBENCH_BASE)/Makeconf.local)
@@ -43,6 +44,7 @@ FFmpeg/config.mak: FFmpeg/configure
 		--enable-decoder=h264 --enable-parser=h264 --enable-demuxer=h264 --enable-protocol=file --enable-rdft
 FFmpeg/configure: FFmpeg/.git/config FFmpeg.patch $(WORKBENCH_BASE)/Makefile
 	cd $(@D) && git diff --name-status --exit-code
+	cd $(@D) && git fetch --prune
 	cd $(@D) && git reset --hard 39fe8033bbf94cac7935d749849fdf67ba8fc16a  # n0.11.1
 #	cd $(@D) && git reset --hard a74f292d4ab3e800853c3ab7536418e6eb584b27  # n1.0
 	cd $(@D) && git clean -dfx
@@ -50,7 +52,7 @@ FFmpeg/configure: FFmpeg/.git/config FFmpeg.patch $(WORKBENCH_BASE)/Makefile
 	cd $(@D) && git add --all
 	touch $@
 FFmpeg/.git/config:
-	git clone -n git://source.ffmpeg.org/ffmpeg.git FFmpeg
+	git clone --single-branch --no-checkout git://source.ffmpeg.org/ffmpeg.git FFmpeg
 endif
 
 
@@ -74,11 +76,12 @@ x264/config.mak: x264/configure
 	cd $(@D) && CC=$(CC) CPPFLAGS= CFLAGS= ./configure --extra-cflags=-march=$(ARCH)
 x264/configure: x264/.git/config $(WORKBENCH_BASE)/Makefile
 	cd $(@D) && git diff --name-status --exit-code
+	cd $(@D) && git fetch --prune
 	cd $(@D) && git reset --hard aff928d2a2f601072cebecfd1ac5ff768880cf88
 	cd $(@D) && git clean -dfx
 	touch $@
 x264/.git/config:
-	git clone -n git://git.videolan.org/x264.git x264
+	git clone --single-branch --no-checkout git://git.videolan.org/x264.git x264
 endif
 
 
@@ -101,6 +104,7 @@ Linux/.config: Linux/debian
 	@false
 Linux/debian: Linux/.git/config Linux.patch $(WORKBENCH_BASE)/Makefile
 	cd $(@D) && git diff --name-status --exit-code
+	cd $(@D) && git fetch --prune
 	cd $(@D) && git reset --hard 7340a183c5702144b5c62cc78b78791f2783695c  # Ubuntu-lts-3.5.0-19.30
 	cd $(@D) && git clean -dfx
 	patch -d $(@D) -p1 < Linux.patch
@@ -110,7 +114,7 @@ Linux/debian: Linux/.git/config Linux.patch $(WORKBENCH_BASE)/Makefile
 		git add --all
 	touch $@
 Linux/.git/config:
-	git clone -n git://kernel.ubuntu.com/ubuntu/ubuntu-precise.git Linux
+	git clone --single-branch --no-checkout git://kernel.ubuntu.com/ubuntu/ubuntu-precise.git Linux
 endif
 
 
