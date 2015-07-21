@@ -77,7 +77,7 @@ x264/config.mak: x264/configure
 x264/configure: x264/.git/config $(WORKBENCH_BASE)/Makefile
 	cd $(@D) && git diff --name-status --exit-code
 	cd $(@D) && git fetch --prune
-	cd $(@D) && git reset --hard aff928d2a2f601072cebecfd1ac5ff768880cf88
+	cd $(@D) && git reset --hard c8a773ebfca148ef04f5a60d42cbd7336af0baf6
 	cd $(@D) && git clean -dfx
 	touch $@
 x264/.git/config:
