@@ -72,6 +72,7 @@ all clean:
 # $USER ALL = NOPASSWD: /sbin/modprobe msr
 # $USER ALL = NOPASSWD: /usr/sbin/rdmsr
 # $USER ALL = NOPASSWD: /usr/sbin/wrmsr
+# $USER ALL = NOPASSWD: SETENV: /usr/bin/chrt 10
 
 environment:
 	$(MAKE) -C Bodytrack
