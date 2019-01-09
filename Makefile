@@ -28,7 +28,7 @@ BUILD_FFMPEG ?= $(filter .,$(WORKBENCH_BASE))$(wildcard FFmpeg)
 ifneq ($(BUILD_FFMPEG),)
 ffplay: %: FFmpeg/%.c FFmpeg/cmdutils.o $(COMPONENTS) $(FFMPEG_LIBS) Makefile $(WORKBENCH_BASE)/Makefile $(WORKBENCH_BASE)/Makeconf $(wildcard $(WORKBENCH_BASE)/Makeconf.local)
 	-$(CC) $(CPPFLAGS) -MM $< > .$*.d 2> /dev/null
-	$(CC) $(CPPFLAGS) $(filter-out -Weverything,-Wall $(CFLAGS)) -o $@ "$(realpath $<)" FFmpeg/cmdutils.o $(COMPONENTS) $(FFMPEG_LIBS) $(shell sdl-config --libs) $(LDFLAGS)
+	$(CC) $(CPPFLAGS) $(filter-out -Weverything,-Wall $(CFLAGS)) $(shell sdl-config --cflags) -o $@ "$(realpath $<)" FFmpeg/cmdutils.o $(COMPONENTS) $(FFMPEG_LIBS) $(shell sdl-config --libs) $(LDFLAGS)
 clean::
 	rm -f ffplay
 FFmpeg/ffplay.c FFmpeg/cmdutils.o $(FFMPEG_LIBS): .FFmpeg
