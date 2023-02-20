@@ -26,7 +26,7 @@ struct matrix {
 struct llsp_s {
 	size_t        metrics;   // metrics count
 	double       *data;      // pointer to the malloc'ed data block, matrix is transposed
-	struct matrix full;      // pointers to the matrix in its original form with all columns
+	struct matrix full;      // pointers to the matrix in its original form with all columns 指向具有所有列的原始形式的矩阵的指针
 	struct matrix sort;      // matrix with to-be-dropped columns shuffled to the right
 	struct matrix good;      // reduced matrix with low-contribution columns dropped
 	double        last_measured;
@@ -56,6 +56,7 @@ llsp_t *llsp_new(size_t count)
 	llsp->metrics = count;
 	llsp->full.columns = count + 1;
 	llsp->sort.columns = count + 1;
+	llsp->good.columns = count + 1;
 	
 	return llsp;
 }
@@ -139,8 +140,10 @@ double llsp_predict(llsp_t *restrict llsp, const double *restrict metrics)
 void llsp_dispose(llsp_t *restrict llsp)
 {
 	const size_t index_last = llsp->good.columns - 1;
-	
-	free(llsp->good.matrix[index_last]);
+	// fprintf(stderr, "good.matrix = %p, index_last = %lu\n", llsp->good.matrix, index_last);
+	if (llsp->good.matrix) {
+		free(llsp->good.matrix[index_last]);
+	}
 	free(llsp->full.matrix);
 	free(llsp->sort.matrix);
 	free(llsp->good.matrix);
